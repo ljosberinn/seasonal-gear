@@ -19,8 +19,8 @@ export const WowheadItemLink = ({
 
   return (
     <a
-      href={itemLink(item, isPtr)}
       data-wowhead={itemData(item, isPtr)}
+      href={itemLink(item, isPtr)}
       {...props}
     >
       {children}

@@ -106,7 +106,7 @@ export default function App() {
         <script
           dangerouslySetInnerHTML={{
             __html: `
-        const whTooltips = { colorLinks: true, iconizeLinks: true, renameLinks: true };
+        const whTooltips = { colorLinks: true, iconizeLinks: true };
         `,
           }}
         />
