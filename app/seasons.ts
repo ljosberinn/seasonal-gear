@@ -5,6 +5,67 @@ export enum Regions {
   tw = "tw",
 }
 
+enum ArmorSlot {
+  HEAD = 1,
+  NECK = 2,
+  SHOULDER = 3,
+  SHIRT = 4,
+  CHEST = 5,
+  BELT = 6,
+  LEGS = 7,
+  FEET = 8,
+  WRIST = 9,
+  GLOVES = 10,
+  FINGER1 = 11,
+  FINGER2 = 12, // do not use; identical with below
+  TRINKET1 = 13,
+  TRINKET2 = 14, // do not use; identical with below
+  BACK = 15,
+  MAINHAND = 16,
+  OFFHAND = 17,
+  TABARD = 19,
+}
+
+enum ArmorType {
+  CLOTH = 0,
+  LEATHER = 1,
+  MAIL = 2,
+  PLATE = 3,
+}
+
+enum Class {
+  WARRIOR = 1,
+  PALADIN = 2,
+  HUNTER = 3,
+  ROGUE = 4,
+  PRIEST = 5,
+  DEATHKNIGHT = 6,
+  SHAMAN = 7,
+  MAGE = 8,
+  WARLOCK = 9,
+  MONK = 10,
+  DRUID = 11,
+  DEMONHUNTER = 12,
+  EVOKER = 13,
+}
+
+type Item = {
+  id: number;
+  /**
+   * key of meta.sources
+   */
+  source: number;
+  slot: ArmorSlot;
+  armorType: ArmorType;
+  classIds?: Class[];
+};
+
+type GearSource = {
+  name: string;
+  sources: Record<number, string>;
+  items: Item[];
+};
+
 export type Season = {
   name: string;
   slug: string;
@@ -12,6 +73,9 @@ export type Season = {
   endDates: Record<Regions, number | null>;
   seasonIcon: string;
   usePtrTooltip: boolean;
+  raid: GearSource;
+  dungeons: GearSource;
+  professions: GearSource;
 };
 
 const UNKNOWN_SEASON_START_OR_ENDING = null;
@@ -43,6 +107,21 @@ export const seasons: Season[] = [
     seasonIcon:
       "https://wow.zamimg.com/images/wow/icons/small/inv_misc_head_dragon_black_nightmare.jpg",
     usePtrTooltip: true,
+    dungeons: {
+      items: [],
+      name: "Mythic+ Season 2",
+      sources: {},
+    },
+    professions: {
+      items: [],
+      name: "Crafted Items",
+      sources: {},
+    },
+    raid: {
+      name: "Aberrus, the Shadowed Crucible",
+      items: [],
+      sources: {},
+    },
   },
   {
     name: "DF S1",
@@ -62,6 +141,21 @@ export const seasons: Season[] = [
     seasonIcon:
       "https://wow.zamimg.com/images/wow/icons/small/shaman_pvp_leaderclan.jpg",
     usePtrTooltip: false,
+    dungeons: {
+      items: [],
+      name: "Mythic+ Season 2",
+      sources: {},
+    },
+    professions: {
+      items: [],
+      name: "Crafted Items",
+      sources: {},
+    },
+    raid: {
+      name: "Aberrus, the Shadowed Crucible",
+      items: [],
+      sources: {},
+    },
   },
 ];
 
