@@ -1,5 +1,8 @@
 for reference: https://docs.google.com/spreadsheets/d/e/2PACX-1vTmvLXqEpIbHUtn1J2rknIrK9K_yn-0NXKD-dsNhnt_afT75VQDr0BudTSpA_LyrX-DCvXRxfMsR84M/pubhtml#
 
+- [ ] copy some layout from title site / KSH
+
+
 ```js
 [
     raid: {
