@@ -1,7 +1,9 @@
 import type { LoaderArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
+import { ClientOnly } from "remix-utils";
 
+import { WowheadItemLink } from "~/components/WowheadLink.client";
 import { getEnhancedSeason } from "~/models/season.server";
 import { Footer } from "~/routes/$season/Footer";
 import { Header } from "~/routes/$season/Header";
@@ -37,7 +39,11 @@ export default function Season() {
   return (
     <>
       <Header />
-      <main className="container mt-4 flex max-w-screen-2xl flex-1 flex-col space-y-4 px-4 md:mx-auto 2xl:px-0" />
+      <main className="container mt-4 flex max-w-screen-2xl flex-1 flex-col space-y-4 px-4 md:mx-auto 2xl:px-0">
+        <ClientOnly>
+          {() => <WowheadItemLink isPtr={season.usePtrTooltip} item={200342} />}
+        </ClientOnly>
+      </main>
       <Footer />
     </>
   );

@@ -11,6 +11,7 @@ export type Season = {
   startDates: Record<Regions, number | null>;
   endDates: Record<Regions, number | null>;
   seasonIcon: string;
+  usePtrTooltip: boolean;
 };
 
 const UNKNOWN_SEASON_START_OR_ENDING = null;
@@ -41,6 +42,7 @@ export const seasons: Season[] = [
     },
     seasonIcon:
       "https://wow.zamimg.com/images/wow/icons/small/inv_misc_head_dragon_black_nightmare.jpg",
+    usePtrTooltip: true,
   },
   {
     name: "DF S1",
@@ -59,6 +61,7 @@ export const seasons: Season[] = [
     },
     seasonIcon:
       "https://wow.zamimg.com/images/wow/icons/small/shaman_pvp_leaderclan.jpg",
+    usePtrTooltip: false,
   },
 ];
 
@@ -118,6 +121,5 @@ export const findSeasonByName = (slug: string): Season | null => {
     return season.slug === slug;
   });
 
-  console.log("found season by name", { match });
   return match ?? null;
 };

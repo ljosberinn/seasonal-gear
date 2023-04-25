@@ -93,7 +93,7 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body className="min-h-screen">
+      <body>
         <div className="flex min-h-screen flex-col">
           <SSRProvider>
             <Outlet />
@@ -103,6 +103,17 @@ export default function App() {
         <Scripts />
         <LiveReload />
         <Analytics />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+        const whTooltips = { colorLinks: true, iconizeLinks: true, renameLinks: true };
+        `,
+          }}
+        />
+        <script
+          src="https://wow.zamimg.com/js/tooltips.js"
+          type="text/javascript"
+        />
       </body>
     </html>
   );
