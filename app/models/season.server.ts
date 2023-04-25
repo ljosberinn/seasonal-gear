@@ -1,7 +1,7 @@
 import add from "date-fns/add";
 
 import { env } from "~/env/server";
-import type { Season } from "~/seasons";
+import { type Season } from "~/seasons";
 import { hasSeasonEndedForAllRegions } from "~/seasons";
 
 const lastModified = "Last-Modified";
@@ -12,13 +12,15 @@ const expires = "Expires";
 type GetEnhancedSeasonParams = {
   season: Season;
 };
+
 type GetEnhancedSeasonResult = {
   season: Season;
   headers: HeadersInit;
 };
-export const getEnhancedSeason = async ({
+
+export const getEnhancedSeason = ({
   season,
-}: GetEnhancedSeasonParams) => {
+}: GetEnhancedSeasonParams): { season: Season; headers: ResponseInit } => {
   const headers: HeadersInit = {};
 
   if (hasSeasonEndedForAllRegions(season.slug)) {

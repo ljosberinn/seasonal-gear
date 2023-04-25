@@ -1,5 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
-import React, { useEffect } from "react";
+import { type ComponentPropsWithoutRef } from "react";
 
 import { item as itemLink, itemData } from "../wowhead";
 
@@ -7,16 +6,12 @@ type ItemLinkProps = Omit<ComponentPropsWithoutRef<"a">, "href"> & {
   isPtr: boolean;
   item: number;
 };
-export const WowheadItemLink = ({
+export function WowheadItemLink({
   children,
   isPtr,
   item,
   ...props
-}: ItemLinkProps) => {
-  useEffect(() => {
-    window.$WowheadPower.refreshLinks();
-  }, []);
-
+}: ItemLinkProps): JSX.Element {
   return (
     <a
       data-wowhead={itemData(item, isPtr)}
@@ -26,4 +21,4 @@ export const WowheadItemLink = ({
       {children}
     </a>
   );
-};
+}

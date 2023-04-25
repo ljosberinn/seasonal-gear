@@ -1,4 +1,4 @@
-import type { LinksFunction, V2_MetaFunction } from "@remix-run/node";
+import { type LinksFunction, type V2_MetaFunction } from "@remix-run/node";
 import {
   Links,
   LiveReload,
@@ -80,7 +80,7 @@ export const meta: V2_MetaFunction = () => {
     { property: "theme-color", content: "#ffffff" },
   ];
 };
-export default function App() {
+export default function App(): JSX.Element {
   return (
     <html
       lang="en"
@@ -104,6 +104,7 @@ export default function App() {
         <LiveReload />
         <Analytics />
         <script
+          // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
             __html: `
         const whTooltips = { colorLinks: true, iconizeLinks: true };
