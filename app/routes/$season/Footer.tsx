@@ -1,5 +1,4 @@
-import { type LucideIcon } from "lucide-react";
-import { Coffee, DollarSign, Twitter } from "lucide-react";
+import { Coffee, DollarSign, type LucideIcon, Twitter } from "lucide-react";
 import { version } from "react";
 
 import { env } from "~/env/client";

@@ -1,14 +1,13 @@
-import { type TypedResponse } from "@remix-run/node";
-import { type LoaderArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import { json, type LoaderArgs, type TypedResponse } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 
 import { WowheadItemLink } from "~/components/WowheadLink";
+import { itemsByJournalInstanceNameAndJournalEncounterName } from "~/models/items";
 import { getEnhancedSeason } from "~/models/season.server";
 import { Footer } from "~/routes/$season/Footer";
 import { Header } from "~/routes/$season/Header";
-import { type Season as SeasonType } from "~/seasons";
-import { findSeasonByName } from "~/seasons";
+import { findSeasonByName, type Season as SeasonType } from "~/seasons";
+import { typedKeys } from "~/typed-keys";
 
 export const loader = ({ params }: LoaderArgs): TypedResponse<SeasonType> => {
   if (!("season" in params) || !params.season) {
@@ -41,9 +40,37 @@ export default function Season(): JSX.Element {
     <>
       <Header />
       <main className="container mt-4 flex max-w-screen-2xl flex-1 flex-col space-y-4 px-4 md:mx-auto 2xl:px-0">
-        <WowheadItemLink isPtr={season.usePtrTooltip} item={200_342}>
-          Skybound Avenger's Harness
-        </WowheadItemLink>
+        <h1 className="text-lg">
+          Items by Journal Instance and Journal Encounter
+        </h1>
+        {typedKeys(itemsByJournalInstanceNameAndJournalEncounterName).map(
+          (instanceName) => (
+            <section className="space-y-1" key={instanceName}>
+              <h2 className="font-bold">{instanceName}</h2>
+              {typedKeys(
+                itemsByJournalInstanceNameAndJournalEncounterName[instanceName]
+              ).map((encounterName) => (
+                <section key={encounterName}>
+                  <h3 className="italic">{encounterName}</h3>
+                  <ul>
+                    {itemsByJournalInstanceNameAndJournalEncounterName[
+                      instanceName
+                    ][encounterName].map((item) => (
+                      <li key={item.id}>
+                        <WowheadItemLink
+                          isPtr={season.usePtrTooltip}
+                          item={item.id}
+                        >
+                          {item.name}
+                        </WowheadItemLink>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </section>
+          )
+        )}
       </main>
       <Footer />
     </>

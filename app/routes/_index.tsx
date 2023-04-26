@@ -1,5 +1,4 @@
-import  { type TypedResponse } from "@remix-run/node";
-import { redirect } from "@remix-run/node";
+import { redirect, type TypedResponse } from "@remix-run/node";
 import { Outlet } from "@remix-run/react";
 
 import { findSeasonByName } from "~/seasons";

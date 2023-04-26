@@ -1026,7 +1026,7 @@
       }
     ],
     "unicorn/prefer-ternary": "off",
-    "unicorn/prefer-top-level-await": "off",
+    "unicorn/prefer-top-level-await": "error",
     "unicorn/prefer-type-error": "error",
     "unicorn/prevent-abbreviations": "off",
     "unicorn/relative-url-style": "warn",
@@ -1109,7 +1109,7 @@
     "sonarjs/no-all-duplicated-branches": "error",
     "sonarjs/no-collapsible-if": "error",
     "sonarjs/no-collection-size-mischeck": "warn",
-    "sonarjs/no-duplicate-string": "error",
+    "sonarjs/no-duplicate-string": "off",
     "sonarjs/no-duplicated-branches": "error",
     "sonarjs/no-element-overwrite": "error",
     "sonarjs/no-empty-collection": "off",

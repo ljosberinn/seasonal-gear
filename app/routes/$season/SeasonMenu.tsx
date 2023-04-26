@@ -6,11 +6,11 @@ import {
   useSearchParams,
 } from "@remix-run/react";
 import clsx from "clsx";
-import { type MutableRefObject, type ReactNode } from "react";
-import { useRef } from "react";
-import { type AriaButtonProps, type AriaPopoverProps } from "react-aria";
-import { type AriaMenuProps } from "react-aria";
+import { type MutableRefObject, type ReactNode, useRef } from "react";
 import {
+  type AriaButtonProps,
+  type AriaMenuProps,
+  type AriaPopoverProps,
   Overlay,
   useButton,
   useMenu,
@@ -19,16 +19,18 @@ import {
   useMenuTrigger,
   usePopover,
 } from "react-aria";
-import { type OverlayTriggerState, type TreeState } from "react-stately";
-import { type MenuTriggerProps } from "react-stately";
 import {
   Item,
+  type MenuTriggerProps,
+  type OverlayTriggerState,
   Section,
+  type TreeState,
   useMenuTriggerState,
   useTreeState,
 } from "react-stately";
 
-import { type Season, seasons } from "~/seasons";
+import { type Season } from "~/seasons";
+import { seasons } from "~/seasons";
 
 export function SeasonMenu(): JSX.Element {
   const now = Date.now();

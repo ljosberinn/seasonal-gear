@@ -1,8 +1,7 @@
 import add from "date-fns/add";
 
 import { env } from "~/env/server";
-import { type Season } from "~/seasons";
-import { hasSeasonEndedForAllRegions } from "~/seasons";
+import { hasSeasonEndedForAllRegions, type Season } from "~/seasons";
 
 const lastModified = "Last-Modified";
 const cacheControl = "Cache-Control";
