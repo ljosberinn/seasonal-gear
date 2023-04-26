@@ -20,6 +20,7 @@
     "eslint:run": "eslint app",
     "dev": "tsx scripts/generate-env.ts && remix dev",
     "format": "prettier --write app",
+    "generate:item-blocks": "tsx scripts/generate-item-blocks.ts",
     "lint": "eslint app",
     "start": "tsx scripts/generate-env.ts && remix-serve build",
     "typecheck": "tsc"
@@ -45,12 +46,15 @@
   "devDependencies": {
     "@remix-run/dev": "1.15.0",
     "@remix-run/eslint-config": "1.15.0",
+    "@types/minimist": "1.2.2",
     "@types/prettier": "2.7.2",
     "@types/react": "18.2.0",
     "@types/react-dom": "18.2.0",
+    "csv-parse": "5.3.8",
     "eslint": "8.39.0",
     "eslint-config-galex": "4.5.2",
     "husky": "8.0.3",
+    "minimist": "1.2.8",
     "prettier": "2.8.8",
     "prettier-plugin-pkg": "0.17.1",
     "prettier-plugin-tailwindcss": "0.2.7",
