@@ -452,7 +452,9 @@ const build = "10.1.0.49318";
   );
   const itemClasses = await parseCsvIntoJson("ItemClass", isItemClass);
   const itemSubClasses = await parseCsvIntoJson("ItemSubClass", isItemSubClass);
-  const item = await parseCsvIntoJson("Item", isItem);
+  const item = await parseCsvIntoJson("Item", isItem, (record) =>
+    journalEncounterItemItemIds.includes(record.ID)
+  );
   const randPropPoints = await parseCsvIntoJson(
     "RandPropPoints",
     isRandPropPoint
