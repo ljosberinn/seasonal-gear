@@ -12,6 +12,42 @@
     "AreaID": "5583"
   },
   {
+    "ID": "313",
+    "Name_lang": "Temple of the Jade Serpent",
+    "Description_lang": "Rising high above the east coast of Pandaria, the Temple of the Jade Serpent stands as a sacred monument to the legendary pandaren emperor Shaohao's victory over the Sha of Doubt thousands of years ago. Recently, a disastrous conflict in the Jade Forest unleashed the sha, and several of the entities  have raided the temple's most treasured stores of wisdom and knowledge.",
+    "MapID": "960",
+    "BackgroundFileDataID": "632269",
+    "ButtonFileDataID": "632276",
+    "ButtonSmallFileDataID": "632363",
+    "LoreFileDataID": "632283",
+    "Flags": "1",
+    "AreaID": "0"
+  },
+  {
+    "ID": "537",
+    "Name_lang": "Shadowmoon Burial Grounds",
+    "Description_lang": "The traditional burial grounds of the Shadowmoon clan are the final resting place for countless generations of ancestors. The fallen chieftain Ner'zhul, in the depths of his depravity, has sacrificed the very soul of his clan in a desperate quest for power. Now the ancestral spirits are restless, tormented and used to fuel dark rituals that will pull all of Draenor into the void if allowed to run their course.",
+    "MapID": "1176",
+    "BackgroundFileDataID": "1041972",
+    "ButtonFileDataID": "1041998",
+    "ButtonSmallFileDataID": "1042063",
+    "LoreFileDataID": "1041988",
+    "Flags": "1",
+    "AreaID": "0"
+  },
+  {
+    "ID": "721",
+    "Name_lang": "Halls of Valor",
+    "Description_lang": "In the clouds high above Stormheim, the titanic keeper Odyn has called the greatest vrykul warriors of Azeroth to be his Valarjar. Amidst feasting halls and hunting grounds, these ascended vrykul test themselves and prepare for the great war that is to come. Adventurers must pass through these halls and prove their worth if they hope to stand before Odyn and claim the Aegis of Aggramar.",
+    "MapID": "1477",
+    "BackgroundFileDataID": "1498150",
+    "ButtonFileDataID": "1498158",
+    "ButtonSmallFileDataID": "1498162",
+    "LoreFileDataID": "1498154",
+    "Flags": "0",
+    "AreaID": "0"
+  },
+  {
     "ID": "767",
     "Name_lang": "Neltharion's Lair",
     "Description_lang": "The Earth Warder Neltharion, later known as Deathwing, once called this cavern home. Since his fall, the drogbar that once worshipped the great dragon built their capital within this ancient lair. Now, Dargrul, chieftain of the drogbar, rallies a massive army within these depths. Bolstered by the Hammer of Khaz'goroth, this army will surge from the mountainside if left unchecked, devastating Highmountain and threatening the security of all Azeroth.",
@@ -20,6 +56,18 @@
     "ButtonFileDataID": "1450574",
     "ButtonSmallFileDataID": "1450576",
     "LoreFileDataID": "1450572",
+    "Flags": "1",
+    "AreaID": "0"
+  },
+  {
+    "ID": "800",
+    "Name_lang": "Court of Stars",
+    "Description_lang": "Even as Legion troops patrol the streets, casting a pall over the grand city of Suramar, the socialites of the Nightborne nobility continue to cling to custom and routine. On this clear night, the cry of revelers echoes through the chill air, as the largest mansion in the Noble District opens its doors for a grand gala. Rumor has it that Grand Magistrix Elisande herself may be making an appearance, in an effort to reassure several of her closest allies despite recent turmoil.",
+    "MapID": "1571",
+    "BackgroundFileDataID": "1498148",
+    "ButtonFileDataID": "1498156",
+    "ButtonSmallFileDataID": "1498160",
+    "LoreFileDataID": "1498152",
     "Flags": "1",
     "AreaID": "0"
   },
@@ -72,6 +120,18 @@
     "AreaID": "0"
   },
   {
+    "ID": "1198",
+    "Name_lang": "The Nokhud Offensive",
+    "Description_lang": "After Clan Nokhud captured the ancient eagle spirit, Ohn'ahra, civil war spread across the Ohn'ahran plains like wildfire. To the other clans, Ohn'ahra is more than a mere spirit: she is their goddess. Primalists summon elemental forces, and necromancers command the spirits of legendary centaur. Beset by enemies, the other Maruuk clans rally. The Nokhud tyrant, Balakar Khan, watches from afar, bellowing commands. Relentless enemy offenses will continue until his forces submit. The battlefield awaits.",
+    "MapID": "2516",
+    "BackgroundFileDataID": "4742821",
+    "ButtonFileDataID": "4742924",
+    "ButtonSmallFileDataID": "4746636",
+    "LoreFileDataID": "4742934",
+    "Flags": "0",
+    "AreaID": "0"
+  },
+  {
     "ID": "1199",
     "Name_lang": "Neltharus",
     "Description_lang": "Beneath the Obsidian Citadel lies Neltharus, home of the black dragonflight's hoard and the secrets behind their legendary forging. When the djaradin woke from their slumber, they chose Neltharus as the point of entry for their attack. Surprised to find it deserted, they quickly laid claim to its secrets for themselves... as well as the rest of the Obsidian Citadel.",
@@ -80,6 +140,54 @@
     "ButtonFileDataID": "4742928",
     "ButtonSmallFileDataID": "4746640",
     "LoreFileDataID": "4742938",
+    "Flags": "0",
+    "AreaID": "0"
+  },
+  {
+    "ID": "1200",
+    "Name_lang": "Vault of the Incarnates",
+    "Description_lang": "The Primalists breached the Titan prison used to hold the Incarnates for millennia. Within, Raszageth performs a foul ritual to unleash her siblings, so together they can purge the world of the Titans' influence. The champions of Azeroth must assault this impregnable fortress and break their defenses to end this threat. While many could fall, defeat condemns all the realms to the Incarnates' reign of fire and blood.",
+    "MapID": "2522",
+    "BackgroundFileDataID": "4742828",
+    "ButtonFileDataID": "4742931",
+    "ButtonSmallFileDataID": "4746643",
+    "LoreFileDataID": "4742941",
+    "Flags": "0",
+    "AreaID": "0"
+  },
+  {
+    "ID": "1201",
+    "Name_lang": "Algeth'ar Academy",
+    "Description_lang": "Long ago, the great Algeth'ar Academy was a place of higher learning for all dragons. Though it fell dormant with the rest of the Isles, it has reopened and is back under the guidance of Headteacher Doragosa. In a series of exciting, new changes the Academy is currently seeking new students from all walks of life, not just dragons, as well as volunteers to help get it back to the bustling halls of education it once was. Those who walk the Academy grounds are sure to learn something new.",
+    "MapID": "2526",
+    "BackgroundFileDataID": "4742826",
+    "ButtonFileDataID": "4742929",
+    "ButtonSmallFileDataID": "4746641",
+    "LoreFileDataID": "4742939",
+    "Flags": "0",
+    "AreaID": "0"
+  },
+  {
+    "ID": "1202",
+    "Name_lang": "Ruby Life Pools",
+    "Description_lang": "As the ancestral nesting grounds for the five flights, the Ruby Life Pools is a sacred place. The Red Dragonflight, whose charge it is to nuture all life, protect these pools and the the future of all dragonkind held within them.\n\nHowever, Raszageth and her Primalists have come to steal that future away and infuse their own powers into the sacred pools. They must be stopped for dragonkind to thrive.",
+    "MapID": "2521",
+    "BackgroundFileDataID": "4742824",
+    "ButtonFileDataID": "4742927",
+    "ButtonSmallFileDataID": "4746639",
+    "LoreFileDataID": "4742937",
+    "Flags": "0",
+    "AreaID": "0"
+  },
+  {
+    "ID": "1203",
+    "Name_lang": "The Azure Vault",
+    "Description_lang": "Long ago, Malygos created the Azure Vault as a place for Sindragosa to catalogue and store any curious magical artifacts he found. Locked away and deserted millennia ago, the Vault has since fallen into disrepair, leaving it vulnerable to attacks from without... and within.",
+    "MapID": "2515",
+    "BackgroundFileDataID": "4742819",
+    "ButtonFileDataID": "4742829",
+    "ButtonSmallFileDataID": "4746634",
+    "LoreFileDataID": "4742932",
     "Flags": "0",
     "AreaID": "0"
   },
@@ -93,6 +201,18 @@
     "ButtonSmallFileDataID": "4746638",
     "LoreFileDataID": "4742936",
     "Flags": "0",
+    "AreaID": "0"
+  },
+  {
+    "ID": "1205",
+    "Name_lang": "Dragon Isles",
+    "Description_lang": "Once, the skies of the Dragon Isles were filled with the dragons of the five flights. But thousands of years ago the dragonflights left to defend Azeroth from those that threatened the world. Recently, however, the Isles have reawakened and called their long-absent caretakers to return. They were not alone--four great primal dragons have also arrived: Basrikron, wielder of earth and shale; Strunraan, master of electric tempests; Bazual, manipulator of flame; and Liskanoth, mistress of ice and cold.",
+    "MapID": "2574",
+    "BackgroundFileDataID": "4742822",
+    "ButtonFileDataID": "4742925",
+    "ButtonSmallFileDataID": "4746637",
+    "LoreFileDataID": "4742935",
+    "Flags": "2",
     "AreaID": "0"
   },
   {

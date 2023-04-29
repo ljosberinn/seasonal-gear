@@ -194,40 +194,16 @@ export interface Item {
   CraftingQualityID: string;
 }
 
-export interface RandPropPoint {
+export interface JournalTier {
   ID: string;
-  DamageReplaceStatF: string;
-  DamageSecondaryF: string;
-  DamageReplaceStat: string;
-  DamageSecondary: string;
-  EpicF_0: string;
-  EpicF_1: string;
-  EpicF_2: string;
-  EpicF_3: string;
-  EpicF_4: string;
-  SuperiorF_0: string;
-  SuperiorF_1: string;
-  SuperiorF_2: string;
-  SuperiorF_3: string;
-  SuperiorF_4: string;
-  GoodF_0: string;
-  GoodF_1: string;
-  GoodF_2: string;
-  GoodF_3: string;
-  GoodF_4: string;
-  Epic_0: string;
-  Epic_1: string;
-  Epic_2: string;
-  Epic_3: string;
-  Epic_4: string;
-  Superior_0: string;
-  Superior_1: string;
-  Superior_2: string;
-  Superior_3: string;
-  Superior_4: string;
-  Good_0: string;
-  Good_1: string;
-  Good_2: string;
-  Good_3: string;
-  Good_4: string;
+  Name_lang: string;
+  PlayerConditionID: string;
+}
+
+export interface JournalTierXInstance {
+  ID: string;
+  JournalTierID: string;
+  JournalInstanceID: string;
+  OrderIndex: string;
+  // Field_10_1_0_49092_003: string;
 }

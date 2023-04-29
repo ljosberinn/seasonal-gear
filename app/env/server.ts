@@ -10,6 +10,8 @@ export const serverSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
+  BATTLE_NET_CLIENT_ID: z.string(),
+  BATTLE_NET_CLIENT_SECRET: z.string(),
 });
 
 export const mergedSchema = serverSchema.merge(clientSchema);

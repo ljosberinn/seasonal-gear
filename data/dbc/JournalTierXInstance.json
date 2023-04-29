@@ -1,0 +1,205 @@
+[
+  {
+    "ID": "1383",
+    "JournalTierID": "503",
+    "JournalInstanceID": "1196",
+    "OrderIndex": "2",
+    "Field_10_1_0_49092_003": "0"
+  },
+  {
+    "ID": "1386",
+    "JournalTierID": "503",
+    "JournalInstanceID": "1197",
+    "OrderIndex": "8",
+    "Field_10_1_0_49092_003": "0"
+  },
+  {
+    "ID": "1387",
+    "JournalTierID": "503",
+    "JournalInstanceID": "1198",
+    "OrderIndex": "7",
+    "Field_10_1_0_49092_003": "0"
+  },
+  {
+    "ID": "1388",
+    "JournalTierID": "503",
+    "JournalInstanceID": "1199",
+    "OrderIndex": "4",
+    "Field_10_1_0_49092_003": "0"
+  },
+  {
+    "ID": "1389",
+    "JournalTierID": "503",
+    "JournalInstanceID": "1200",
+    "OrderIndex": "2",
+    "Field_10_1_0_49092_003": "0"
+  },
+  {
+    "ID": "1390",
+    "JournalTierID": "503",
+    "JournalInstanceID": "1201",
+    "OrderIndex": "1",
+    "Field_10_1_0_49092_003": "0"
+  },
+  {
+    "ID": "1391",
+    "JournalTierID": "503",
+    "JournalInstanceID": "1203",
+    "OrderIndex": "6",
+    "Field_10_1_0_49092_003": "0"
+  },
+  {
+    "ID": "1392",
+    "JournalTierID": "503",
+    "JournalInstanceID": "1202",
+    "OrderIndex": "5",
+    "Field_10_1_0_49092_003": "0"
+  },
+  {
+    "ID": "1393",
+    "JournalTierID": "503",
+    "JournalInstanceID": "1204",
+    "OrderIndex": "3",
+    "Field_10_1_0_49092_003": "0"
+  },
+  {
+    "ID": "1394",
+    "JournalTierID": "503",
+    "JournalInstanceID": "1205",
+    "OrderIndex": "1",
+    "Field_10_1_0_49092_003": "0"
+  },
+  {
+    "ID": "1409",
+    "JournalTierID": "505",
+    "JournalInstanceID": "1205",
+    "OrderIndex": "1",
+    "Field_10_1_0_49092_003": "0"
+  },
+  {
+    "ID": "1411",
+    "JournalTierID": "503",
+    "JournalInstanceID": "1208",
+    "OrderIndex": "3",
+    "Field_10_1_0_49092_003": "0"
+  },
+  {
+    "ID": "1414",
+    "JournalTierID": "505",
+    "JournalInstanceID": "1208",
+    "OrderIndex": "2",
+    "Field_10_1_0_49092_003": "0"
+  },
+  {
+    "ID": "1448",
+    "JournalTierID": "505",
+    "JournalInstanceID": "1001",
+    "OrderIndex": "5",
+    "Field_10_1_0_49092_003": "109807"
+  },
+  {
+    "ID": "1449",
+    "JournalTierID": "505",
+    "JournalInstanceID": "1022",
+    "OrderIndex": "6",
+    "Field_10_1_0_49092_003": "109807"
+  },
+  {
+    "ID": "1450",
+    "JournalTierID": "505",
+    "JournalInstanceID": "767",
+    "OrderIndex": "7",
+    "Field_10_1_0_49092_003": "109807"
+  },
+  {
+    "ID": "1451",
+    "JournalTierID": "505",
+    "JournalInstanceID": "68",
+    "OrderIndex": "8",
+    "Field_10_1_0_49092_003": "109807"
+  },
+  {
+    "ID": "1452",
+    "JournalTierID": "505",
+    "JournalInstanceID": "1196",
+    "OrderIndex": "1",
+    "Field_10_1_0_49092_003": "109807"
+  },
+  {
+    "ID": "1453",
+    "JournalTierID": "505",
+    "JournalInstanceID": "1204",
+    "OrderIndex": "2",
+    "Field_10_1_0_49092_003": "109807"
+  },
+  {
+    "ID": "1454",
+    "JournalTierID": "505",
+    "JournalInstanceID": "1199",
+    "OrderIndex": "3",
+    "Field_10_1_0_49092_003": "109807"
+  },
+  {
+    "ID": "1455",
+    "JournalTierID": "505",
+    "JournalInstanceID": "1197",
+    "OrderIndex": "4",
+    "Field_10_1_0_49092_003": "109807"
+  },
+  {
+    "ID": "1456",
+    "JournalTierID": "505",
+    "JournalInstanceID": "1201",
+    "OrderIndex": "1",
+    "Field_10_1_0_49092_003": "109806"
+  },
+  {
+    "ID": "1457",
+    "JournalTierID": "505",
+    "JournalInstanceID": "1202",
+    "OrderIndex": "2",
+    "Field_10_1_0_49092_003": "109806"
+  },
+  {
+    "ID": "1458",
+    "JournalTierID": "505",
+    "JournalInstanceID": "1203",
+    "OrderIndex": "3",
+    "Field_10_1_0_49092_003": "109806"
+  },
+  {
+    "ID": "1459",
+    "JournalTierID": "505",
+    "JournalInstanceID": "1198",
+    "OrderIndex": "4",
+    "Field_10_1_0_49092_003": "109806"
+  },
+  {
+    "ID": "1460",
+    "JournalTierID": "505",
+    "JournalInstanceID": "800",
+    "OrderIndex": "5",
+    "Field_10_1_0_49092_003": "109806"
+  },
+  {
+    "ID": "1461",
+    "JournalTierID": "505",
+    "JournalInstanceID": "721",
+    "OrderIndex": "6",
+    "Field_10_1_0_49092_003": "109806"
+  },
+  {
+    "ID": "1462",
+    "JournalTierID": "505",
+    "JournalInstanceID": "537",
+    "OrderIndex": "7",
+    "Field_10_1_0_49092_003": "109806"
+  },
+  {
+    "ID": "1463",
+    "JournalTierID": "505",
+    "JournalInstanceID": "313",
+    "OrderIndex": "8",
+    "Field_10_1_0_49092_003": "109806"
+  }
+]

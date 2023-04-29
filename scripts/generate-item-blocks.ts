@@ -15,19 +15,19 @@ import {
   isJournalEncounter,
   isJournalEncounterItem,
   isJournalInstance,
-  isRandPropPoint,
+  isJournalTier,
+  isJournalTierXInstance,
 } from "./item-blocks/types.guard";
-import {
-  ItemBlock,
-  ItemClass,
-  ItemSparse,
-  ItemSubClass,
-  RandPropPoint,
-} from "./item-blocks/types";
-import { info, warn, error } from "./item-blocks/log";
+import { ItemBlock, ItemClass, ItemSubClass, Stat } from "./item-blocks/types";
+import { info, warn } from "./item-blocks/log";
 import { ensureDir } from "fs-extra";
 import { format } from "prettier";
 import { associateBy } from "~/associate-by";
+import {
+  authenticateWithBlizzard,
+  retrieveAndParseStatsFromBlizzard,
+} from "./bnet";
+import { chunkArray } from "~/partition";
 
 const downloadWagoToolsCsv = async (
   tableName: string,
@@ -136,80 +136,6 @@ const itemQuality: Record<number, string> = {
   8: "WoW Token",
 };
 
-// https://github.com/Marlamin/wow.tools/blob/master/dbc/js/enums.js#L508-L579
-const itemPrettyStatType: Record<number, string> = {
-  0: "Mana",
-  1: "Health",
-  3: "Agility",
-  4: "Strength",
-  5: "Intellect",
-  6: "Spirit",
-  7: "Stamina",
-  12: "Defense",
-  13: "Dodge",
-  14: "Parry",
-  15: "Block",
-  16: "Hit (Melee)",
-  17: "Hit (Ranged)",
-  18: "Hit (Spell)",
-  19: "Crit (Melee)",
-  20: "Crit (Ranged)",
-  21: "Crit (Spell)",
-  22: "Corruption",
-  23: "Corruption Resistance",
-  24: "Random Stat 1",
-  25: "Random Stat 2",
-  26: "Critical Strike Avoidance (Ranged)",
-  27: "Critical Strike Avoidance (Spell)",
-  28: "Haste (Melee)",
-  29: "Haste (Ranged)",
-  30: "Haste (Spell)",
-  31: "Hit",
-  32: "Critical Strike",
-  33: "Hit Avoidance",
-  34: "Critical Strike Avoidance",
-  35: "Resilience",
-  36: "Haste",
-  37: "Expertise",
-  38: "Attack Power",
-  39: "Attack Power (Ranged)",
-  40: "Versatility",
-  41: "Bonus Healing",
-  42: "Bonus Damage",
-  43: "Mana Regeneration",
-  44: "Armor Penetration",
-  45: "Spell Power",
-  46: "Health Regen",
-  47: "Spell Penetration",
-  48: "Block",
-  49: "Mastery",
-  50: "Bonus Armor",
-  51: "Fire Resistance",
-  52: "Frost Resistance",
-  53: "Holy Resistance",
-  54: "Shadow Resistance",
-  55: "Nature Resistance",
-  56: "Arcane Resistance",
-  57: "PvP Power",
-  58: "Amplify",
-  59: "Multistrike",
-  60: "Readiness",
-  61: "Speed",
-  62: "Lifesteal",
-  63: "Avoidance",
-  64: "Sturdiness",
-  65: "Unused (7)",
-  66: "Cleave",
-  67: "Versatility",
-  68: "Unused (10)",
-  69: "Unused (11)",
-  70: "Unused (12)",
-  71: "Agility | Strength | Intellect",
-  72: "Agility | Strength",
-  73: "Agility | Intellect",
-  74: "Strength | Intellect",
-};
-
 const generateItemBlocksTsFile = async (
   itemBlocks: ItemBlock[],
   itemClasses: ItemClass[],
@@ -314,10 +240,6 @@ const generateItemBlocksTsFile = async (
     export const itemQualityEnum: Record<string, string> = ${JSON.stringify(
       itemQuality
     )}
-
-    export const itemStatEnum: Record<string, string> = ${JSON.stringify(
-      itemPrettyStatType
-    )}
   `.trim();
 
   const itemTsContents = format(`${header}${itemBlocksMappedToTs}${footer}`, {
@@ -329,74 +251,6 @@ const generateItemBlocksTsFile = async (
   });
 };
 
-const parseMultiplierTxt = (text: string): MultiplierByItemLevel[] => {
-  const isKeyOfMultiplierByItemLevel = (
-    str: string
-  ): str is keyof MultiplierByItemLevel =>
-    str === "itemLevel" ||
-    str === "armorMultiplier" ||
-    str === "weaponMultiplier" ||
-    str === "trinketMultiplier" ||
-    str === "jewelryMultiplier";
-
-  const [headers, ...rows] = text.split("\n");
-
-  const columns = headers.split("\t").map((column) => {
-    return column
-      .split(" ")
-      .map((str, index) => (index === 0 ? str.toLowerCase() : str))
-      .join("")
-      .trim();
-  });
-
-  return rows.map<MultiplierByItemLevel>((row) => {
-    const parts = row.replaceAll("\r", "").split("\t");
-
-    return columns.reduce<MultiplierByItemLevel>(
-      (acc, column, index) => {
-        if (isKeyOfMultiplierByItemLevel(column)) {
-          acc[column] = parts[index];
-        } else {
-          warn(`Saw unknown CombatRatingMultiplierColumn: "${column}"`);
-        }
-
-        return acc;
-      },
-      {
-        itemLevel: "",
-        armorMultiplier: "1",
-        weaponMultiplier: "1",
-        trinketMultiplier: "1",
-        jewelryMultiplier: "1",
-      }
-    );
-  });
-};
-
-const getStaminaMultiplierByItemLevel = (): Promise<
-  MultiplierByItemLevel[]
-> => {
-  // https://wago.tools/files?search=staminamultbyilvl
-  return fetch("https://wago.tools/api/casc/1980632?download")
-    .then((response) => response.text())
-    .then((text) => parseMultiplierTxt(text));
-};
-
-type MultiplierByItemLevel = {
-  itemLevel: string;
-  armorMultiplier: string;
-  weaponMultiplier: string;
-  trinketMultiplier: string;
-  jewelryMultiplier: string;
-};
-
-const getCombatRatingsMultByILvl = (): Promise<MultiplierByItemLevel[]> => {
-  // https://wago.tools/files?search=CombatRatingsMultByILvl
-  return fetch("https://wago.tools/api/casc/1391670?download")
-    .then((response) => response.text())
-    .then((text) => parseMultiplierTxt(text));
-};
-
 const build = "10.1.0.49318";
 
 (async () => {
@@ -404,407 +258,171 @@ const build = "10.1.0.49318";
 
   info("Downloading DBC CSVs...");
 
-  const [combatRatingsMultByILvl, staminaMultiplierByItemLevel] =
-    await Promise.all([
-      getCombatRatingsMultByILvl(),
-      getStaminaMultiplierByItemLevel(),
-      downloadWagoToolsCsv("ItemSparse", build, true),
-      downloadWagoToolsCsv("ItemClass", build, true),
-      downloadWagoToolsCsv("ItemSubClass", build, true),
-      downloadWagoToolsCsv("JournalEncounter", build, true),
-      downloadWagoToolsCsv("JournalEncounterItem", build, true),
-      downloadWagoToolsCsv("JournalInstance", build, true),
-      downloadWagoToolsCsv("Item", build, true),
-      downloadWagoToolsCsv("RandPropPoints", build, true),
-    ]);
+  await Promise.all([
+    downloadWagoToolsCsv("ItemSparse", build, true),
+    downloadWagoToolsCsv("ItemClass", build, true),
+    downloadWagoToolsCsv("ItemSubClass", build, true),
+    downloadWagoToolsCsv("JournalEncounter", build, true),
+    downloadWagoToolsCsv("JournalEncounterItem", build, true),
+    downloadWagoToolsCsv("JournalInstance", build, true),
+    downloadWagoToolsCsv("Item", build, true),
+    downloadWagoToolsCsv("JournalTier", build, true),
+    downloadWagoToolsCsv("JournalTierXInstance", build, true),
+  ]);
 
   info("Converting DBC CSVs to JSON...");
+
+  const journalTiers = await parseCsvIntoJson(
+    "JournalTier",
+    isJournalTier,
+    (record) =>
+      record.Name_lang === "Dragonflight" ||
+      record.Name_lang === "Mythic+ Dungeons"
+  );
+
+  const journalTierIDs = new Set(journalTiers.map((tier) => tier.ID));
+
+  const journalTierXInstances = await parseCsvIntoJson(
+    "JournalTierXInstance",
+    isJournalTierXInstance,
+    (record) => journalTierIDs.has(record.JournalTierID)
+  );
+
+  const journalInstanceIds = new Set(
+    journalTierXInstances.map(
+      (tierXInstance) => tierXInstance.JournalInstanceID
+    )
+  );
 
   const journalInstances = await parseCsvIntoJson(
     "JournalInstance",
     isJournalInstance,
-    (record) => allJournalInstancesToKeep.includes(record.Name_lang)
+    (record) => journalInstanceIds.has(record.ID)
   );
-  const journalInstanceIds = journalInstances.map((instance) => instance.ID);
 
   const journalEncounters = await parseCsvIntoJson(
     "JournalEncounter",
     isJournalEncounter,
-    (record) => journalInstanceIds.includes(record.JournalInstanceID)
+    (record) => journalInstanceIds.has(record.JournalInstanceID)
   );
-  const journalEncounterIds = journalEncounters.map(
-    (encounter) => encounter.ID
+
+  const journalEncounterIds = new Set(
+    journalEncounters.map((encounter) => encounter.ID)
   );
 
   const journalEncounterItems = await parseCsvIntoJson(
     "JournalEncounterItem",
     isJournalEncounterItem,
-    (record) => journalEncounterIds.includes(record.JournalEncounterID)
-  );
-  const journalEncounterItemItemIds = journalEncounterItems.map(
-    (item) => item.ItemID
+    (record) => journalEncounterIds.has(record.JournalEncounterID)
   );
 
-  const itemSparses = await parseCsvIntoJson(
-    "ItemSparse",
-    isItemSparse,
-    (record) => journalEncounterItemItemIds.includes(record.ID)
+  const journalEncounterItemItemIds = new Set(
+    journalEncounterItems.map((item) => item.ItemID)
   );
-  const itemClasses = await parseCsvIntoJson("ItemClass", isItemClass);
-  const itemSubClasses = await parseCsvIntoJson("ItemSubClass", isItemSubClass);
-  const item = await parseCsvIntoJson("Item", isItem, (record) =>
-    journalEncounterItemItemIds.includes(record.ID)
-  );
-  const randPropPoints = await parseCsvIntoJson(
-    "RandPropPoints",
-    isRandPropPoint
-  );
+
+  const [itemSparses, itemClasses, itemSubClasses, item] = await Promise.all([
+    parseCsvIntoJson("ItemSparse", isItemSparse, (record) =>
+      journalEncounterItemItemIds.has(record.ID)
+    ),
+    parseCsvIntoJson("ItemClass", isItemClass),
+    parseCsvIntoJson("ItemSubClass", isItemSubClass),
+    parseCsvIntoJson("Item", isItem, (record) =>
+      journalEncounterItemItemIds.has(record.ID)
+    ),
+  ]);
+
+  info("Authenticating with Blizzard...");
+
+  const accessToken = await authenticateWithBlizzard();
+
+  if (!accessToken) {
+    throw new Error("Could not authenticate with Blizzard!");
+  }
 
   info("Collating Item Blocks...");
 
-  const itemBlocks = itemSparses
-    .map<ItemBlock | null>((itemSparse) => {
-      const journalEncounterItem = journalEncounterItems.find(
-        (journalEncounterItem) => journalEncounterItem.ItemID === itemSparse.ID
-      );
-      if (!journalEncounterItem) {
-        console.log(
-          `Unable to find matching JournalEncounterItem for item: id=${itemSparse.ID}`
+  const itemBlocks: ItemBlock[] = [];
+
+  for (const chunk of chunkArray(itemSparses, 75)) {
+    await Promise.all(
+      chunk.map(async (itemSparse) => {
+        const journalEncounterItem = journalEncounterItems.find(
+          (journalEncounterItem) =>
+            journalEncounterItem.ItemID === itemSparse.ID
         );
-        return null;
-      }
-
-      const journalEncounter = journalEncounters.find(
-        (journalEncounter) =>
-          journalEncounter.ID === journalEncounterItem.JournalEncounterID
-      );
-      if (!journalEncounter) {
-        console.log(
-          `Unable to find matching JournalEncounter for item: id=${itemSparse.ID}`
-        );
-        return null;
-      }
-
-      const journalInstance = journalInstances.find(
-        (journalInstance) =>
-          journalInstance.ID === journalEncounter.JournalInstanceID
-      );
-
-      if (!journalInstance) {
-        console.log(
-          `Unable to find matching JournalInstance for item: id=${itemSparse.ID}`
-        );
-        return null;
-      }
-
-      const itemMeta = item.find((item) => item.ID === itemSparse.ID);
-
-      if (!itemMeta) {
-        console.log(
-          `Unable to find matching Item for item: id=${itemSparse.ID}`
-        );
-        return null;
-      }
-
-      const stats: ItemBlock["stats"] = [];
-
-      for (let i = 0; i <= 9; i++) {
-        const bonusStatKey = `StatModifier_bonusStat_${i}`;
-
-        const bonusStat = isKeyOfItemSparse(bonusStatKey, itemSparse)
-          ? itemSparse[bonusStatKey]
-          : "-1";
-
-        if (bonusStat === "-1") {
-          continue;
+        if (!journalEncounterItem) {
+          console.log(
+            `Unable to find matching JournalEncounterItem for item: id=${itemSparse.ID}`
+          );
+          return null;
         }
 
-        const percentKey = `StatPercentEditor_${i}`;
-
-        const percent = isKeyOfItemSparse(percentKey, itemSparse)
-          ? itemSparse[percentKey]
-          : "0";
-
-        if (percent === "0") {
-          continue;
+        const journalEncounter = journalEncounters.find(
+          (journalEncounter) =>
+            journalEncounter.ID === journalEncounterItem.JournalEncounterID
+        );
+        if (!journalEncounter) {
+          console.log(
+            `Unable to find matching JournalEncounter for item: id=${itemSparse.ID}`
+          );
+          return null;
         }
 
-        const bonusStatId = Number(bonusStat);
-
-        const beautifiedStatName =
-          bonusStatId in itemPrettyStatType
-            ? itemPrettyStatType[bonusStatId]
-            : "";
-
-        if (!beautifiedStatName) {
-          continue;
-        }
-
-        const value = calculateStatValue(
-          bonusStat,
-          itemSparse.ItemLevel,
-          percent,
-          itemSparse.OverallQualityID,
-          itemMeta.InventoryType,
-          itemMeta.SubclassID,
-          randPropPoints,
-          combatRatingsMultByILvl,
-          staminaMultiplierByItemLevel,
-          itemSparse.ID === "56359"
+        const journalInstance = journalInstances.find(
+          (journalInstance) =>
+            journalInstance.ID === journalEncounter.JournalInstanceID
         );
 
-        if (itemSparse.ID === "56359") {
-          error(`${beautifiedStatName} => ${value}`);
+        if (!journalInstance) {
+          console.log(
+            `Unable to find matching JournalInstance for item: id=${itemSparse.ID}`
+          );
+          return null;
         }
 
-        if (value <= 0) {
-          continue;
+        const itemMeta = item.find((item) => item.ID === itemSparse.ID);
+
+        if (!itemMeta) {
+          console.log(
+            `Unable to find matching Item for item: id=${itemSparse.ID}`
+          );
+          return null;
         }
 
-        stats.push({
-          amount: value,
-          name: beautifiedStatName,
+        const blizzardItemData = await retrieveAndParseStatsFromBlizzard(
+          itemSparse.ID,
+          accessToken
+        );
+
+        const stats: ItemBlock["stats"] =
+          "preview_item" in blizzardItemData &&
+          blizzardItemData.preview_item.stats
+            ? blizzardItemData.preview_item.stats.map((stat) => ({
+                amount: stat.value,
+                name: stat.type.name,
+              }))
+            : []; // PTR Items currently have no stats since they aren't present in the API yet
+
+        itemBlocks.push({
+          id: itemSparse.ID,
+          name: itemSparse.Display_lang,
+          journalEncounterItemId: journalEncounterItem.ID,
+          journalEncounterId: journalEncounter.ID,
+          journalEncounterName: journalEncounter.Name_lang,
+          journalInstanceId: journalInstance.ID,
+          journalInstanceName: journalInstance.Name_lang,
+          itemClassId: itemMeta.ClassID,
+          itemSubClassId: itemMeta.SubclassID,
+          inventoryType: itemMeta.InventoryType,
+          quality: itemSparse.OverallQualityID,
+          stats,
         });
-      }
+      })
+    );
 
-      return {
-        id: itemSparse.ID,
-        name: itemSparse.Display_lang,
-        journalEncounterItemId: journalEncounterItem.ID,
-        journalEncounterId: journalEncounter.ID,
-        journalEncounterName: journalEncounter.Name_lang,
-        journalInstanceId: journalInstance.ID,
-        journalInstanceName: journalInstance.Name_lang,
-        itemClassId: itemMeta.ClassID,
-        itemSubClassId: itemMeta.SubclassID,
-        inventoryType: itemMeta.InventoryType,
-        quality: itemSparse.OverallQualityID,
-        stats,
-      } satisfies ItemBlock;
-    })
-    .filter((block): block is ItemBlock => block !== null);
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+  }
 
   info("Generating TypeScript for app to use...");
   await generateItemBlocksTsFile(itemBlocks, itemClasses, itemSubClasses);
 })();
-
-const isKeyOfItemSparse = (
-  str: string,
-  itemSparse: ItemSparse
-): str is keyof ItemSparse => str in itemSparse;
-
-const getRandomPropertyKey = (
-  quality: string,
-  inventoryType: string,
-  itemSubClassId: string
-): string => {
-  let targetIndex = -1;
-
-  switch (inventoryType) {
-    case "1":
-    case "4":
-    case "5":
-    case "7":
-    case "15":
-    case "17":
-    case "20":
-    case "25": {
-      targetIndex = 0;
-      break;
-    }
-    case "3":
-    case "6":
-    case "8":
-    case "10":
-    case "12": {
-      targetIndex = 1;
-      break;
-    }
-    case "2":
-    case "9":
-    case "11":
-    case "16": {
-      targetIndex = 2;
-      break;
-    }
-    case "13":
-    case "14":
-    case "21":
-    case "22":
-    case "23": {
-      targetIndex = 3;
-      break;
-    }
-    case "26":
-      targetIndex = 3;
-      if (itemSubClassId !== "19") {
-        targetIndex = 0;
-      }
-      break;
-    case "28": {
-      targetIndex = 4;
-      break;
-    }
-    default: {
-      break;
-    }
-  }
-
-  let targetField = "Good";
-
-  switch (quality) {
-    case "2": {
-      break;
-    }
-    case "3": {
-      targetField = "Superior";
-      break;
-    }
-    case "4": {
-      targetField = "Epic";
-    }
-  }
-
-  return `${targetField}_${targetIndex}`;
-};
-
-const calculateStatValue = (
-  bonusStat: string,
-  itemLevel: string,
-  statAlloc: string,
-  quality: string,
-  inventoryType: string,
-  itemSubClassId: string,
-  randPropPoints: RandPropPoint[],
-  combatRatingsMultByILvl: MultiplierByItemLevel[],
-  staminaMultiplierByItemLevel: MultiplierByItemLevel[],
-  shouldLog: boolean
-): number => {
-  const randomPropRow = randPropPoints.find((prop) => prop.ID === itemLevel);
-
-  if (!randomPropRow) {
-    return 0;
-  }
-
-  const randomPropKey = getRandomPropertyKey(
-    quality,
-    inventoryType,
-    itemSubClassId
-  );
-
-  const value = isKeyOfRandProp(randomPropKey, randomPropRow)
-    ? randomPropRow[randomPropKey]
-    : "0";
-
-  if (value === "0") {
-    return 0;
-  }
-
-  const baseStatAllocation = Math.floor(
-    Number(statAlloc) * Number(value) * 0.000099999997 + 0.5
-  );
-
-  const multiplierRow = findItemlevelCombatRatingMultiplier(
-    isStatCombatRating(bonusStat)
-      ? combatRatingsMultByILvl
-      : bonusStat === "7"
-      ? staminaMultiplierByItemLevel
-      : [],
-    itemLevel
-  );
-
-  if (!multiplierRow) {
-    return baseStatAllocation;
-  }
-
-  // https://github.com/Marlamin/DBCDumpHost/blob/master/DBCDumpHost/Utils/TooltipUtils.cs#L316-L338
-  const multiplier = Number(
-    inventoryType === "2" || inventoryType === "11"
-      ? multiplierRow.jewelryMultiplier
-      : inventoryType === "12"
-      ? multiplierRow.trinketMultiplier
-      : inventoryType === "13" ||
-        inventoryType === "14" ||
-        inventoryType === "17" ||
-        inventoryType === "21" ||
-        inventoryType === "22" ||
-        inventoryType === "23" ||
-        inventoryType === "26" ||
-        inventoryType === "15"
-      ? multiplierRow.weaponMultiplier
-      : multiplierRow.armorMultiplier
-  );
-
-  if (shouldLog) {
-    warn({
-      inventoryType,
-      itemSubClassId,
-      randomPropRow,
-      randomPropKey,
-      value,
-      baseStatAllocation,
-      statAlloc,
-      multiplierRow,
-      multiplier,
-    });
-  }
-
-  return Math.floor(baseStatAllocation * multiplier);
-};
-
-const findItemlevelCombatRatingMultiplier = (
-  multipliersByItemlevel: MultiplierByItemLevel[],
-  itemLevel: string
-): MultiplierByItemLevel | null => {
-  const asNumber = Number(itemLevel) - 1;
-
-  // implies this is NEITHER a StatCombatRating nor Stamina, so we default to 1 for all
-  // https://github.com/Marlamin/DBCDumpHost/blob/master/DBCDumpHost/Utils/TooltipUtils.cs#L298-L313
-  if (multipliersByItemlevel.length === 0) {
-    return {
-      armorMultiplier: "1",
-      itemLevel: `${asNumber}`,
-      jewelryMultiplier: "1",
-      trinketMultiplier: "1",
-      weaponMultiplier: "1",
-    };
-  }
-
-  const match = multipliersByItemlevel.find(
-    (dataset) => Number(dataset.itemLevel) === asNumber
-  );
-
-  return match ? match : null;
-};
-
-const isKeyOfRandProp = (
-  str: string,
-  randProp: RandPropPoint
-): str is keyof RandPropPoint => str in randProp;
-
-const combatRatingStats = new Set([
-  "13", // Dodge
-  "14", // Parry
-  "15", // Block
-  "16", // Hit Melee
-  "17", // Hit Ranged
-  "18", // Hit Spell
-  "19", // Crit Melee
-  "20", // Crit Ranged
-  "31", // Hit
-  "32", // Crit
-  "35", // Resilience
-  "36", // Haste
-  "37", // Expertise
-  "40", // Versatility
-  "49", // Mastery
-  "59", // Multistrike
-  "61", // Speed
-  "62", // Leech
-  "63", // Avoidance
-  "64", // Sturdiness
-]);
-
-const isStatCombatRating = (stat: string): boolean => {
-  return combatRatingStats.has(stat);
-};

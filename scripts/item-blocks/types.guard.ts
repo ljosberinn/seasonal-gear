@@ -2,7 +2,7 @@
  * Generated type guards for "types.ts".
  * WARNING: Do not manually change this file.
  */
-import { ItemClass, ItemSubClass, ItemSparse, JournalEncounter, JournalEncounterItem, JournalInstance, Stat, ItemBlock, Item, RandPropPoint } from "./types";
+import { ItemClass, ItemSubClass, ItemSparse, JournalEncounter, JournalEncounterItem, JournalInstance, Stat, ItemBlock, Item, JournalTier, JournalTierXInstance } from "./types";
 
 export function isItemClass(obj: unknown): obj is ItemClass {
     const typedObj = obj as ItemClass
@@ -257,46 +257,27 @@ export function isItem(obj: unknown): obj is Item {
     )
 }
 
-export function isRandPropPoint(obj: unknown): obj is RandPropPoint {
-    const typedObj = obj as RandPropPoint
+export function isJournalTier(obj: unknown): obj is JournalTier {
+    const typedObj = obj as JournalTier
     return (
         (typedObj !== null &&
             typeof typedObj === "object" ||
             typeof typedObj === "function") &&
         typeof typedObj["ID"] === "string" &&
-        typeof typedObj["DamageReplaceStatF"] === "string" &&
-        typeof typedObj["DamageSecondaryF"] === "string" &&
-        typeof typedObj["DamageReplaceStat"] === "string" &&
-        typeof typedObj["DamageSecondary"] === "string" &&
-        typeof typedObj["EpicF_0"] === "string" &&
-        typeof typedObj["EpicF_1"] === "string" &&
-        typeof typedObj["EpicF_2"] === "string" &&
-        typeof typedObj["EpicF_3"] === "string" &&
-        typeof typedObj["EpicF_4"] === "string" &&
-        typeof typedObj["SuperiorF_0"] === "string" &&
-        typeof typedObj["SuperiorF_1"] === "string" &&
-        typeof typedObj["SuperiorF_2"] === "string" &&
-        typeof typedObj["SuperiorF_3"] === "string" &&
-        typeof typedObj["SuperiorF_4"] === "string" &&
-        typeof typedObj["GoodF_0"] === "string" &&
-        typeof typedObj["GoodF_1"] === "string" &&
-        typeof typedObj["GoodF_2"] === "string" &&
-        typeof typedObj["GoodF_3"] === "string" &&
-        typeof typedObj["GoodF_4"] === "string" &&
-        typeof typedObj["Epic_0"] === "string" &&
-        typeof typedObj["Epic_1"] === "string" &&
-        typeof typedObj["Epic_2"] === "string" &&
-        typeof typedObj["Epic_3"] === "string" &&
-        typeof typedObj["Epic_4"] === "string" &&
-        typeof typedObj["Superior_0"] === "string" &&
-        typeof typedObj["Superior_1"] === "string" &&
-        typeof typedObj["Superior_2"] === "string" &&
-        typeof typedObj["Superior_3"] === "string" &&
-        typeof typedObj["Superior_4"] === "string" &&
-        typeof typedObj["Good_0"] === "string" &&
-        typeof typedObj["Good_1"] === "string" &&
-        typeof typedObj["Good_2"] === "string" &&
-        typeof typedObj["Good_3"] === "string" &&
-        typeof typedObj["Good_4"] === "string"
+        typeof typedObj["Name_lang"] === "string" &&
+        typeof typedObj["PlayerConditionID"] === "string"
+    )
+}
+
+export function isJournalTierXInstance(obj: unknown): obj is JournalTierXInstance {
+    const typedObj = obj as JournalTierXInstance
+    return (
+        (typedObj !== null &&
+            typeof typedObj === "object" ||
+            typeof typedObj === "function") &&
+        typeof typedObj["ID"] === "string" &&
+        typeof typedObj["JournalTierID"] === "string" &&
+        typeof typedObj["JournalInstanceID"] === "string" &&
+        typeof typedObj["OrderIndex"] === "string"
     )
 }
