@@ -1,1 +1,142 @@
-[{"ID":"1","ClassName_lang":"Consumable","ClassID":"0","PriceModifier":"0.25","Flags":"0"},{"ID":"2","ClassName_lang":"Container","ClassID":"1","PriceModifier":"0.25","Flags":"0"},{"ID":"3","ClassName_lang":"Weapon","ClassID":"2","PriceModifier":"0.20000000298","Flags":"1"},{"ID":"4","ClassName_lang":"Gem","ClassID":"3","PriceModifier":"0.25","Flags":"0"},{"ID":"5","ClassName_lang":"Armor","ClassID":"4","PriceModifier":"0.20000000298","Flags":"0"},{"ID":"6","ClassName_lang":"Reagent","ClassID":"5","PriceModifier":"0.25","Flags":"0"},{"ID":"7","ClassName_lang":"Projectile","ClassID":"6","PriceModifier":"0.25","Flags":"0"},{"ID":"8","ClassName_lang":"Tradeskill","ClassID":"7","PriceModifier":"0.25","Flags":"0"},{"ID":"9","ClassName_lang":"Item Enhancement","ClassID":"8","PriceModifier":"0.25","Flags":"0"},{"ID":"10","ClassName_lang":"Recipe","ClassID":"9","PriceModifier":"0.25","Flags":"0"},{"ID":"11","ClassName_lang":"Money(OBSOLETE)","ClassID":"10","PriceModifier":"0.25","Flags":"0"},{"ID":"12","ClassName_lang":"Quiver","ClassID":"11","PriceModifier":"0.25","Flags":"0"},{"ID":"13","ClassName_lang":"Quest","ClassID":"12","PriceModifier":"0.25","Flags":"0"},{"ID":"14","ClassName_lang":"Key","ClassID":"13","PriceModifier":"0.25","Flags":"0"},{"ID":"15","ClassName_lang":"Permanent(OBSOLETE)","ClassID":"14","PriceModifier":"0.25","Flags":"0"},{"ID":"16","ClassName_lang":"Miscellaneous","ClassID":"15","PriceModifier":"0.25","Flags":"0"},{"ID":"17","ClassName_lang":"Glyph","ClassID":"16","PriceModifier":"0.25","Flags":"0"},{"ID":"18","ClassName_lang":"Battle Pets","ClassID":"17","PriceModifier":"0.25","Flags":"0"},{"ID":"19","ClassName_lang":"WoW Token","ClassID":"18","PriceModifier":"0.25","Flags":"0"},{"ID":"145","ClassName_lang":"Profession","ClassID":"19","PriceModifier":"0","Flags":"0"}]
+[
+  {
+    "ID": "1",
+    "ClassName_lang": "Consumable",
+    "ClassID": "0",
+    "PriceModifier": "0.25",
+    "Flags": "0"
+  },
+  {
+    "ID": "2",
+    "ClassName_lang": "Container",
+    "ClassID": "1",
+    "PriceModifier": "0.25",
+    "Flags": "0"
+  },
+  {
+    "ID": "3",
+    "ClassName_lang": "Weapon",
+    "ClassID": "2",
+    "PriceModifier": "0.20000000298",
+    "Flags": "1"
+  },
+  {
+    "ID": "4",
+    "ClassName_lang": "Gem",
+    "ClassID": "3",
+    "PriceModifier": "0.25",
+    "Flags": "0"
+  },
+  {
+    "ID": "5",
+    "ClassName_lang": "Armor",
+    "ClassID": "4",
+    "PriceModifier": "0.20000000298",
+    "Flags": "0"
+  },
+  {
+    "ID": "6",
+    "ClassName_lang": "Reagent",
+    "ClassID": "5",
+    "PriceModifier": "0.25",
+    "Flags": "0"
+  },
+  {
+    "ID": "7",
+    "ClassName_lang": "Projectile",
+    "ClassID": "6",
+    "PriceModifier": "0.25",
+    "Flags": "0"
+  },
+  {
+    "ID": "8",
+    "ClassName_lang": "Tradeskill",
+    "ClassID": "7",
+    "PriceModifier": "0.25",
+    "Flags": "0"
+  },
+  {
+    "ID": "9",
+    "ClassName_lang": "Item Enhancement",
+    "ClassID": "8",
+    "PriceModifier": "0.25",
+    "Flags": "0"
+  },
+  {
+    "ID": "10",
+    "ClassName_lang": "Recipe",
+    "ClassID": "9",
+    "PriceModifier": "0.25",
+    "Flags": "0"
+  },
+  {
+    "ID": "11",
+    "ClassName_lang": "Money(OBSOLETE)",
+    "ClassID": "10",
+    "PriceModifier": "0.25",
+    "Flags": "0"
+  },
+  {
+    "ID": "12",
+    "ClassName_lang": "Quiver",
+    "ClassID": "11",
+    "PriceModifier": "0.25",
+    "Flags": "0"
+  },
+  {
+    "ID": "13",
+    "ClassName_lang": "Quest",
+    "ClassID": "12",
+    "PriceModifier": "0.25",
+    "Flags": "0"
+  },
+  {
+    "ID": "14",
+    "ClassName_lang": "Key",
+    "ClassID": "13",
+    "PriceModifier": "0.25",
+    "Flags": "0"
+  },
+  {
+    "ID": "15",
+    "ClassName_lang": "Permanent(OBSOLETE)",
+    "ClassID": "14",
+    "PriceModifier": "0.25",
+    "Flags": "0"
+  },
+  {
+    "ID": "16",
+    "ClassName_lang": "Miscellaneous",
+    "ClassID": "15",
+    "PriceModifier": "0.25",
+    "Flags": "0"
+  },
+  {
+    "ID": "17",
+    "ClassName_lang": "Glyph",
+    "ClassID": "16",
+    "PriceModifier": "0.25",
+    "Flags": "0"
+  },
+  {
+    "ID": "18",
+    "ClassName_lang": "Battle Pets",
+    "ClassID": "17",
+    "PriceModifier": "0.25",
+    "Flags": "0"
+  },
+  {
+    "ID": "19",
+    "ClassName_lang": "WoW Token",
+    "ClassID": "18",
+    "PriceModifier": "0.25",
+    "Flags": "0"
+  },
+  {
+    "ID": "145",
+    "ClassName_lang": "Profession",
+    "ClassID": "19",
+    "PriceModifier": "0",
+    "Flags": "0"
+  }
+]

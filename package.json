@@ -20,8 +20,8 @@
     "eslint:create": "node node_modules/eslint-config-galex/dist/generateStandalone",
     "eslint:run": "eslint app",
     "format": "prettier --write app",
-    "generate:item-blocks": "tsx scripts/generate-item-blocks.ts",
-    "generate:type-guards": "ts-auto-guard --export-all ./scripts/item-blocks/types.ts && prettier --loglevel silent ./scripts/item-blocks/types.ts",
+    "generate:item-blocks": "tsx scripts/generate-item-blocks.ts && prettier --write --loglevel silent ./data/dbc/*.json",
+    "generate:type-guards": "ts-auto-guard --export-all ./scripts/item-blocks/types.ts && prettier --write --loglevel silent ./scripts/item-blocks/types.ts",
     "lint": "eslint app",
     "start": "tsx scripts/generate-env.ts && remix-serve build",
     "typecheck": "tsc"
