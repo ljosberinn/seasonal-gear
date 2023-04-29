@@ -4,7 +4,9 @@ export function associateBy<T>(
 ): Record<string, T[]> {
   return arr.reduce<Record<string, T[]>>((map, value, index, array) => {
     const key = predicate(value, index, array);
+
     map[key] = map[key]?.concat([value]) ?? [value];
+
     return map;
   }, {});
 }

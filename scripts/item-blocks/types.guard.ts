@@ -2,7 +2,7 @@
  * Generated type guards for "types.ts".
  * WARNING: Do not manually change this file.
  */
-import { ItemClass, ItemSubClass, ItemSparse, JournalEncounter, JournalEncounterItem, JournalInstance, ItemBlock } from "./types";
+import { ItemClass, ItemSubClass, ItemSparse, JournalEncounter, JournalEncounterItem, JournalInstance, Stat, ItemBlock, Item, RandPropPoint } from "./types";
 
 export function isItemClass(obj: unknown): obj is ItemClass {
     const typedObj = obj as ItemClass
@@ -201,6 +201,17 @@ export function isJournalInstance(obj: unknown): obj is JournalInstance {
     )
 }
 
+export function isStat(obj: unknown): obj is Stat {
+    const typedObj = obj as Stat
+    return (
+        (typedObj !== null &&
+            typeof typedObj === "object" ||
+            typeof typedObj === "function") &&
+        typeof typedObj["name"] === "string" &&
+        typeof typedObj["amount"] === "number"
+    )
+}
+
 export function isItemBlock(obj: unknown): obj is ItemBlock {
     const typedObj = obj as ItemBlock
     return (
@@ -211,6 +222,81 @@ export function isItemBlock(obj: unknown): obj is ItemBlock {
         typeof typedObj["name"] === "string" &&
         typeof typedObj["journalEncounterItemId"] === "string" &&
         typeof typedObj["journalEncounterId"] === "string" &&
-        typeof typedObj["journalInstanceId"] === "string"
+        typeof typedObj["journalEncounterName"] === "string" &&
+        typeof typedObj["journalInstanceId"] === "string" &&
+        typeof typedObj["journalInstanceName"] === "string" &&
+        typeof typedObj["itemClassId"] === "string" &&
+        typeof typedObj["itemSubClassId"] === "string" &&
+        typeof typedObj["inventoryType"] === "string" &&
+        typeof typedObj["quality"] === "string" &&
+        Array.isArray(typedObj["stats"]) &&
+        typedObj["stats"].every((e: any) =>
+            isStat(e) as boolean
+        )
+    )
+}
+
+export function isItem(obj: unknown): obj is Item {
+    const typedObj = obj as Item
+    return (
+        (typedObj !== null &&
+            typeof typedObj === "object" ||
+            typeof typedObj === "function") &&
+        typeof typedObj["ID"] === "string" &&
+        typeof typedObj["ClassID"] === "string" &&
+        typeof typedObj["SubclassID"] === "string" &&
+        typeof typedObj["Material"] === "string" &&
+        typeof typedObj["InventoryType"] === "string" &&
+        typeof typedObj["SheatheType"] === "string" &&
+        typeof typedObj["Sound_override_subclassID"] === "string" &&
+        typeof typedObj["IconFileDataID"] === "string" &&
+        typeof typedObj["ItemGroupSoundsID"] === "string" &&
+        typeof typedObj["ContentTuningID"] === "string" &&
+        typeof typedObj["ModifiedCraftingReagentItemID"] === "string" &&
+        typeof typedObj["CraftingQualityID"] === "string"
+    )
+}
+
+export function isRandPropPoint(obj: unknown): obj is RandPropPoint {
+    const typedObj = obj as RandPropPoint
+    return (
+        (typedObj !== null &&
+            typeof typedObj === "object" ||
+            typeof typedObj === "function") &&
+        typeof typedObj["ID"] === "string" &&
+        typeof typedObj["DamageReplaceStatF"] === "string" &&
+        typeof typedObj["DamageSecondaryF"] === "string" &&
+        typeof typedObj["DamageReplaceStat"] === "string" &&
+        typeof typedObj["DamageSecondary"] === "string" &&
+        typeof typedObj["EpicF_0"] === "string" &&
+        typeof typedObj["EpicF_1"] === "string" &&
+        typeof typedObj["EpicF_2"] === "string" &&
+        typeof typedObj["EpicF_3"] === "string" &&
+        typeof typedObj["EpicF_4"] === "string" &&
+        typeof typedObj["SuperiorF_0"] === "string" &&
+        typeof typedObj["SuperiorF_1"] === "string" &&
+        typeof typedObj["SuperiorF_2"] === "string" &&
+        typeof typedObj["SuperiorF_3"] === "string" &&
+        typeof typedObj["SuperiorF_4"] === "string" &&
+        typeof typedObj["GoodF_0"] === "string" &&
+        typeof typedObj["GoodF_1"] === "string" &&
+        typeof typedObj["GoodF_2"] === "string" &&
+        typeof typedObj["GoodF_3"] === "string" &&
+        typeof typedObj["GoodF_4"] === "string" &&
+        typeof typedObj["Epic_0"] === "string" &&
+        typeof typedObj["Epic_1"] === "string" &&
+        typeof typedObj["Epic_2"] === "string" &&
+        typeof typedObj["Epic_3"] === "string" &&
+        typeof typedObj["Epic_4"] === "string" &&
+        typeof typedObj["Superior_0"] === "string" &&
+        typeof typedObj["Superior_1"] === "string" &&
+        typeof typedObj["Superior_2"] === "string" &&
+        typeof typedObj["Superior_3"] === "string" &&
+        typeof typedObj["Superior_4"] === "string" &&
+        typeof typedObj["Good_0"] === "string" &&
+        typeof typedObj["Good_1"] === "string" &&
+        typeof typedObj["Good_2"] === "string" &&
+        typeof typedObj["Good_3"] === "string" &&
+        typeof typedObj["Good_4"] === "string"
     )
 }

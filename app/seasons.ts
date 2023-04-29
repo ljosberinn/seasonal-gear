@@ -60,10 +60,9 @@ type Item = {
   classIds?: Class[];
 };
 
-type GearSource = {
+type Source = {
+  kind: "raid" | "dungeon";
   name: string;
-  sources: Record<number, string>;
-  items: Item[];
 };
 
 export type Season = {
@@ -73,9 +72,8 @@ export type Season = {
   endDates: Record<Regions, number | null>;
   seasonIcon: string;
   usePtrTooltip: boolean;
-  raid: GearSource;
-  dungeons: GearSource;
-  professions: GearSource;
+  items: Item[];
+  sources: Record<number, Source>;
 };
 
 const UNKNOWN_SEASON_START_OR_ENDING = null;
@@ -107,21 +105,8 @@ export const seasons: Season[] = [
     seasonIcon:
       "https://wow.zamimg.com/images/wow/icons/small/inv_misc_head_dragon_black_nightmare.jpg",
     usePtrTooltip: true,
-    dungeons: {
-      items: [],
-      name: "Mythic+ Season 2",
-      sources: {},
-    },
-    professions: {
-      items: [],
-      name: "Crafted Items",
-      sources: {},
-    },
-    raid: {
-      name: "Aberrus, the Shadowed Crucible",
-      items: [],
-      sources: {},
-    },
+    items: [],
+    sources: {},
   },
   {
     name: "DF S1",
@@ -141,21 +126,8 @@ export const seasons: Season[] = [
     seasonIcon:
       "https://wow.zamimg.com/images/wow/icons/small/shaman_pvp_leaderclan.jpg",
     usePtrTooltip: false,
-    dungeons: {
-      items: [],
-      name: "Mythic+ Season 2",
-      sources: {},
-    },
-    professions: {
-      items: [],
-      name: "Crafted Items",
-      sources: {},
-    },
-    raid: {
-      name: "Aberrus, the Shadowed Crucible",
-      items: [],
-      sources: {},
-    },
+    items: [],
+    sources: {},
   },
 ];
 
