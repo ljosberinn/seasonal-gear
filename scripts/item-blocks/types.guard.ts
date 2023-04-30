@@ -2,7 +2,7 @@
  * Generated type guards for "types.ts".
  * WARNING: Do not manually change this file.
  */
-import { ItemClass, ItemSubClass, ItemSparse, JournalEncounter, JournalEncounterItem, JournalInstance, Stat, ItemBlock, Item, JournalTier, JournalTierXInstance } from "./types";
+import { ItemClass, ItemSubClass, ItemSparse, JournalEncounter, JournalEncounterItem, JournalInstance, Stat, ItemBlock, Item, JournalTier, JournalTierXInstance, ItemSet, CraftingData } from "./types";
 
 export function isItemClass(obj: unknown): obj is ItemClass {
     const typedObj = obj as ItemClass
@@ -279,5 +279,56 @@ export function isJournalTierXInstance(obj: unknown): obj is JournalTierXInstanc
         typeof typedObj["JournalTierID"] === "string" &&
         typeof typedObj["JournalInstanceID"] === "string" &&
         typeof typedObj["OrderIndex"] === "string"
+    )
+}
+
+export function isItemSet(obj: unknown): obj is ItemSet {
+    const typedObj = obj as ItemSet
+    return (
+        (typedObj !== null &&
+            typeof typedObj === "object" ||
+            typeof typedObj === "function") &&
+        typeof typedObj["ID"] === "string" &&
+        typeof typedObj["Name_lang"] === "string" &&
+        typeof typedObj["SetFlags"] === "string" &&
+        typeof typedObj["RequiredSkill"] === "string" &&
+        typeof typedObj["RequiredSkillRank"] === "string" &&
+        typeof typedObj["ItemID_0"] === "string" &&
+        typeof typedObj["ItemID_1"] === "string" &&
+        typeof typedObj["ItemID_2"] === "string" &&
+        typeof typedObj["ItemID_3"] === "string" &&
+        typeof typedObj["ItemID_4"] === "string" &&
+        typeof typedObj["ItemID_5"] === "string" &&
+        typeof typedObj["ItemID_6"] === "string" &&
+        typeof typedObj["ItemID_7"] === "string" &&
+        typeof typedObj["ItemID_8"] === "string" &&
+        typeof typedObj["ItemID_9"] === "string" &&
+        typeof typedObj["ItemID_10"] === "string" &&
+        typeof typedObj["ItemID_11"] === "string" &&
+        typeof typedObj["ItemID_12"] === "string" &&
+        typeof typedObj["ItemID_13"] === "string" &&
+        typeof typedObj["ItemID_14"] === "string" &&
+        typeof typedObj["ItemID_15"] === "string" &&
+        typeof typedObj["ItemID_16"] === "string"
+    )
+}
+
+export function isCraftingData(obj: unknown): obj is CraftingData {
+    const typedObj = obj as CraftingData
+    return (
+        (typedObj !== null &&
+            typeof typedObj === "object" ||
+            typeof typedObj === "function") &&
+        typeof typedObj["ID"] === "string" &&
+        typeof typedObj["CraftingDifficultyID"] === "string" &&
+        typeof typedObj["CraftedItemID"] === "string" &&
+        typeof typedObj["ItemBonusTreeID"] === "string" &&
+        typeof typedObj["CraftingDifficulty"] === "string" &&
+        typeof typedObj["CraftSkillBonusPercent"] === "string" &&
+        typeof typedObj["ReCraftSkillBonusPercent"] === "string" &&
+        typeof typedObj["InspirationSkillBonusPercent"] === "string" &&
+        typeof typedObj["FirstCraftFlagQuestID"] === "string" &&
+        typeof typedObj["FirstCraftTreasureID"] === "string" &&
+        typeof typedObj["CraftedTreasureID"] === "string"
     )
 }

@@ -165,18 +165,19 @@ export type Stat = {
 };
 
 export interface ItemBlock {
-  id: string;
+  id: number;
   name: string;
-  journalEncounterItemId: string;
-  journalEncounterId: string;
-  journalEncounterName: string;
-  journalInstanceId: string;
-  journalInstanceName: string;
-  itemClassId: string;
-  itemSubClassId: string;
-  inventoryType: string;
-  quality: string;
+  journalEncounterItemId: number | null;
+  journalEncounterId: number | null;
+  journalEncounterName: string | null;
+  journalInstanceId: number | null;
+  journalInstanceName: string | null;
+  itemClassId: number;
+  itemSubClassId: number;
+  inventoryType: number;
+  quality: number;
   stats: Stat[];
+  itemSetId: number | null;
 }
 
 export interface Item {
@@ -206,4 +207,47 @@ export interface JournalTierXInstance {
   JournalInstanceID: string;
   OrderIndex: string;
   // Field_10_1_0_49092_003: string;
+}
+
+export interface ItemSet {
+  ID: string;
+  Name_lang: string;
+  SetFlags: string;
+  RequiredSkill: string;
+  RequiredSkillRank: string;
+  ItemID_0: string;
+  ItemID_1: string;
+  ItemID_2: string;
+  ItemID_3: string;
+  ItemID_4: string;
+  ItemID_5: string;
+  ItemID_6: string;
+  ItemID_7: string;
+  ItemID_8: string;
+  ItemID_9: string;
+  ItemID_10: string;
+  ItemID_11: string;
+  ItemID_12: string;
+  ItemID_13: string;
+  ItemID_14: string;
+  ItemID_15: string;
+  ItemID_16: string;
+}
+
+export interface CraftingData {
+  ID: string;
+  // Field_10_0_0_44649_001: string;
+  CraftingDifficultyID: string;
+  CraftedItemID: string;
+  ItemBonusTreeID: string;
+  CraftingDifficulty: string;
+  // Field_10_0_0_44649_005: string;
+  CraftSkillBonusPercent: string;
+  ReCraftSkillBonusPercent: string;
+  InspirationSkillBonusPercent: string;
+  // Field_10_0_0_44649_009: string;
+  // Field_10_0_0_45141_011: string;
+  FirstCraftFlagQuestID: string;
+  FirstCraftTreasureID: string;
+  CraftedTreasureID: string;
 }

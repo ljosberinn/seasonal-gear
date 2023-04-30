@@ -6,10 +6,11 @@ import { finished } from "node:stream/promises";
 
 import { parse } from "csv-parse";
 
-import { allJournalInstancesToKeep } from "../config/instances";
 import {
+  isCraftingData,
   isItem,
   isItemClass,
+  isItemSet,
   isItemSparse,
   isItemSubClass,
   isJournalEncounter,
@@ -18,8 +19,15 @@ import {
   isJournalTier,
   isJournalTierXInstance,
 } from "./item-blocks/types.guard";
-import { ItemBlock, ItemClass, ItemSubClass, Stat } from "./item-blocks/types";
-import { info, warn } from "./item-blocks/log";
+import {
+  ItemBlock,
+  ItemClass,
+  ItemSet,
+  ItemSubClass,
+  JournalEncounter,
+  JournalInstance,
+} from "./item-blocks/types";
+import { info } from "./item-blocks/log";
 import { ensureDir } from "fs-extra";
 import { format } from "prettier";
 import { associateBy } from "~/associate-by";
@@ -139,7 +147,8 @@ const itemQuality: Record<number, string> = {
 const generateItemBlocksTsFile = async (
   itemBlocks: ItemBlock[],
   itemClasses: ItemClass[],
-  itemSubClasses: ItemSubClass[]
+  itemSubClasses: ItemSubClass[],
+  itemSets: ItemSet[]
 ) => {
   const dataDirectory = join(process.cwd(), "app", "models");
   await ensureDir(dataDirectory);
@@ -150,25 +159,11 @@ const generateItemBlocksTsFile = async (
      * Generated items.
      * WARNING: Do not manually change this file.
      */
-    import { associateBy } from "~/associate-by"; 
-    import { typedKeys } from "~/typed-keys";
-    import { type ItemClass, type ItemSubClass, type Stat } from "scripts/item-blocks/types";
+    // import { associateBy } from "~/associate-by"; 
+    // import { typedKeys } from "~/typed-keys";
+    import { type ItemClass, type ItemBlock, type ItemSubClass, type ItemSet } from "scripts/item-blocks/types";
      
-
-    export type Item = {
-      id: number;
-      name: string;
-      journalEncounterItemId: number;
-      journalEncounterId: number;
-      journalEncounterName: string;
-      journalInstanceId: number;
-      journalInstanceName: string;
-      itemClassId: number;
-      itemSubClassId: number;
-      inventoryType: number;
-      stats: Stat[];
-      quality: number;
-    };
+    export type Item = ItemBlock;
     export type ItemsByJournalEncounterName = Record<string, Item[]>;
     export type ItemsByJournalInstanceName = Record<string, Item[]>;
     export type ItemsByJournalInstanceAndJournalEncounterName = Record<
@@ -183,18 +178,27 @@ const generateItemBlocksTsFile = async (
     .map((itemBlock) =>
       `
     {
-        id: ${Number(itemBlock.id)},
-        name: "${itemBlock.name}",
-        journalEncounterItemId: ${Number(itemBlock.journalEncounterItemId)},
-        journalEncounterId: ${Number(itemBlock.journalEncounterId)},
-        journalEncounterName: "${itemBlock.journalEncounterName}",
-        journalInstanceId: ${Number(itemBlock.journalInstanceId)},
-        journalInstanceName: "${itemBlock.journalInstanceName}",
+        id: ${itemBlock.id},
+        name: "${itemBlock.name.replaceAll('"', "'")}",
+        journalEncounterItemId: ${itemBlock.journalEncounterItemId},
+        journalEncounterId: ${itemBlock.journalEncounterId},
+        journalEncounterName: ${
+          itemBlock.journalEncounterName
+            ? `"${itemBlock.journalEncounterName}"`
+            : null
+        },
+        journalInstanceId: ${itemBlock.journalInstanceId},
+        journalInstanceName: ${
+          itemBlock.journalInstanceName
+            ? `"${itemBlock.journalInstanceName}"`
+            : null
+        },
         itemClassId: ${Number(itemBlock.itemClassId)},
-        itemSubClassId: ${Number(itemBlock.itemSubClassId)},
-        inventoryType: ${Number(itemBlock.inventoryType)},
-        quality: ${Number(itemBlock.quality)},
-        stats: ${JSON.stringify(itemBlock.stats)}
+        itemSubClassId: ${itemBlock.itemSubClassId},
+        inventoryType: ${itemBlock.inventoryType},
+        quality: ${itemBlock.quality},
+        stats: ${JSON.stringify(itemBlock.stats)},
+        itemSetId: ${itemBlock.itemSetId}
     },
   `.trim()
     )
@@ -209,22 +213,22 @@ const generateItemBlocksTsFile = async (
   const footer = `
     ];
 
-    export const itemsByJournalInstanceName: ItemsByJournalInstanceName =
-      associateBy(items, (item) => item.journalInstanceName);
-    export const itemsByJournalEncounterName: ItemsByJournalEncounterName =
-      associateBy(items, (item) => item.journalEncounterName);
-    export const itemsByJournalInstanceNameAndJournalEncounterName = typedKeys(
-      itemsByJournalInstanceName
-    ).reduce<ItemsByJournalInstanceAndJournalEncounterName>((acc, instanceName) => {
-      const itemsForInstance = items.filter(
-        (item) => item.journalInstanceName === instanceName
-      );
-      acc[instanceName] = associateBy(
-        itemsForInstance,
-        (item) => item.journalEncounterName
-      );
-      return acc;
-    }, {});
+    // export const itemsByJournalInstanceName: ItemsByJournalInstanceName =
+    //  associateBy(items, (item) => item.journalInstanceName);
+    // export const itemsByJournalEncounterName: ItemsByJournalEncounterName =
+    //   associateBy(items, (item) => item.journalEncounterName);
+    // export const itemsByJournalInstanceNameAndJournalEncounterName = typedKeys(
+    //   itemsByJournalInstanceName
+    // ).reduce<ItemsByJournalInstanceAndJournalEncounterName>((acc, instanceName) => {
+    //   const itemsForInstance = items.filter(
+    //    (item) => item.journalInstanceName === instanceName
+    //  );
+    //  acc[instanceName] = associateBy(
+    //    itemsForInstance,
+    //    (item) => item.journalEncounterName
+    //  );
+    //  return acc;
+    // }, {});
 
     export const itemClasses: Record<string, [ItemClass]> = ${JSON.stringify(
       itemClassMap
@@ -240,6 +244,8 @@ const generateItemBlocksTsFile = async (
     export const itemQualityEnum: Record<string, string> = ${JSON.stringify(
       itemQuality
     )}
+
+    export const itemSets: ItemSet[] = ${JSON.stringify(itemSets)}
   `.trim();
 
   const itemTsContents = format(`${header}${itemBlocksMappedToTs}${footer}`, {
@@ -268,6 +274,8 @@ const build = "10.1.0.49318";
     downloadWagoToolsCsv("Item", build, true),
     downloadWagoToolsCsv("JournalTier", build, true),
     downloadWagoToolsCsv("JournalTierXInstance", build, true),
+    downloadWagoToolsCsv("ItemSet", build, true),
+    downloadWagoToolsCsv("CraftingData", build, true),
   ]);
 
   info("Converting DBC CSVs to JSON...");
@@ -320,6 +328,24 @@ const build = "10.1.0.49318";
     journalEncounterItems.map((item) => item.ItemID)
   );
 
+  const itemSet = await parseCsvIntoJson("ItemSet", isItemSet);
+
+  itemSet.forEach((set) => {
+    Object.entries(set).forEach(([key, value]) => {
+      if (key.startsWith("ItemID_") && value !== "0") {
+        journalEncounterItemItemIds.add(value);
+      }
+    });
+  });
+
+  const craftingData = await parseCsvIntoJson("CraftingData", isCraftingData);
+
+  craftingData.forEach((dataset) => {
+    if (dataset.CraftedItemID !== "0") {
+      journalEncounterItemItemIds.add(dataset.CraftedItemID);
+    }
+  });
+
   const [itemSparses, itemClasses, itemSubClasses, item] = await Promise.all([
     parseCsvIntoJson("ItemSparse", isItemSparse, (record) =>
       journalEncounterItemItemIds.has(record.ID)
@@ -339,45 +365,55 @@ const build = "10.1.0.49318";
     throw new Error("Could not authenticate with Blizzard!");
   }
 
-  info("Collating Item Blocks...");
+  info(`Collating ${itemSparses.length} Item Blocks...`);
 
   const itemBlocks: ItemBlock[] = [];
+  const chunks = chunkArray(itemSparses, 100);
 
-  for (const chunk of chunkArray(itemSparses, 75)) {
+  for (const chunk of chunks) {
+    const position = chunks.indexOf(chunk);
+    const percent =
+      position === 0
+        ? "0.00%"
+        : `${((position / (chunks.length - 1)) * 100).toFixed(2)}%`;
+    info(`> Begin processing chunk ${chunks.indexOf(chunk) + 1} (${percent})`);
+
     await Promise.all(
       chunk.map(async (itemSparse) => {
         const journalEncounterItem = journalEncounterItems.find(
           (journalEncounterItem) =>
             journalEncounterItem.ItemID === itemSparse.ID
         );
-        if (!journalEncounterItem) {
-          console.log(
-            `Unable to find matching JournalEncounterItem for item: id=${itemSparse.ID}`
-          );
-          return null;
-        }
 
-        const journalEncounter = journalEncounters.find(
-          (journalEncounter) =>
-            journalEncounter.ID === journalEncounterItem.JournalEncounterID
-        );
-        if (!journalEncounter) {
-          console.log(
-            `Unable to find matching JournalEncounter for item: id=${itemSparse.ID}`
-          );
-          return null;
-        }
+        let journalEncounter: null | JournalEncounter = null;
+        let journalInstance: null | JournalInstance = null;
 
-        const journalInstance = journalInstances.find(
-          (journalInstance) =>
-            journalInstance.ID === journalEncounter.JournalInstanceID
-        );
-
-        if (!journalInstance) {
-          console.log(
-            `Unable to find matching JournalInstance for item: id=${itemSparse.ID}`
+        if (journalEncounterItem) {
+          const encounter = journalEncounters.find(
+            (journalEncounter) =>
+              journalEncounter.ID === journalEncounterItem.JournalEncounterID
           );
-          return null;
+          if (!encounter) {
+            console.log(
+              `Unable to find matching JournalEncounter for item: id=${itemSparse.ID}`
+            );
+            return null;
+          }
+
+          const instance = journalInstances.find(
+            (journalInstance) =>
+              journalInstance.ID === encounter.JournalInstanceID
+          );
+
+          if (!instance) {
+            console.log(
+              `Unable to find matching JournalInstance for item: id=${itemSparse.ID}`
+            );
+            return null;
+          }
+
+          journalEncounter = encounter;
+          journalInstance = instance;
         }
 
         const itemMeta = item.find((item) => item.ID === itemSparse.ID);
@@ -387,6 +423,10 @@ const build = "10.1.0.49318";
             `Unable to find matching Item for item: id=${itemSparse.ID}`
           );
           return null;
+        }
+
+        if (itemMeta.InventoryType === "0") {
+          return null; // ignore Non-Equippable (like toys and consumables)
         }
 
         const blizzardItemData = await retrieveAndParseStatsFromBlizzard(
@@ -404,25 +444,44 @@ const build = "10.1.0.49318";
             : []; // PTR Items currently have no stats since they aren't present in the API yet
 
         itemBlocks.push({
-          id: itemSparse.ID,
+          id: Number(itemSparse.ID),
           name: itemSparse.Display_lang,
-          journalEncounterItemId: journalEncounterItem.ID,
-          journalEncounterId: journalEncounter.ID,
-          journalEncounterName: journalEncounter.Name_lang,
-          journalInstanceId: journalInstance.ID,
-          journalInstanceName: journalInstance.Name_lang,
-          itemClassId: itemMeta.ClassID,
-          itemSubClassId: itemMeta.SubclassID,
-          inventoryType: itemMeta.InventoryType,
-          quality: itemSparse.OverallQualityID,
+          journalEncounterItemId: journalEncounterItem
+            ? Number(journalEncounterItem.ID)
+            : null,
+          journalEncounterId: journalEncounter
+            ? Number(journalEncounter.ID)
+            : null,
+          journalEncounterName: journalEncounter
+            ? journalEncounter.Name_lang
+            : null,
+          journalInstanceId: journalInstance
+            ? Number(journalInstance.ID)
+            : null,
+          journalInstanceName: journalInstance
+            ? journalInstance.Name_lang
+            : null,
+          itemClassId: Number(itemMeta.ClassID),
+          itemSubClassId: Number(itemMeta.SubclassID),
+          inventoryType: Number(itemMeta.InventoryType),
+          quality: Number(itemSparse.OverallQualityID),
           stats,
+          itemSetId:
+            itemSparse.ItemSet === "0" ? null : Number(itemSparse.ItemSet),
         });
       })
     );
 
-    await new Promise((resolve) => setTimeout(resolve, 1200));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
+  info(`Result: ${itemBlocks.length} Item Blocks`);
+
   info("Generating TypeScript for app to use...");
-  await generateItemBlocksTsFile(itemBlocks, itemClasses, itemSubClasses);
+  await generateItemBlocksTsFile(
+    itemBlocks,
+    itemClasses,
+    itemSubClasses,
+    itemSet
+  );
 })();
