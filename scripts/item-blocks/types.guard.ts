@@ -218,21 +218,28 @@ export function isItemBlock(obj: unknown): obj is ItemBlock {
         (typedObj !== null &&
             typeof typedObj === "object" ||
             typeof typedObj === "function") &&
-        typeof typedObj["id"] === "string" &&
+        typeof typedObj["id"] === "number" &&
         typeof typedObj["name"] === "string" &&
-        typeof typedObj["journalEncounterItemId"] === "string" &&
-        typeof typedObj["journalEncounterId"] === "string" &&
-        typeof typedObj["journalEncounterName"] === "string" &&
-        typeof typedObj["journalInstanceId"] === "string" &&
-        typeof typedObj["journalInstanceName"] === "string" &&
-        typeof typedObj["itemClassId"] === "string" &&
-        typeof typedObj["itemSubClassId"] === "string" &&
-        typeof typedObj["inventoryType"] === "string" &&
-        typeof typedObj["quality"] === "string" &&
+        (typedObj["journalEncounterItemId"] === null ||
+            typeof typedObj["journalEncounterItemId"] === "number") &&
+        (typedObj["journalEncounterId"] === null ||
+            typeof typedObj["journalEncounterId"] === "number") &&
+        (typedObj["journalEncounterName"] === null ||
+            typeof typedObj["journalEncounterName"] === "string") &&
+        (typedObj["journalInstanceId"] === null ||
+            typeof typedObj["journalInstanceId"] === "number") &&
+        (typedObj["journalInstanceName"] === null ||
+            typeof typedObj["journalInstanceName"] === "string") &&
+        typeof typedObj["itemClassId"] === "number" &&
+        typeof typedObj["itemSubClassId"] === "number" &&
+        typeof typedObj["inventoryType"] === "number" &&
+        typeof typedObj["quality"] === "number" &&
         Array.isArray(typedObj["stats"]) &&
         typedObj["stats"].every((e: any) =>
             isStat(e) as boolean
-        )
+        ) &&
+        (typedObj["itemSetId"] === null ||
+            typeof typedObj["itemSetId"] === "number")
     )
 }
 

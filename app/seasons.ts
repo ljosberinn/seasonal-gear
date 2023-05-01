@@ -58,10 +58,11 @@ type Item = {
   slot: ArmorSlot;
   armorType: ArmorType;
   classIds?: Class[];
+  setId: number | null;
 };
 
 type Source = {
-  kind: "raid" | "dungeon";
+  kind: "raid" | "dungeon" | "crafting";
   name: string;
 };
 
@@ -72,8 +73,12 @@ export type Season = {
   endDates: Record<Regions, number | null>;
   seasonIcon: string;
   usePtrTooltip: boolean;
-  items: Item[];
   sources: Record<number, Source>;
+  itemsBySource: Record<number, Item[]>;
+  /**
+   * @see https://github.com/WoWAnalyzer/WoWAnalyzer/blob/dragonflight/src/common/ITEMS/dragonflight/tier.ts
+   */
+  setIds: Record<Class, number> | null;
 };
 
 const UNKNOWN_SEASON_START_OR_ENDING = null;
@@ -105,8 +110,23 @@ export const seasons: Season[] = [
     seasonIcon:
       "https://wow.zamimg.com/images/wow/icons/small/inv_misc_head_dragon_black_nightmare.jpg",
     usePtrTooltip: true,
-    items: [],
+    itemsBySource: {},
     sources: {},
+    setIds: {
+      [Class.DEATHKNIGHT]: 1540,
+      [Class.DEMONHUNTER]: 1541,
+      [Class.DRUID]: 1542,
+      [Class.EVOKER]: 1543,
+      [Class.HUNTER]: 1544,
+      [Class.MAGE]: 1545,
+      [Class.MONK]: 1546,
+      [Class.PALADIN]: 1547,
+      [Class.PRIEST]: 1548,
+      [Class.ROGUE]: 1549,
+      [Class.SHAMAN]: 1550,
+      [Class.WARLOCK]: 1551,
+      [Class.WARRIOR]: 1552,
+    },
   },
   {
     name: "DF S1",
@@ -126,8 +146,23 @@ export const seasons: Season[] = [
     seasonIcon:
       "https://wow.zamimg.com/images/wow/icons/small/shaman_pvp_leaderclan.jpg",
     usePtrTooltip: false,
-    items: [],
+    itemsBySource: {},
     sources: {},
+    setIds: {
+      [Class.DEATHKNIGHT]: 1526,
+      [Class.DEMONHUNTER]: 1527,
+      [Class.DRUID]: 1528,
+      [Class.EVOKER]: 1529,
+      [Class.HUNTER]: 1530,
+      [Class.MAGE]: 1531,
+      [Class.MONK]: 1532,
+      [Class.PALADIN]: 1533,
+      [Class.PRIEST]: 1534,
+      [Class.ROGUE]: 1535,
+      [Class.SHAMAN]: 1536,
+      [Class.WARLOCK]: 1537,
+      [Class.WARRIOR]: 1538,
+    },
   },
 ];
 

@@ -36,6 +36,7 @@ import {
   retrieveAndParseStatsFromBlizzard,
 } from "./bnet";
 import { chunkArray } from "~/partition";
+import { seasons } from "~/seasons";
 
 const downloadWagoToolsCsv = async (
   tableName: string,
@@ -329,13 +330,18 @@ const build = "10.1.0.49318";
   );
 
   const itemSet = await parseCsvIntoJson("ItemSet", isItemSet);
+  const relevantItemSetIds = new Set(
+    seasons.flatMap((season) => Object.values(season.setIds ?? {}))
+  );
 
   itemSet.forEach((set) => {
-    Object.entries(set).forEach(([key, value]) => {
-      if (key.startsWith("ItemID_") && value !== "0") {
-        journalEncounterItemItemIds.add(value);
-      }
-    });
+    if (relevantItemSetIds.has(Number(set.ID))) {
+      Object.entries(set).forEach(([key, value]) => {
+        if (key.startsWith("ItemID_") && value !== "0") {
+          journalEncounterItemItemIds.add(value);
+        }
+      });
+    }
   });
 
   const craftingData = await parseCsvIntoJson("CraftingData", isCraftingData);
