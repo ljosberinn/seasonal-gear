@@ -54,7 +54,7 @@ class SeasonResolver
     private int $endTimeEvent = PHP_INT_MAX;
 
     /**
-     * @param  array{slug: string, name: string, expansion_id: int, start_time_event: int, ilvl_scaling_id: int, special_instances: list<int>, catalyst_bonus_trees: list<int>}  $season
+     * @param  array{slug: string, name: string, expansion_id: int, start_time_event: int, ilvl_scaling_id: int, min_group: int, special_instances: list<int>, catalyst_bonus_trees: list<int>}  $season
      * @param  array<string, array{bonus_trees: list<int>, max_group?: int}>  $expansion
      */
     public function __construct(
@@ -131,7 +131,7 @@ class SeasonResolver
         }
 
         $sources = array_values(array_filter($sources, fn (array $source): bool => $this->isGear($items[$source['itemId']] ?? null, $sparse[$source['itemId']] ?? null)));
-        $sources = $this->withItemLevels($sources, $itemTrees);
+        $sources = $this->withMinimumTrack($this->withItemLevels($sources, $itemTrees));
 
         return [
             'build' => $build,
@@ -418,6 +418,28 @@ class SeasonResolver
         }
 
         return $sources;
+    }
+
+    /**
+     * Drops sources without an upgrade track or whose best track is below the configured minimum.
+     * Crafted items are exempt since they never have a track.
+     *
+     * @param  list<Source>  $sources
+     * @return list<Source>
+     */
+    private function withMinimumTrack(array $sources): array
+    {
+        $minGroup = (string) $this->season['min_group'];
+
+        if (! isset($this->groupTopItemLevel[$minGroup])) {
+            throw new RuntimeException("Minimum upgrade group {$minGroup} isn't a season upgrade track.");
+        }
+
+        // Tracks don't overlap at their top rank, so comparing top item levels orders them.
+        $minItemLevel = $this->groupTopItemLevel[$minGroup];
+
+        return array_values(array_filter($sources, fn (array $source): bool => $source['type'] === 'crafted'
+            || ($source['itemLevel'] !== null && $source['itemLevel'] >= $minItemLevel)));
     }
 
     /**
