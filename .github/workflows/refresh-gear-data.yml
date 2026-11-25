@@ -1,0 +1,87 @@
+name: Refresh gear data
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      build:
+        description: Game build to import (defaults to the latest live build)
+        required: false
+
+concurrency:
+  group: refresh-gear-data
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
+          ini-values: memory_limit=1G
+
+      - uses: ramsey/composer-install@v3
+
+      # Table downloads run concurrently inside the command (Http::pool).
+      - name: Import
+        env:
+          BUILD: ${{ inputs.build }}
+        run: php artisan gear:import --no-interaction ${BUILD:+"--build=$BUILD"}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gear-data
+          path: resources/data/gear.json
+          retention-days: 7
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
+
+      - uses: ramsey/composer-install@v3
+
+      - name: Test
+        run: php artisan test --compact
+
+  publish:
+    needs: [import, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: gear-data
+          path: resources/data
+
+      # Vercel's Git integration deploys the pushed commit.
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- resources/data/gear.json; then
+            echo "Dataset unchanged."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add resources/data/gear.json
+          git commit -m "Refresh gear data for build $(jq -r .build resources/data/gear.json)"
+          git push
