@@ -36,6 +36,14 @@ class GearPageTest extends TestCase
             ->assertSee('Vile Alchemist&#039;s Band', false);
     }
 
+    public function test_item_links_carry_wowhead_tooltip_item_level(): void
+    {
+        $this->get(route('gear.index'))
+            ->assertOk()
+            ->assertSee('wow.zamimg.com/js/tooltips.js', false)
+            ->assertSee('data-wowhead="ilvl=334"', false);
+    }
+
     public function test_filters_by_slot_and_all_selected_stats(): void
     {
         $this->get(route('gear.index', ['slot' => 'head', 'stats' => ['mastery', 'crit']]))

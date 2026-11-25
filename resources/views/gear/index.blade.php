@@ -91,7 +91,7 @@
                     @forelse ($items as $item)
                         <tr class="align-top">
                             <td class="px-3 py-2">
-                                <a href="https://www.wowhead.com/item={{ $item['id'] }}{{ $item['itemLevel'] ? '?ilvl='.$item['itemLevel'] : '' }}" @class([
+                                <a href="https://www.wowhead.com/item={{ $item['id'] }}{{ $item['itemLevel'] ? '?ilvl='.$item['itemLevel'] : '' }}" @if ($item['itemLevel']) data-wowhead="ilvl={{ $item['itemLevel'] }}" @endif @class([
                                     'font-medium hover:underline',
                                     'text-purple-700 dark:text-purple-400' => $item['quality'] === 4,
                                     'text-blue-700 dark:text-blue-400' => $item['quality'] === 3,
