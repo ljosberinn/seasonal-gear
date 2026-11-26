@@ -36,6 +36,16 @@ trait ManagesWagoExports
         return false;
     }
 
+    /**
+     * @param  array<string, mixed>  $dataset
+     */
+    private function writeDataset(string $output, array $dataset): void
+    {
+        File::ensureDirectoryExists(File::dirname($output));
+        File::put($output, json_encode($dataset, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)."\n");
+        $this->components->info("Wrote {$output}");
+    }
+
     private function discardExports(string $directory): void
     {
         $this->option('keep')

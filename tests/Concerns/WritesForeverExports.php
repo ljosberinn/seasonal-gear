@@ -4,6 +4,7 @@ namespace Tests\Concerns;
 
 use App\Gear\Db2Directory;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 /**
  * Writes the DB2 exports `forever:import` reads into a temporary directory, removed by `removeForeverExports()`.
@@ -14,7 +15,7 @@ trait WritesForeverExports
 
     protected function createForeverExportsDirectory(): void
     {
-        $this->directory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'forever-'.bin2hex(random_bytes(4));
+        $this->directory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'forever-'.Str::random(8);
         File::makeDirectory($this->directory);
     }
 

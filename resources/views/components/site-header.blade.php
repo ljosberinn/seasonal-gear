@@ -2,10 +2,11 @@
 
 @php
     use Illuminate\Support\Carbon;
+    use Illuminate\Support\Facades\File;
 
     // assets are built during every deploy, so the manifest dates the running site
     $manifest = public_path('build/manifest.json');
-    $builtAt = is_file($manifest) ? Carbon::createFromTimestamp(filemtime($manifest)) : null;
+    $builtAt = File::exists($manifest) ? Carbon::createFromTimestamp(File::lastModified($manifest)) : null;
     $gameVersions = [
         // statistics are retail-only, so Retail stays marked there without being the current page
         ['label' => 'Retail', 'href' => route('gear.index'), 'icon' => 'retail.webp', 'current' => request()->routeIs('gear.*') ? 'page' : (request()->routeIs('statistics.*') ? 'true' : null)],

@@ -10,7 +10,6 @@ use App\Gear\WowheadClient;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\File;
 
 #[Signature('gear:import
     {--build= : Game build to import; defaults to the latest live build on wago.tools}
@@ -73,9 +72,7 @@ class ImportGear extends Command
             return self::FAILURE;
         }
 
-        File::ensureDirectoryExists(dirname($output));
-        File::put($output, json_encode($dataset, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)."\n");
-        $this->components->info("Wrote {$output}");
+        $this->writeDataset($output, $dataset);
 
         if (! $this->option('from')) {
             $this->discardExports($directory);

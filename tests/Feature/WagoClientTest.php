@@ -7,6 +7,7 @@ use App\Gear\WagoClient;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class WagoClientTest extends TestCase
@@ -29,7 +30,7 @@ class WagoClientTest extends TestCase
 
     public function test_records_the_hotfix_times_of_downloaded_tables(): void
     {
-        $directory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'wago-'.bin2hex(random_bytes(4));
+        $directory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'wago-'.Str::random(8);
 
         Http::fake([
             '*/db2/ItemSparse/csv*' => Http::response('ID', headers: ['X-Hotfix-Modified-At' => '2026-11-18 08:40:18']),
