@@ -163,6 +163,17 @@ class GearPageTest extends TestCase
             ->assertDontSee('Voracious Heart');
     }
 
+    public function test_marks_embellished_crafted_items(): void
+    {
+        $this->get(route('gear.index', ['sources' => ['crafted']]))
+            ->assertOk()
+            ->assertSeeInOrder(['Martyr&#039;s Crown', 'Embellished'], false);
+
+        $this->get(route('gear.index'))
+            ->assertOk()
+            ->assertDontSee('Embellished');
+    }
+
     public function test_type_column_only_shows_when_it_tells_items_apart(): void
     {
         $this->get(route('gear.index'))
@@ -172,7 +183,8 @@ class GearPageTest extends TestCase
 
         $this->get(route('gear.index', ['slot' => 'head']))
             ->assertOk()
-            ->assertDontSee('>Type</th>', false);
+            ->assertDontSee('>Type</th>', false)
+            ->assertDontSee('>Slot</th>', false);
 
         // ring, neck and trinket have no armor or weapon type
         $this->get(route('gear.index', ['sources' => ['raid']]))
@@ -205,7 +217,7 @@ class GearPageTest extends TestCase
             'id' => $id, 'name' => $name, 'slot' => $slot, 'inventoryType' => $inventoryType, 'classId' => $classId,
             'subclassId' => $subclassId, 'quality' => 4, 'allowableClass' => -1, 'specs' => [], 'primaries' => $primaries,
             'secondaries' => $secondaries, 'choiceStats' => false, 'itemLevel' => 334, 'tracks' => ['hero' => $hero, 'myth' => $myth],
-            'stats' => ['sta' => 1000] + $secondaries, 'sockets' => 0, 'onUse' => false, 'onEquip' => false, 'itemSet' => null,
+            'stats' => ['sta' => 1000] + $secondaries, 'sockets' => 0, 'onUse' => false, 'onEquip' => false, 'embellished' => false, 'itemSet' => null,
             ...$extra,
         ];
         $source = fn (int $itemId, string $type, ?string $instance = null): array => [
@@ -224,7 +236,7 @@ class GearPageTest extends TestCase
                 $item(251199, 'Worldroot Canopy', 'head', 1, 4, 1, ['int'], ['mastery' => 3500, 'crit' => 3500]),
                 $item(900001, 'Hasty Helm', 'head', 1, 4, 4, ['str'], ['haste' => 4000, 'crit' => 3000], $heroOnly),
                 $item(271499, "Calamitous Echo's Sundered Peaks", 'shoulder', 3, 4, 3, ['agi', 'int'], ['crit' => 4846, 'vers' => 2154], ['allowableClass' => 4096]),
-                $item(239652, "Martyr's Crown", 'head', 1, 4, 1, ['int'], [], ['choiceStats' => true, 'itemLevel' => null, 'tracks' => [], 'stats' => null]),
+                $item(239652, "Martyr's Crown", 'head', 1, 4, 1, ['int'], [], ['choiceStats' => true, 'embellished' => true, 'itemLevel' => null, 'tracks' => [], 'stats' => null]),
                 $item(900002, 'Greatsword of Testing', 'two-hand', 17, 2, 8, ['str'], ['haste' => 3500, 'vers' => 3500]),
                 $item(900003, 'Staff of Testing', 'two-hand', 17, 2, 10, ['int'], ['haste' => 3500, 'vers' => 3500]),
                 $item(900004, 'Bulwark of Testing', 'off-hand', 14, 4, 6, ['str'], ['haste' => 3500, 'vers' => 3500], $heroOnly),

@@ -4,12 +4,11 @@
 
     // full class strings so Tailwind picks them up
     $statChips = [
-        'crit' => ['label' => 'Critical Strike', 'dot' => 'bg-red-500', 'active' => 'border-red-500 bg-red-500/10 ring-red-500 dark:bg-red-950/60'],
-        'haste' => ['label' => 'Haste', 'dot' => 'bg-amber-500', 'active' => 'border-amber-500 bg-amber-500/10 ring-amber-500 dark:bg-amber-950/60'],
-        'mastery' => ['label' => 'Mastery', 'dot' => 'bg-purple-500', 'active' => 'border-purple-500 bg-purple-500/10 ring-purple-500 dark:bg-purple-950/60'],
-        'vers' => ['label' => 'Versatility', 'dot' => 'bg-green-500', 'active' => 'border-green-500 bg-green-500/10 ring-green-500 dark:bg-green-950/60'],
+        'crit' => ['label' => 'Critical Strike', 'short' => 'Crit', 'text' => 'text-red-600 dark:text-red-400', 'dot' => 'bg-red-500', 'active' => 'border-red-500 bg-red-500/10 ring-red-500 dark:bg-red-950/60'],
+        'haste' => ['label' => 'Haste', 'short' => 'Haste', 'text' => 'text-amber-600 dark:text-amber-400', 'dot' => 'bg-amber-500', 'active' => 'border-amber-500 bg-amber-500/10 ring-amber-500 dark:bg-amber-950/60'],
+        'mastery' => ['label' => 'Mastery', 'short' => 'Mastery', 'text' => 'text-purple-600 dark:text-purple-400', 'dot' => 'bg-purple-500', 'active' => 'border-purple-500 bg-purple-500/10 ring-purple-500 dark:bg-purple-950/60'],
+        'vers' => ['label' => 'Versatility', 'short' => 'Vers', 'text' => 'text-green-600 dark:text-green-400', 'dot' => 'bg-green-500', 'active' => 'border-green-500 bg-green-500/10 ring-green-500 dark:bg-green-950/60'],
     ];
-    $shortStatLabels = ['crit' => 'Crit', 'haste' => 'Haste', 'mastery' => 'Mastery', 'vers' => 'Vers'];
     $query = request()->query();
     $formAction = $classKey === null ? route('gear.index') : route('gear.class', array_filter(['class' => $classKey, 'spec' => $specKey]));
     $allSources = array_keys(GearCatalog::SOURCE_TYPES);
@@ -133,7 +132,9 @@
                 <thead class="bg-gray-50 text-left text-xs tracking-wide text-gray-500 uppercase dark:bg-gray-900/40 dark:text-gray-400">
                     <tr>
                         <th class="px-3 py-2">Item</th>
-                        <th class="px-3 py-2">Slot</th>
+                        @if ($filter->slot === null)
+                            <th class="px-3 py-2">Slot</th>
+                        @endif
                         @if ($showsType)
                             <th class="px-3 py-2">Type</th>
                         @endif
@@ -158,10 +159,15 @@
                                         @if ($item['itemSet'])
                                             <span class="text-xs text-gray-500 dark:text-gray-400">{{ $item['itemSet']['name'] }}</span>
                                         @endif
+                                        @if ($item['embellished'])
+                                            <span class="text-xs text-gray-500 dark:text-gray-400">Embellished</span>
+                                        @endif
                                     </span>
                                 </a>
                             </td>
-                            <td class="px-3 py-2 whitespace-nowrap">{{ Slot::from($item['slot'])->label() }}</td>
+                            @if ($filter->slot === null)
+                                <td class="px-3 py-2 whitespace-nowrap">{{ Slot::from($item['slot'])->label() }}</td>
+                            @endif
                             @if ($showsType)
                                 <td class="px-3 py-2 whitespace-nowrap">{{ GearCatalog::typeLabel($item) }}</td>
                             @endif
@@ -175,7 +181,7 @@
                                                 @if ($ranked['relation'])
                                                     <span class="text-gray-500 dark:text-gray-400">{{ $ranked['relation'] }}</span>
                                                 @endif
-                                                <span @class(['font-semibold' => in_array($ranked['stat'], $filter->stats, true)])>{{ $shortStatLabels[$ranked['stat']] }}</span>
+                                                <span @class([$statChips[$ranked['stat']]['text'], 'font-semibold' => in_array($ranked['stat'], $filter->stats, true)])>{{ $statChips[$ranked['stat']]['short'] }}</span>
                                             @endforeach
                                         </span>
                                     @endif
@@ -204,7 +210,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ $showsType ? 5 : 4 }}" class="px-3 py-8 text-center text-gray-500 dark:text-gray-400">No items match these filters.</td>
+                            <td colspan="{{ 3 + ($filter->slot === null ? 1 : 0) + ($showsType ? 1 : 0) }}" class="px-3 py-8 text-center text-gray-500 dark:text-gray-400">No items match these filters.</td>
                         </tr>
                     @endforelse
                 </tbody>

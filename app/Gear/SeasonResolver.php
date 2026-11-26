@@ -495,6 +495,7 @@ class SeasonResolver
         }
 
         $effects = $this->effects($itemLevels);
+        $embellishedCategories = $this->db2->keyed('ItemLimitCategory', filter: fn (array $row): bool => str_ends_with($row['Name_lang'], 'Embellished'));
         $specOverrides = $this->db2->grouped('ItemSpecOverride', 'ItemID', fn (array $row): bool => isset($itemLevels[$row['ItemID']]));
         $guaranteedSockets = $this->guaranteedSockets($itemLevels, $sparse, $itemTrees);
         $setIds = array_fill_keys(array_filter(array_map(fn (int $id): string => $sparse[$id]['ItemSet'], array_keys($itemLevels))), true);
@@ -555,6 +556,7 @@ class SeasonResolver
                 'sockets' => $nativeSockets + ($guaranteedSockets[$id] ?? 0),
                 'onUse' => $effects[$id]['onUse'] ?? false,
                 'onEquip' => $effects[$id]['onEquip'] ?? false,
+                'embellished' => isset($embellishedCategories[$row['LimitCategory']]),
                 'itemSet' => $setId === 0 ? null : ['id' => $setId, 'name' => $sets[$setId]['Name_lang'] ?? null],
             ];
         }

@@ -23,6 +23,7 @@ class WagoClient
         'ItemBonusTree',
         'ItemBonusTreeNode',
         'ItemEffect',
+        'ItemLimitCategory',
         'ItemScalingConfig',
         'ItemSet',
         'ItemSparse',
