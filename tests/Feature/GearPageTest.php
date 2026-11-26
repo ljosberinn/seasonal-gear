@@ -248,10 +248,54 @@ class GearPageTest extends TestCase
             ->assertSee('href="'.route('statistics.index').'"', false);
     }
 
+    public function test_exports_the_listed_items_with_equipment_slots(): void
+    {
+        $this->assertSame([
+            ['id' => 268265, 'name' => 'Aqirbane Reliquary', 'slot' => 'neck'],
+            ['id' => 268249, 'name' => "Vile Alchemist's Band", 'slot' => 'finger'],
+            ['id' => 270175, 'name' => "Voracious Heart of Ula'tek", 'slot' => 'trinket'],
+        ], $this->exportRows(route('gear.index', ['sources' => ['raid']])));
+
+        $this->assertSame(
+            ['Greatsword of Testing' => 'main_hand', 'Bulwark of Testing' => 'off_hand'],
+            collect($this->exportRows(route('gear.index', ['sources' => self::ALL_SOURCES])))
+                ->pluck('slot', 'name')
+                ->only(['Greatsword of Testing', 'Bulwark of Testing'])
+                ->all(),
+        );
+    }
+
+    public function test_export_is_named_after_the_selection(): void
+    {
+        $this->get(route('gear.class', ['class' => 'paladin', 'spec' => 'protection']))
+            ->assertOk()
+            ->assertSee('data-export="seasonal-gear-paladin-protection"', false);
+    }
+
+    public function test_hides_the_export_without_items(): void
+    {
+        $this->get(route('gear.index', ['slot' => 'legs']))
+            ->assertOk()
+            ->assertSee('No items match these filters.')
+            ->assertDontSee('data-export', false);
+    }
+
     public function test_rejects_unknown_filter_values(): void
     {
         $this->get(route('gear.index', ['stats' => ['leech']]))->assertSessionHasErrors('stats.0');
         $this->get(route('gear.index', ['slot' => 'tabard']))->assertSessionHasErrors('slot');
         $this->get(route('gear.index', ['track' => 'explorer']))->assertSessionHasErrors('track');
+    }
+
+    /**
+     * @return list<array{id: int, name: string, slot: string}>
+     */
+    private function exportRows(string $url): array
+    {
+        $content = $this->get($url)->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('/<script type="application\/json" data-export-rows>(.*?)<\/script>/s', $content, $matches));
+
+        return json_decode($matches[1], true, flags: JSON_THROW_ON_ERROR);
     }
 }
