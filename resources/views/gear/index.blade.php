@@ -40,6 +40,8 @@
         ])->values(),
     ];
     $specOptions = $classKey === null ? [] : $specOptionsFor($classKey);
+    // a picked slot already implies the type, and slots like neck or back have none
+    $showsType = $filter->slot === null && collect($items)->contains(fn (array $item): bool => GearCatalog::typeLabel($item) !== '');
     $title = collect([$classKey ? $classes[$classKey]['name'] : null, $specKey ? $classes[$classKey]['specs'][$specKey]['name'] : null])->filter()->reverse()->implode(' ');
 @endphp
 
@@ -131,9 +133,10 @@
                 <thead class="bg-gray-50 text-left text-xs tracking-wide text-gray-500 uppercase dark:bg-gray-900/40 dark:text-gray-400">
                     <tr>
                         <th class="px-3 py-2">Item</th>
-                        <th class="px-3 py-2 text-right">Item Level</th>
                         <th class="px-3 py-2">Slot</th>
-                        <th class="px-3 py-2">Type</th>
+                        @if ($showsType)
+                            <th class="px-3 py-2">Type</th>
+                        @endif
                         <th class="px-3 py-2">Stats</th>
                         <th class="px-3 py-2">Source</th>
                     </tr>
@@ -158,13 +161,14 @@
                                     </span>
                                 </a>
                             </td>
-                            <td class="px-3 py-2 text-right tabular-nums">{{ $item['rank']['itemLevel'] ?? '–' }}</td>
                             <td class="px-3 py-2 whitespace-nowrap">{{ Slot::from($item['slot'])->label() }}</td>
-                            <td class="px-3 py-2 whitespace-nowrap">{{ GearCatalog::typeLabel($item) }}</td>
+                            @if ($showsType)
+                                <td class="px-3 py-2 whitespace-nowrap">{{ GearCatalog::typeLabel($item) }}</td>
+                            @endif
                             <td class="px-3 py-2">
                                 <div class="flex flex-wrap gap-x-3">
                                     @if ($item['choiceStats'])
-                                        <span class="text-gray-500 dark:text-gray-400">Secondary Stats of Your Choice</span>
+                                        <span class="text-gray-500 dark:text-gray-400">Your Choice</span>
                                     @elseif ($item['secondaries'] !== [])
                                         <span class="whitespace-nowrap">
                                             @foreach (GearCatalog::rankSecondaries($item['secondaries']) as $ranked)
@@ -182,7 +186,7 @@
                                             $item['sockets'] ? Str::plural('Socket', $item['sockets'], prependCount: true) : null,
                                             $item['onUse'] ? 'On Use' : null,
                                             $item['onEquip'] ? 'On Equip' : null,
-                                        ])->filter()->implode(' · ') }}
+                                        ])->filter()->implode(' | ') }}
                                     </div>
                                 @endif
                             </td>
@@ -200,7 +204,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-3 py-8 text-center text-gray-500 dark:text-gray-400">No items match these filters.</td>
+                            <td colspan="{{ $showsType ? 5 : 4 }}" class="px-3 py-8 text-center text-gray-500 dark:text-gray-400">No items match these filters.</td>
                         </tr>
                     @endforelse
                 </tbody>

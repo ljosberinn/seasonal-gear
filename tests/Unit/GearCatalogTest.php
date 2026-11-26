@@ -42,5 +42,6 @@ class GearCatalogTest extends TestCase
 
         $this->assertSame('', GearCatalog::typeLabel($cloak));
         $this->assertSame('Cloth', GearCatalog::typeLabel(['slot' => 'head', 'inventoryType' => 1] + $cloak));
+        $this->assertSame('Off-Hand', GearCatalog::typeLabel(['slot' => 'off-hand', 'inventoryType' => 23] + $cloak));
     }
 }

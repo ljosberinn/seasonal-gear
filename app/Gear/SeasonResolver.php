@@ -495,6 +495,7 @@ class SeasonResolver
         }
 
         $effects = $this->effects($itemLevels);
+        $specOverrides = $this->db2->grouped('ItemSpecOverride', 'ItemID', fn (array $row): bool => isset($itemLevels[$row['ItemID']]));
         $guaranteedSockets = $this->guaranteedSockets($itemLevels, $sparse, $itemTrees);
         $setIds = array_fill_keys(array_filter(array_map(fn (int $id): string => $sparse[$id]['ItemSet'], array_keys($itemLevels))), true);
         $sets = $this->db2->keyed('ItemSet', filter: fn (array $row): bool => isset($setIds[$row['ID']]));
@@ -544,6 +545,7 @@ class SeasonResolver
                 'subclassId' => (int) $items[$id]['SubclassID'],
                 'quality' => (int) $row['OverallQualityID'],
                 'allowableClass' => (int) $row['AllowableClass'],
+                'specs' => array_map(intval(...), array_column($specOverrides[$id] ?? [], 'SpecID')),
                 'primaries' => array_values(array_unique($primaries)),
                 'secondaries' => $secondaries === [] ? (object) [] : $secondaries,
                 'choiceStats' => $hasChoiceStats,
@@ -578,10 +580,19 @@ class SeasonResolver
     private function effects(array $itemIds): array
     {
         $links = $this->db2->grouped('ItemXItemEffect', 'ItemEffectID', fn (array $row): bool => isset($itemIds[$row['ItemID']]));
+        $effects = $this->db2->keyed('ItemEffect', filter: fn (array $row): bool => isset($links[$row['ID']]));
+        $spellIds = array_fill_keys(array_column($effects, 'SpellID'), true);
+
+        // Effects whose spell has no description are hidden value holders (e.g. the damage a use effect deals), not tooltip lines.
+        $described = $this->db2->keyed('Spell', filter: fn (array $row): bool => isset($spellIds[$row['ID']]) && $row['Description_lang'] !== '');
         $result = [];
 
-        foreach ($this->db2->rows('ItemEffect') as $effect) {
-            foreach ($links[$effect['ID']] ?? [] as $link) {
+        foreach ($effects as $effect) {
+            if (! isset($described[$effect['SpellID']])) {
+                continue;
+            }
+
+            foreach ($links[$effect['ID']] as $link) {
                 $itemId = (int) $link['ItemID'];
                 $result[$itemId] ??= ['onUse' => false, 'onEquip' => false];
                 $result[$itemId]['onUse'] = $result[$itemId]['onUse'] || $effect['TriggerType'] === '0';

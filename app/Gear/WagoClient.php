@@ -26,6 +26,7 @@ class WagoClient
         'ItemScalingConfig',
         'ItemSet',
         'ItemSparse',
+        'ItemSpecOverride',
         'ItemXBonusTree',
         'ItemXItemEffect',
         'JournalEncounter',
@@ -39,6 +40,7 @@ class WagoClient
         'PlayerCondition',
         'RandPropPoints',
         'SharedString',
+        'Spell',
         'WorldStateExpression',
     ];
 

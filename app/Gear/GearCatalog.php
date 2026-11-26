@@ -208,7 +208,7 @@ class GearCatalog
         }
 
         if ($item['inventoryType'] === self::INVENTORY_TYPE_HELD_IN_OFF_HAND) {
-            return 'Held In Off-Hand';
+            return 'Off-Hand';
         }
 
         return self::ARMOR_TYPES[$item['subclassId']] ?? '';
@@ -242,7 +242,7 @@ class GearCatalog
 
     /**
      * @param  array<string, mixed>  $item
-     * @param  array{id: int, armor: int, specs: array<string, array{primary: string, weapons: list<int>, shield?: bool, off_hand?: bool}>}  $class
+     * @param  array{id: int, armor: int, specs: array<string, array{id: int, primary: string, weapons: list<int>, shield?: bool, off_hand?: bool}>}  $class
      * @param  list<string>  $specKeys
      */
     private function isUsableBy(array $item, array $class, array $specKeys): bool
@@ -270,10 +270,15 @@ class GearCatalog
 
     /**
      * @param  array<string, mixed>  $item
-     * @param  array{primary: string, weapons: list<int>, shield?: bool, off_hand?: bool}  $spec
+     * @param  array{id: int, primary: string, weapons: list<int>, shield?: bool, off_hand?: bool}  $spec
      */
     private function isUsableBySpec(array $item, array $spec): bool
     {
+        // The override is the loot spec list; it's how primary-less trinkets are limited to Str/Agi specs.
+        if ($item['specs'] !== [] && ! in_array($spec['id'], $item['specs'], true)) {
+            return false;
+        }
+
         if ($item['primaries'] !== [] && ! in_array($spec['primary'], $item['primaries'], true)) {
             return false;
         }

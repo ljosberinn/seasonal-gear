@@ -151,6 +151,35 @@ class GearPageTest extends TestCase
             ->assertDontSee('Greatsword of Testing');
     }
 
+    public function test_spec_override_limits_items_without_a_primary_stat(): void
+    {
+        $this->get(route('gear.class', ['class' => 'warrior', 'spec' => 'arms']))
+            ->assertOk()
+            ->assertSee('Voracious Heart');
+
+        $this->get(route('gear.class', ['class' => 'evoker', 'spec' => 'augmentation']))
+            ->assertOk()
+            ->assertSee('Vile Alchemist')
+            ->assertDontSee('Voracious Heart');
+    }
+
+    public function test_type_column_only_shows_when_it_tells_items_apart(): void
+    {
+        $this->get(route('gear.index'))
+            ->assertOk()
+            ->assertSee('>Type</th>', false)
+            ->assertSee('1 Socket | On Use');
+
+        $this->get(route('gear.index', ['slot' => 'head']))
+            ->assertOk()
+            ->assertDontSee('>Type</th>', false);
+
+        // ring, neck and trinket have no armor or weapon type
+        $this->get(route('gear.index', ['sources' => ['raid']]))
+            ->assertOk()
+            ->assertDontSee('>Type</th>', false);
+    }
+
     public function test_unknown_class_or_spec_is_not_found(): void
     {
         $this->get('/tinker')->assertNotFound();
@@ -174,7 +203,7 @@ class GearPageTest extends TestCase
         $heroOnly = ['itemLevel' => 321, 'tracks' => ['hero' => $hero]];
         $item = fn (int $id, string $name, string $slot, int $inventoryType, int $classId, int $subclassId, array $primaries, array $secondaries, array $extra = []): array => [
             'id' => $id, 'name' => $name, 'slot' => $slot, 'inventoryType' => $inventoryType, 'classId' => $classId,
-            'subclassId' => $subclassId, 'quality' => 4, 'allowableClass' => -1, 'primaries' => $primaries,
+            'subclassId' => $subclassId, 'quality' => 4, 'allowableClass' => -1, 'specs' => [], 'primaries' => $primaries,
             'secondaries' => $secondaries, 'choiceStats' => false, 'itemLevel' => 334, 'tracks' => ['hero' => $hero, 'myth' => $myth],
             'stats' => ['sta' => 1000] + $secondaries, 'sockets' => 0, 'onUse' => false, 'onEquip' => false, 'itemSet' => null,
             ...$extra,
@@ -199,11 +228,13 @@ class GearPageTest extends TestCase
                 $item(900002, 'Greatsword of Testing', 'two-hand', 17, 2, 8, ['str'], ['haste' => 3500, 'vers' => 3500]),
                 $item(900003, 'Staff of Testing', 'two-hand', 17, 2, 10, ['int'], ['haste' => 3500, 'vers' => 3500]),
                 $item(900004, 'Bulwark of Testing', 'off-hand', 14, 4, 6, ['str'], ['haste' => 3500, 'vers' => 3500], $heroOnly),
+                $item(270175, "Voracious Heart of Ula'tek", 'trinket', 12, 4, 0, [], ['crit' => 6666], ['specs' => [71, 72, 73, 103, 577], 'sockets' => 1, 'onUse' => true]),
                 $item(900005, 'Catalyzed Cowl', 'head', 1, 4, 4, ['str'], ['haste' => 3500, 'crit' => 3500]),
             ],
             'sources' => [
                 $source(268249, 'raid', 'The Venomous Abyss'),
                 $source(268265, 'raid', 'The Venomous Abyss'),
+                $source(270175, 'raid', 'The Venomous Abyss'),
                 $source(251229, 'dungeon', 'Voidscar Arena'),
                 $source(251199, 'dungeon', 'The Blinding Vale'),
                 $source(900001, 'delve'),
