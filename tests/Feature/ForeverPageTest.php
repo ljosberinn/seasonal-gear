@@ -128,20 +128,40 @@ class ForeverPageTest extends TestCase
             ->assertDontSee('Zarmok');
     }
 
-    public function test_item_level_slider_spans_the_dataset(): void
+    public function test_level_inputs_are_bounded_except_for_the_highest_item_level(): void
     {
         $this->useForeverDataset();
 
-        $this->get(route('forever.index'))
-            ->assertOk()
-            ->assertSee('name="min_item_level" min="24" max="98" value="24"', false)
-            ->assertSee('name="max_item_level" min="24" max="98" value="98"', false);
+        $content = $this->get(route('forever.index'))->assertOk()->getContent();
 
-        $this->get(route('forever.index', ['min_item_level' => 23]))
-            ->assertSessionHasErrors(['min_item_level' => 'The min item level field must be between 24 and 98.']);
+        $this->assertMatchesRegularExpression('/<input [^>]*type="number"[^>]*name="max_level" min="1"\s+max="60"\s+value=""/', $content);
+        $this->assertMatchesRegularExpression('/<input [^>]*type="number"[^>]*name="max_item_level" min="1"\s+value=""/', $content);
+
+        $this->get(route('forever.index', ['min_item_level' => 0]))
+            ->assertSessionHasErrors(['min_item_level' => 'The min item level field must be at least 1.']);
+
+        $this->get(route('forever.index', ['min_item_level' => 1000]))
+            ->assertOk()
+            ->assertSee('No items match these filters.');
     }
 
-    public function test_required_level_bounds_dragged_past_each_other_still_form_a_range(): void
+    public function test_level_ranges_can_be_open_ended(): void
+    {
+        $this->useForeverDataset();
+
+        $this->get(route('forever.index', ['min_item_level' => 85, 'max_item_level' => '']))
+            ->assertOk()
+            ->assertSee('Dreadnaught Legplates')
+            ->assertSee('Inquisition Crown')
+            ->assertDontSee('Ghostweave Leggings');
+
+        $this->get(route('forever.index', ['max_level' => 1]))
+            ->assertOk()
+            ->assertSee('Minor Channeling Ring')
+            ->assertDontSee('Zarmok');
+    }
+
+    public function test_required_level_bounds_typed_the_wrong_way_round_still_form_a_range(): void
     {
         $this->useForeverDataset();
 

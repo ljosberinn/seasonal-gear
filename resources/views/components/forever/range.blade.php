@@ -3,8 +3,9 @@
     // query parameter suffix; the inputs submit as min_{name} and max_{name}
     'name',
     'min',
-    'max',
-    // picked bounds; null is the slider's end stop
+    // null leaves the range open-ended
+    'max' => null,
+    // picked bounds; null is no bound
     'low' => null,
     'high' => null,
 ])
@@ -16,11 +17,11 @@
     'font-bold' => $low !== null || $high !== null,
 ])>
     <legend class="float-left mr-1 text-gray-600 dark:text-gray-400">{{ $legend }}</legend>
-    <label class="sr-only" for="min-{{ $id }}">Minimum {{ $legend }}</label>
-    <input id="min-{{ $id }}" type="range" name="min_{{ $name }}" min="{{ $min }}" max="{{ $max }}" value="{{ $low ?? $min }}" data-output="min-{{ $id }}-value" class="w-32 accent-teal-600">
-    <output id="min-{{ $id }}-value" for="min-{{ $id }}" class="w-6 text-right tabular-nums">{{ $low ?? $min }}</output>
-    <span aria-hidden="true">–</span>
-    <label class="sr-only" for="max-{{ $id }}">Maximum {{ $legend }}</label>
-    <output id="max-{{ $id }}-value" for="max-{{ $id }}" class="w-6 tabular-nums">{{ $high ?? $max }}</output>
-    <input id="max-{{ $id }}" type="range" name="max_{{ $name }}" min="{{ $min }}" max="{{ $max }}" value="{{ $high ?? $max }}" data-output="max-{{ $id }}-value" class="w-32 accent-teal-600">
+    @foreach (['min' => $low, 'max' => $high] as $bound => $value)
+        @if ($bound === 'max')
+            <span aria-hidden="true">–</span>
+        @endif
+        <label class="sr-only" for="{{ $bound }}-{{ $id }}">{{ $bound === 'min' ? 'Minimum' : 'Maximum' }} {{ $legend }}</label>
+        <input id="{{ $bound }}-{{ $id }}" type="number" inputmode="numeric" name="{{ $bound }}_{{ $name }}" min="{{ $min }}" @if ($max !== null) max="{{ $max }}" @endif value="{{ $value }}" placeholder="{{ $bound === 'min' ? $min : ($max ?? 'Any') }}" class="w-16 rounded-md border border-gray-200 bg-gray-50 px-2 py-0.5 tabular-nums placeholder:font-normal placeholder:text-gray-400 focus-visible:outline-2 focus-visible:outline-teal-500 dark:border-gray-800 dark:bg-gray-900/40 dark:placeholder:text-gray-500">
+    @endforeach
 </fieldset>
