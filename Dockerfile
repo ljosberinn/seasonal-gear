@@ -2,7 +2,7 @@
 FROM dunglas/frankenphp:1-php8.5-alpine AS base
 
 RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
-    && install-php-extensions opcache
+    && install-php-extensions intl opcache
 
 WORKDIR /app
 
