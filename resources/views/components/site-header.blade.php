@@ -42,9 +42,12 @@
         </div>
 
         <div class="flex items-center gap-4 sm:gap-6">
-            <nav aria-label="Main" class="flex gap-3 text-sm sm:gap-4">
-                <a href="{{ route('statistics.index') }}" @if (request()->routeIs('statistics.*')) aria-current="page" @endif class="hover:text-primary-500 aria-[current=page]:font-semibold dark:hover:text-primary-400">Statistics</a>
-            </nav>
+            {{-- Forever's DB2 has no Encounter Journal or specs, which the statistics are built on --}}
+            @if (request()->routeIs('gear.*', 'statistics.*'))
+                <nav aria-label="Main" class="flex gap-3 text-sm sm:gap-4">
+                    <a href="{{ route('statistics.index') }}" @if (request()->routeIs('statistics.*')) aria-current="page" @endif class="hover:text-primary-500 aria-[current=page]:font-semibold dark:hover:text-primary-400">Statistics</a>
+                </nav>
+            @endif
 
             <div class="hidden flex-col items-end sm:flex text-sm text-gray-500 dark:text-gray-400">
                 @if ($build)

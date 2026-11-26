@@ -241,6 +241,13 @@ class GearPageTest extends TestCase
         $this->get('/retail/paladin/arcane')->assertNotFound();
     }
 
+    public function test_links_to_the_statistics(): void
+    {
+        $this->get(route('gear.index'))
+            ->assertOk()
+            ->assertSee('href="'.route('statistics.index').'"', false);
+    }
+
     public function test_rejects_unknown_filter_values(): void
     {
         $this->get(route('gear.index', ['stats' => ['leech']]))->assertSessionHasErrors('stats.0');

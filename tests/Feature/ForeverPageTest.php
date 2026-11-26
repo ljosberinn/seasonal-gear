@@ -207,6 +207,15 @@ class ForeverPageTest extends TestCase
         $this->assertMatchesRegularExpression('#href="'.preg_quote(route('forever.index'), '#').'"\s+aria-current="page"#', $content);
     }
 
+    public function test_hides_the_retail_only_statistics_link(): void
+    {
+        $this->useForeverDataset();
+
+        $this->get(route('forever.index'))
+            ->assertOk()
+            ->assertDontSee('href="'.route('statistics.index').'"', false);
+    }
+
     public function test_rejects_unknown_filter_values(): void
     {
         $this->useForeverDataset();
