@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\CacheOnCdn;
+use App\Http\Middleware\CollapseHtmlWhitespace;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Application;
@@ -21,7 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Nothing reads the session and there are no forms, and Vercel's CDN won't cache a response that sets a cookie.
         $middleware->web(
-            append: [CacheOnCdn::class],
+            append: [CacheOnCdn::class, CollapseHtmlWhitespace::class],
             remove: [
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
