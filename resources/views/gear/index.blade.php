@@ -2,139 +2,193 @@
     use App\Gear\GearCatalog;
     use App\Gear\Slot;
 
-    $statLabels = ['crit' => 'Critical Strike', 'haste' => 'Haste', 'mastery' => 'Mastery', 'vers' => 'Versatility'];
-    $shortStatLabels = ['sta' => 'Sta', 'crit' => 'Crit', 'haste' => 'Haste', 'mastery' => 'Mastery', 'vers' => 'Vers'];
+    // full class strings so Tailwind picks them up
+    $statChips = [
+        'crit' => ['label' => 'Critical Strike', 'dot' => 'bg-red-500', 'active' => 'border-red-500 bg-red-500/10 ring-red-500 dark:bg-red-950/60'],
+        'haste' => ['label' => 'Haste', 'dot' => 'bg-amber-500', 'active' => 'border-amber-500 bg-amber-500/10 ring-amber-500 dark:bg-amber-950/60'],
+        'mastery' => ['label' => 'Mastery', 'dot' => 'bg-purple-500', 'active' => 'border-purple-500 bg-purple-500/10 ring-purple-500 dark:bg-purple-950/60'],
+        'vers' => ['label' => 'Versatility', 'dot' => 'bg-green-500', 'active' => 'border-green-500 bg-green-500/10 ring-green-500 dark:bg-green-950/60'],
+    ];
+    $shortStatLabels = ['crit' => 'Crit', 'haste' => 'Haste', 'mastery' => 'Mastery', 'vers' => 'Vers'];
     $query = request()->query();
     $formAction = $classKey === null ? route('gear.index') : route('gear.class', array_filter(['class' => $classKey, 'spec' => $specKey]));
+    $allSources = array_keys(GearCatalog::SOURCE_TYPES);
+    $showsAllSources = array_diff($allSources, $filter->sources) === [];
+    $hasFilters = $filter->slot !== null || $filter->stats !== [] || collect($filter->sources)->sort()->values()->all() !== collect(GearCatalog::DEFAULT_SOURCE_TYPES)->sort()->values()->all();
+    $specOptionsFor = fn (string $key): array => [
+        ['href' => route('gear.class', ['class' => $key] + $query), 'label' => 'All Specs', 'active' => $classKey === $key && $specKey === null, 'icon' => $classes[$key]['icon'], 'color' => $classes[$key]['color']],
+        ...collect($classes[$key]['specs'])->map(fn (array $spec, string $specKeyOption): array => [
+            'href' => route('gear.class', ['class' => $key, 'spec' => $specKeyOption] + $query),
+            'label' => $spec['name'],
+            'active' => $classKey === $key && $specKey === $specKeyOption,
+            'icon' => $spec['icon'],
+            'color' => $classes[$key]['color'],
+        ])->values(),
+    ];
+    $classOptions = [
+        ['href' => route('gear.index', $query), 'label' => 'All Classes', 'cardLabel' => 'All Classes', 'active' => $classKey === null, 'icon' => 'inv_misc_questionmark', 'cardIcon' => 'inv_misc_questionmark', 'color' => null, 'specs' => []],
+        ...collect($classes)->map(fn (array $class, string $key): array => [
+            'href' => route('gear.class', ['class' => $key] + $query),
+            'label' => $class['name'],
+            // without a spec row on wider screens, the active class card names the picked spec
+            'cardLabel' => $classKey === $key && $specKey !== null ? $class['specs'][$specKey]['name'] : $class['name'],
+            'active' => $classKey === $key,
+            'icon' => $class['icon'],
+            'cardIcon' => $classKey === $key && $specKey !== null ? $class['specs'][$specKey]['icon'] : $class['icon'],
+            'color' => $class['color'],
+            'specs' => $specOptionsFor($key),
+        ])->values(),
+    ];
+    $specOptions = $classKey === null ? [] : $specOptionsFor($classKey);
     $title = collect([$classKey ? $classes[$classKey]['name'] : null, $specKey ? $classes[$classKey]['specs'][$specKey]['name'] : null])->filter()->reverse()->implode(' ');
 @endphp
 
-<x-layout :title="$title ?: null">
-    <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        <header class="flex flex-wrap items-baseline justify-between gap-2">
-            <h1 class="text-3xl font-semibold tracking-tight">{{ $meta['season']['name'] }} gear</h1>
-            <p class="text-sm text-zinc-500">Build {{ $meta['build'] }}</p>
-        </header>
+<x-layout :title="$title ?: null" :build="$meta['build']">
+    <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+        <h1 class="sr-only">{{ $meta['season']['name'] }} Gear</h1>
 
-        <nav class="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Class">
-            <a href="{{ route('gear.index', $query) }}" @class(['rounded-full px-3 py-1 ring-1 ring-zinc-300 dark:ring-zinc-700', 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' => $classKey === null])>All classes</a>
-            @foreach ($classes as $key => $class)
-                <a href="{{ route('gear.class', ['class' => $key] + $query) }}" @class(['rounded-full px-3 py-1 ring-1 ring-zinc-300 dark:ring-zinc-700', 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' => $classKey === $key])>{{ $class['name'] }}</a>
+        <nav aria-label="Class and Specialization">
+            {{-- phones pick class and spec from two dropdowns, wider screens from cards whose spec flyout opens on hover --}}
+            @foreach (['Class' => $classOptions, 'Specialization' => $specOptions] as $label => $options)
+                @if ($options !== [])
+                    @php($selected = collect($options)->firstWhere('active', true))
+                    <x-filter.nav-select @class(['sm:hidden', 'mt-1.5' => ! $loop->first]) :label="$label" :options="$options" :icon="$selected['icon']" :color="$selected['color']" />
+                @endif
             @endforeach
+
+            <ul data-flyout-container class="hidden grid-cols-4 gap-1.5 sm:grid lg:grid-cols-7">
+                @foreach ($classOptions as $index => $option)
+                    <li data-flyout class="relative">
+                        <x-filter.card data-flyout-trigger class="h-full" :aria-controls="$option['specs'] === [] ? null : 'specs-'.$index" :aria-expanded="$option['specs'] === [] ? null : 'false'" :href="$option['href']" :active="$option['active']" :icon="$option['cardIcon']" :color="$option['color']">{{ $option['cardLabel'] }}</x-filter.card>
+                        @if ($option['specs'] !== [])
+                            <div id="specs-{{ $index }}" data-flyout-panel hidden class="absolute top-full left-0 z-20 w-56 pt-1.5">
+                                <ul class="grid gap-1 rounded-md border border-gray-200 bg-white p-1.5 shadow-lg dark:border-gray-800 dark:bg-gray-950">
+                                    @foreach ($option['specs'] as $spec)
+                                        <li><x-filter.card :href="$spec['href']" :active="$spec['active']" :icon="$spec['icon']" :color="$spec['color']">{{ $spec['label'] }}</x-filter.card></li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
         </nav>
 
-        @if ($classKey !== null)
-            <nav class="mt-3 flex flex-wrap gap-2 text-sm" aria-label="Specialization">
-                <a href="{{ route('gear.class', ['class' => $classKey] + $query) }}" @class(['rounded-full px-3 py-1 ring-1 ring-zinc-300 dark:ring-zinc-700', 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' => $specKey === null])>All specs</a>
-                @foreach ($classes[$classKey]['specs'] as $key => $spec)
-                    <a href="{{ route('gear.class', ['class' => $classKey, 'spec' => $key] + $query) }}" @class(['rounded-full px-3 py-1 ring-1 ring-zinc-300 dark:ring-zinc-700', 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' => $specKey === $key])>{{ $spec['name'] }}</a>
+        <form method="get" action="{{ $formAction }}" data-auto-submit class="z-10 mt-6 flex flex-col gap-3 rounded-md border border-gray-200 bg-white/90 p-3 shadow-sm backdrop-blur lg:sticky lg:top-0 dark:border-gray-800 dark:bg-gray-950/90">
+            <div role="group" aria-label="Source" class="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-5">
+                <x-filter.card :href="request()->fullUrlWithQuery(['sources' => $allSources])" :active="$showsAllSources" :count="$counts['anySource']">All Sources</x-filter.card>
+                @foreach (GearCatalog::SOURCE_TYPES as $key => $label)
+                    <x-filter.card :active="in_array($key, $filter->sources, true)" :count="$counts['sources'][$key]">
+                        <input type="checkbox" name="sources[]" value="{{ $key }}" class="sr-only" @checked(in_array($key, $filter->sources, true))>
+                        {{ $label }}
+                    </x-filter.card>
                 @endforeach
-            </nav>
-        @endif
+            </div>
 
-        <form method="get" action="{{ $formAction }}" class="mt-6 grid gap-4 rounded-lg bg-white p-4 ring-1 ring-zinc-200 sm:grid-cols-[12rem_1fr_1fr_auto] dark:bg-zinc-900 dark:ring-zinc-800">
-            <label class="flex flex-col gap-1 text-sm">
-                <span class="font-medium">Slot</span>
-                <select name="slot" class="rounded-md border-zinc-300 bg-transparent py-1.5 dark:border-zinc-700">
-                    <option value="">Any slot</option>
-                    @foreach (Slot::cases() as $slot)
-                        <option value="{{ $slot->value }}" @selected($filter->slot === $slot)>{{ $slot->label() }}</option>
-                    @endforeach
-                </select>
-            </label>
-
-            <fieldset class="text-sm">
-                <legend class="font-medium">Secondary stats (all of)</legend>
-                <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1">
-                    @foreach ($statLabels as $key => $label)
-                        <label class="flex items-center gap-1.5">
-                            <input type="checkbox" name="stats[]" value="{{ $key }}" @checked(in_array($key, $filter->stats, true))>
-                            {{ $label }}
-                        </label>
-                    @endforeach
+            <div role="group" aria-label="Slot and Secondary Stats" class="flex flex-wrap items-center gap-2">
+                <div class="relative">
+                    <select name="slot" aria-label="Slot" @class([
+                        'cursor-pointer appearance-none rounded-md border py-0.5 pr-8 pl-3 text-sm focus-visible:outline-2 focus-visible:outline-teal-500',
+                        'border-teal-500 bg-teal-500/10 font-bold text-gray-950 ring-1 ring-teal-500 ring-inset dark:bg-teal-950/60 dark:text-white' => $filter->slot !== null,
+                        'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300 hover:text-gray-900 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-100' => $filter->slot === null,
+                    ])>
+                        <option value="">Any Slot ({{ $counts['anySlot'] }})</option>
+                        @foreach (Slot::cases() as $slot)
+                            <option value="{{ $slot->value }}" @selected($filter->slot === $slot)>{{ $slot->label() }} ({{ $counts['slots'][$slot->value] }})</option>
+                        @endforeach
+                    </select>
+                    <x-icon.chevron-down class="pointer-events-none absolute top-1/2 right-2 size-4 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                 </div>
-            </fieldset>
 
-            <fieldset class="text-sm">
-                <legend class="font-medium">Sources (none checked = all)</legend>
-                <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1">
-                    @foreach (GearCatalog::SOURCE_TYPES as $key => $label)
-                        <label class="flex items-center gap-1.5">
-                            <input type="checkbox" name="sources[]" value="{{ $key }}" @checked(in_array($key, $filter->sources, true))>
-                            {{ $label }}
-                        </label>
-                    @endforeach
-                </div>
-            </fieldset>
+                <x-filter.divider />
 
-            <div class="flex items-end gap-2">
-                <button type="submit" class="rounded-md bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900">Filter</button>
-                <a href="{{ $formAction }}" class="px-2 py-1.5 text-sm text-zinc-500 hover:underline">Reset</a>
+                <x-filter.chip :href="request()->fullUrlWithoutQuery(['stats'])" :active="$filter->stats === []" :count="$counts['anyStat']">Any Stats</x-filter.chip>
+
+                <x-filter.divider />
+
+                @foreach ($statChips as $key => $chip)
+                    <x-filter.chip :active="in_array($key, $filter->stats, true)" :count="$counts['stats'][$key]" :dot="$chip['dot']" :active-color="$chip['active']">
+                        <input type="checkbox" name="stats[]" value="{{ $key }}" class="sr-only" @checked(in_array($key, $filter->stats, true))>
+                        {{ $chip['label'] }}
+                    </x-filter.chip>
+                @endforeach
+
+                @if ($hasFilters)
+                    <a href="{{ $formAction }}" class="ml-auto text-sm text-gray-500 underline underline-offset-4 hover:text-primary-500 dark:text-gray-400 dark:hover:text-primary-400">Reset Filters</a>
+                @endif
+
+                <noscript>
+                    <button type="submit" class="rounded-md bg-teal-600 px-3 py-0.5 text-sm font-bold text-white">Apply Filters</button>
+                </noscript>
             </div>
         </form>
 
-        <p class="mt-6 text-sm text-zinc-500">{{ count($items) }} {{ Str::plural('item', count($items)) }}</p>
+        <p class="mt-6 text-sm text-gray-500 dark:text-gray-400">{{ count($items) }} {{ Str::plural('item', count($items)) }}</p>
 
-        <div class="mt-2 overflow-x-auto rounded-lg ring-1 ring-zinc-200 dark:ring-zinc-800">
-            <table class="min-w-full divide-y divide-zinc-200 bg-white text-sm dark:divide-zinc-800 dark:bg-zinc-900">
-                <thead class="text-left text-xs uppercase tracking-wide text-zinc-500">
+        <div class="mt-2 overflow-x-auto rounded-md border border-gray-200 dark:border-gray-800">
+            <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-800">
+                <thead class="bg-gray-50 text-left text-xs tracking-wide text-gray-500 uppercase dark:bg-gray-900/40 dark:text-gray-400">
                     <tr>
                         <th class="px-3 py-2">Item</th>
                         <th class="px-3 py-2">Slot</th>
                         <th class="px-3 py-2">Type</th>
-                        <th class="px-3 py-2 text-right">ilvl</th>
                         <th class="px-3 py-2">Stats</th>
                         <th class="px-3 py-2">Source</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                     @forelse ($items as $item)
-                        <tr class="align-top">
+                        <tr>
                             <td class="px-3 py-2">
-                                <a href="https://www.wowhead.com/item={{ $item['id'] }}{{ $item['itemLevel'] ? '?ilvl='.$item['itemLevel'] : '' }}" @class([
-                                    'font-medium hover:underline',
-                                    'text-purple-700 dark:text-purple-400' => $item['quality'] === 4,
-                                    'text-blue-700 dark:text-blue-400' => $item['quality'] === 3,
-                                    'text-green-700 dark:text-green-400' => $item['quality'] === 2,
-                                ]) target="_blank" rel="noopener">{{ $item['name'] }}</a>
-                                @if ($item['itemSet'])
-                                    <div class="text-xs text-zinc-500">{{ $item['itemSet']['name'] }}</div>
-                                @endif
+                                <a href="https://www.wowhead.com/item={{ $item['id'] }}{{ $item['itemLevel'] ? '?ilvl='.$item['itemLevel'] : '' }}" @if ($item['itemLevel']) data-wowhead="ilvl={{ $item['itemLevel'] }}" @endif class="group inline-flex items-center gap-2" target="_blank" rel="noopener">
+                                    {{-- Wowhead's script prepends the item icon in here --}}
+                                    <span class="flex flex-col">
+                                        <span @class([
+                                            'font-medium group-hover:underline',
+                                            'text-purple-700 dark:text-purple-400' => $item['quality'] === 4,
+                                            'text-blue-700 dark:text-blue-400' => $item['quality'] === 3,
+                                            'text-green-700 dark:text-green-400' => $item['quality'] === 2,
+                                        ])>{{ $item['name'] }}</span>
+                                        @if ($item['itemSet'])
+                                            <span class="text-xs text-gray-500 dark:text-gray-400">{{ $item['itemSet']['name'] }}</span>
+                                        @endif
+                                    </span>
+                                </a>
                             </td>
                             <td class="px-3 py-2 whitespace-nowrap">{{ Slot::from($item['slot'])->label() }}</td>
                             <td class="px-3 py-2 whitespace-nowrap">{{ GearCatalog::typeLabel($item) }}</td>
-                            <td class="px-3 py-2 text-right tabular-nums">{{ $item['itemLevel'] ?? '–' }}</td>
                             <td class="px-3 py-2">
-                                @if ($item['stats'])
-                                    <div class="flex flex-wrap gap-x-3 tabular-nums">
-                                        @foreach ($item['stats'] as $stat => $value)
-                                            <span @class(['font-semibold' => in_array($stat, $filter->stats, true)])>
-                                                {{ $value }} {{ $stat === 'primary' ? collect($item['primaries'])->map(fn ($primary) => ucfirst($primary))->implode('/') : $shortStatLabels[$stat] }}
-                                            </span>
-                                        @endforeach
-                                    </div>
-                                @elseif ($item['choiceStats'])
-                                    <span class="text-zinc-500">Secondary stats of your choice</span>
-                                @endif
+                                <div class="flex flex-wrap gap-x-3">
+                                    @if ($item['choiceStats'])
+                                        <span class="text-gray-500 dark:text-gray-400">Secondary Stats of Your Choice</span>
+                                    @elseif ($item['secondaries'] !== [])
+                                        <span class="whitespace-nowrap">
+                                            @foreach (GearCatalog::rankSecondaries($item['secondaries']) as $ranked)
+                                                @if ($ranked['relation'])
+                                                    <span class="text-gray-500 dark:text-gray-400">{{ $ranked['relation'] }}</span>
+                                                @endif
+                                                <span @class(['font-semibold' => in_array($ranked['stat'], $filter->stats, true)])>{{ $shortStatLabels[$ranked['stat']] }}</span>
+                                            @endforeach
+                                        </span>
+                                    @endif
+                                </div>
                                 @if ($item['sockets'] || $item['onUse'] || $item['onEquip'])
-                                    <div class="text-xs text-zinc-500">
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">
                                         {{ collect([
-                                            $item['sockets'] ? Str::plural('socket', $item['sockets'], prependCount: true) : null,
-                                            $item['onUse'] ? 'on use' : null,
-                                            $item['onEquip'] ? 'on equip' : null,
+                                            $item['sockets'] ? Str::plural('Socket', $item['sockets'], prependCount: true) : null,
+                                            $item['onUse'] ? 'On Use' : null,
+                                            $item['onEquip'] ? 'On Equip' : null,
                                         ])->filter()->implode(' · ') }}
                                     </div>
                                 @endif
                             </td>
-                            <td class="px-3 py-2">
+                            <td class="space-y-1 px-3 py-2">
                                 @foreach ($item['sources'] as $source)
                                     <div class="whitespace-nowrap">
-                                        <span class="text-zinc-500">{{ GearCatalog::SOURCE_TYPES[$source['type']] }}</span>
+                                        {{-- without a boss, the source type (Tier Set, World, Crafted, …) is the most specific source --}}
+                                        <div>{{ $source['encounter'] ?? GearCatalog::SOURCE_TYPES[$source['type']] }}</div>
                                         @if ($source['instance'])
-                                            · {{ $source['instance'] }}
-                                        @endif
-                                        @if ($source['encounter'])
-                                            · {{ $source['encounter'] }}
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ $source['instance'] }}</div>
                                         @endif
                                     </div>
                                 @endforeach
@@ -142,11 +196,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-3 py-8 text-center text-zinc-500">No items match these filters.</td>
+                            <td colspan="5" class="px-3 py-8 text-center text-gray-500 dark:text-gray-400">No items match these filters.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    </main>
+    </div>
 </x-layout>

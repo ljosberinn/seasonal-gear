@@ -9,16 +9,25 @@ use RuntimeException;
  */
 class GearCatalog
 {
+    /**
+     * Source types the site shows. `gear:import` still collects catalyst items, but they're left out
+     * here until the catalyst is usable this season.
+     */
     public const array SOURCE_TYPES = [
         'raid' => 'Raid',
-        'special' => 'Special encounter',
-        'tier' => 'Tier set',
+        'special' => 'Special Encounter',
+        'tier' => 'Tier Set',
         'dungeon' => 'Dungeon',
         'delve' => 'Delves',
         'world' => 'World',
-        'catalyst' => 'Catalyst',
         'crafted' => 'Crafted',
     ];
+
+    /** Picked when the request names no sources. */
+    public const array DEFAULT_SOURCE_TYPES = ['raid', 'tier', 'dungeon'];
+
+    /** Secondaries at least this share of the next higher one read as roughly equal. */
+    private const float NEAR_EQUAL_RATIO = 0.9;
 
     private const int ITEM_CLASS_WEAPON = 2;
 
@@ -57,6 +66,10 @@ class GearCatalog
         $sourcesByItem = [];
 
         foreach ($dataset['sources'] as $source) {
+            if (! isset(self::SOURCE_TYPES[$source['type']])) {
+                continue;
+            }
+
             if ($filter->sources === [] || in_array($source['type'], $filter->sources, true)) {
                 $sourcesByItem[$source['itemId']][] = $source;
             }
@@ -79,6 +92,99 @@ class GearCatalog
     }
 
     /**
+     * Result count per filter option, each counted against the other groups' active filters so it
+     * previews what picking that option yields. Stats are AND-ed, so a stat counts items that also
+     * have every already picked stat.
+     *
+     * @return array{slots: array<string, int>, stats: array<string, int>, sources: array<string, int>, anySlot: int, anyStat: int, anySource: int}
+     */
+    public function counts(GearFilter $filter): array
+    {
+        $dataset = $this->dataset();
+        $sourceTypesByItem = [];
+
+        foreach ($dataset['sources'] as $source) {
+            if (! isset(self::SOURCE_TYPES[$source['type']])) {
+                continue;
+            }
+
+            $sourceTypesByItem[$source['itemId']][$source['type']] = true;
+        }
+
+        $counts = [
+            'slots' => array_fill_keys(array_column(Slot::cases(), 'value'), 0),
+            'stats' => array_fill_keys(Stat::SECONDARY_KEYS, 0),
+            'sources' => array_fill_keys(array_keys(self::SOURCE_TYPES), 0),
+            'anySlot' => 0,
+            'anyStat' => 0,
+            'anySource' => 0,
+        ];
+
+        foreach ($dataset['items'] as $item) {
+            $sourceTypes = $sourceTypesByItem[$item['id']] ?? [];
+
+            if ($sourceTypes === [] || ($filter->class !== null && ! $this->isUsableBy($item, $filter->class, $filter->specs))) {
+                continue;
+            }
+
+            $matchesSlot = $filter->slot === null || $item['slot'] === $filter->slot->value;
+            $matchesStats = $this->hasStats($item, $filter->stats);
+            $matchesSource = $filter->sources === [] || array_intersect_key($sourceTypes, array_flip($filter->sources)) !== [];
+
+            if ($matchesStats && $matchesSource) {
+                $counts['anySlot']++;
+                $counts['slots'][$item['slot']]++;
+            }
+
+            if ($matchesSlot && $matchesSource) {
+                $counts['anyStat']++;
+
+                foreach (Stat::SECONDARY_KEYS as $stat) {
+                    if ($this->hasStats($item, [...$filter->stats, $stat])) {
+                        $counts['stats'][$stat]++;
+                    }
+                }
+            }
+
+            if ($matchesSlot && $matchesStats) {
+                $counts['anySource']++;
+
+                foreach (array_keys($sourceTypes) as $type) {
+                    $counts['sources'][$type]++;
+                }
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
+     * Secondary stats from highest to lowest, each with how it compares to the one before it.
+     *
+     * @param  array<string, int>  $secondaries
+     * @return list<array{stat: string, relation: '='|'≈'|'>'|null}>
+     */
+    public static function rankSecondaries(array $secondaries): array
+    {
+        arsort($secondaries);
+
+        $ranked = [];
+        $previous = null;
+
+        foreach ($secondaries as $stat => $value) {
+            $ranked[] = ['stat' => $stat, 'relation' => match (true) {
+                $previous === null => null,
+                $value === $previous => '=',
+                $value >= $previous * self::NEAR_EQUAL_RATIO => '≈',
+                default => '>',
+            }];
+            $previous = $value;
+        }
+
+        return $ranked;
+    }
+
+    /**
      * @param  array<string, mixed>  $item
      */
     public static function typeLabel(array $item): string
@@ -87,8 +193,13 @@ class GearCatalog
             return self::WEAPON_TYPES[$item['subclassId']] ?? 'Weapon';
         }
 
+        // Cloaks are cloth for every class, so the armor type would only suggest otherwise.
+        if ($item['slot'] === Slot::Back->value) {
+            return '';
+        }
+
         if ($item['inventoryType'] === self::INVENTORY_TYPE_HELD_IN_OFF_HAND) {
-            return 'Held In Off-hand';
+            return 'Held In Off-Hand';
         }
 
         return self::ARMOR_TYPES[$item['subclassId']] ?? '';
@@ -103,12 +214,21 @@ class GearCatalog
             return false;
         }
 
-        // Crafted items take whichever secondaries the crafter picks.
-        if (! $item['choiceStats'] && array_diff($filter->stats, array_keys($item['secondaries'])) !== []) {
+        if (! $this->hasStats($item, $filter->stats)) {
             return false;
         }
 
         return $filter->class === null || $this->isUsableBy($item, $filter->class, $filter->specs);
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     * @param  list<string>  $stats
+     */
+    private function hasStats(array $item, array $stats): bool
+    {
+        // Crafted items take whichever secondaries the crafter picks.
+        return $item['choiceStats'] || array_diff($stats, array_keys($item['secondaries'])) === [];
     }
 
     /**

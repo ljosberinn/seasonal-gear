@@ -2,11 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Gear\GearCatalog;
+use App\Gear\GearFilter;
+use App\Gear\Slot;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 class GearPageTest extends TestCase
 {
+    private const array ALL_SOURCES = ['raid', 'special', 'tier', 'dungeon', 'delve', 'world', 'crafted'];
+
     private string $datasetPath;
 
     protected function setUp(): void
@@ -26,19 +31,41 @@ class GearPageTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_lists_every_item_without_filters(): void
+    public function test_defaults_to_raid_tier_set_and_dungeon_sources(): void
     {
         $this->get(route('gear.index'))
             ->assertOk()
             ->assertSee('Test Season')
             ->assertSee('12.1.5.70961')
             ->assertSeeInOrder(['Visor of the Predator', 'Worldroot Canopy'])
-            ->assertSee('Vile Alchemist&#039;s Band', false);
+            ->assertSee('Vile Alchemist&#039;s Band', false)
+            ->assertSee('Calamitous Echo')
+            ->assertDontSee('Hasty Helm')
+            ->assertDontSee('Greatsword of Testing')
+            ->assertDontSee('Martyr');
+    }
+
+    public function test_hides_catalyst_items(): void
+    {
+        $this->get(route('gear.index', ['sources' => array_keys(GearCatalog::SOURCE_TYPES)]))
+            ->assertOk()
+            ->assertSee('Hasty Helm')
+            ->assertDontSee('Catalyzed Cowl');
+
+        $this->get(route('gear.index', ['sources' => ['catalyst']]))->assertSessionHasErrors('sources.0');
+    }
+
+    public function test_item_links_carry_wowhead_tooltip_item_level(): void
+    {
+        $this->get(route('gear.index'))
+            ->assertOk()
+            ->assertSee('wow.zamimg.com/js/tooltips.js', false)
+            ->assertSee('data-wowhead="ilvl=334"', false);
     }
 
     public function test_filters_by_slot_and_all_selected_stats(): void
     {
-        $this->get(route('gear.index', ['slot' => 'head', 'stats' => ['mastery', 'crit']]))
+        $this->get(route('gear.index', ['slot' => 'head', 'stats' => ['mastery', 'crit'], 'sources' => self::ALL_SOURCES]))
             ->assertOk()
             ->assertSee('Visor of the Predator')
             ->assertSee('Worldroot Canopy')
@@ -54,6 +81,18 @@ class GearPageTest extends TestCase
             ->assertSee('Vile Alchemist')
             ->assertDontSee('Visor of the Predator')
             ->assertDontSee('Martyr');
+    }
+
+    public function test_counts_each_option_against_the_other_groups_filters(): void
+    {
+        $counts = $this->app->make(GearCatalog::class)->counts(new GearFilter(slot: Slot::Head, stats: ['crit'], sources: ['dungeon']));
+
+        $this->assertSame(4, $counts['anySource']);
+        $this->assertSame(['dungeon' => 2, 'delve' => 1, 'crafted' => 1], array_filter($counts['sources']));
+        $this->assertSame(2, $counts['anyStat']);
+        $this->assertSame(['crit' => 2, 'mastery' => 2], array_filter($counts['stats']));
+        $this->assertSame(2, $counts['anySlot']);
+        $this->assertSame(['head' => 2], array_filter($counts['slots']));
     }
 
     public function test_class_route_limits_armor_type_and_class_restricted_items(): void
@@ -72,14 +111,14 @@ class GearPageTest extends TestCase
 
     public function test_spec_route_limits_primary_stat_and_weapons(): void
     {
-        $this->get(route('gear.class', ['class' => 'paladin', 'spec' => 'retribution']))
+        $this->get(route('gear.class', ['class' => 'paladin', 'spec' => 'retribution', 'sources' => self::ALL_SOURCES]))
             ->assertOk()
             ->assertSee('Visor of the Predator')
             ->assertSee('Greatsword of Testing')
             ->assertDontSee('Staff of Testing')
             ->assertDontSee('Bulwark of Testing');
 
-        $this->get(route('gear.class', ['class' => 'paladin', 'spec' => 'protection']))
+        $this->get(route('gear.class', ['class' => 'paladin', 'spec' => 'protection', 'sources' => self::ALL_SOURCES]))
             ->assertOk()
             ->assertSee('Bulwark of Testing')
             ->assertDontSee('Greatsword of Testing');
@@ -127,6 +166,7 @@ class GearPageTest extends TestCase
                 $item(900002, 'Greatsword of Testing', 'two-hand', 17, 2, 8, ['str'], ['haste' => 3500, 'vers' => 3500]),
                 $item(900003, 'Staff of Testing', 'two-hand', 17, 2, 10, ['int'], ['haste' => 3500, 'vers' => 3500]),
                 $item(900004, 'Bulwark of Testing', 'off-hand', 14, 4, 6, ['str'], ['haste' => 3500, 'vers' => 3500]),
+                $item(900005, 'Catalyzed Cowl', 'head', 1, 4, 4, ['str'], ['haste' => 3500, 'crit' => 3500]),
             ],
             'sources' => [
                 $source(268249, 'raid', 'The Venomous Abyss'),
@@ -138,6 +178,7 @@ class GearPageTest extends TestCase
                 $source(900002, 'world'),
                 $source(900003, 'world'),
                 $source(900004, 'delve'),
+                $source(900005, 'catalyst', 'The Venomous Abyss'),
             ],
         ];
     }
