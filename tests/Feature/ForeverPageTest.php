@@ -151,18 +151,28 @@ class ForeverPageTest extends TestCase
             ->assertDontSee('Filler Cloak');
     }
 
-    public function test_counts_each_class_against_the_other_filters(): void
+    public function test_class_cards_show_no_counts(): void
     {
         $this->useForeverDataset();
 
-        // Ghostweave Leggings are cloth, the ring fits everyone.
-        $content = $this->get(route('forever.index', ['stats' => ['spell-power']]))->assertOk()->getContent();
+        $content = $this->get(route('forever.index'))->assertOk()->getContent();
 
-        $this->assertMatchesRegularExpression('#>Mage</span>\s?<span[^>]*>2</span>#', $content);
-        $this->assertMatchesRegularExpression('#>Paladin</span>\s?<span[^>]*>1</span>#', $content);
+        $this->assertMatchesRegularExpression('#>All</span>\s?</a>#', $content);
+        $this->assertMatchesRegularExpression('#>Mage</span>\s?</a>#', $content);
     }
 
-    public function test_links_to_forever_from_the_header(): void
+    public function test_colors_main_stats_except_stamina(): void
+    {
+        $this->useForeverDataset();
+
+        $content = $this->get(route('forever.index'))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('#class="[^"]*text-blue-600[^"]*">\+12 Intellect<#', $content);
+        $this->assertMatchesRegularExpression('#class="[^"]*text-amber-800[^"]*">\+23 Strength<#', $content);
+        $this->assertMatchesRegularExpression('#class="whitespace-nowrap">\+37 Stamina<#', $content);
+    }
+
+    public function test_marks_forever_as_the_current_game_version(): void
     {
         $this->useForeverDataset();
 

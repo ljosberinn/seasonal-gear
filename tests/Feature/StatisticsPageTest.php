@@ -121,4 +121,12 @@ class StatisticsPageTest extends TestCase
 
         $this->get(route('statistics.instance', 999))->assertNotFound();
     }
+
+    public function test_marks_retail_as_the_game_version_of_the_statistics(): void
+    {
+        $content = $this->get(route('statistics.index'))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('#href="'.preg_quote(route('gear.index'), '#').'"\s+aria-current="true"#', $content);
+        $this->assertMatchesRegularExpression('#href="'.preg_quote(route('statistics.index'), '#').'"\s+aria-current="page"#', $content);
+    }
 }

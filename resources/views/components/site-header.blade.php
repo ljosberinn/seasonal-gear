@@ -6,6 +6,11 @@
     // assets are built during every deploy, so the manifest dates the running site
     $manifest = public_path('build/manifest.json');
     $builtAt = is_file($manifest) ? Carbon::createFromTimestamp(filemtime($manifest)) : null;
+    $gameVersions = [
+        // statistics are retail-only, so Retail stays marked there without being the current page
+        ['label' => 'Retail', 'href' => route('gear.index'), 'icon' => 'retail.webp', 'current' => request()->routeIs('gear.*') ? 'page' : (request()->routeIs('statistics.*') ? 'true' : null)],
+        ['label' => 'Forever', 'href' => route('forever.index'), 'icon' => 'forever.png', 'current' => request()->routeIs('forever.*') ? 'page' : null],
+    ];
     $themes = [
         'light' => ['label' => 'Light', 'icon' => 'icon.sun'],
         'dark' => ['label' => 'Dark', 'icon' => 'icon.moon'],
@@ -14,17 +19,31 @@
 @endphp
 
 <header class="border-b border-b-(--pattern-fg) bg-white dark:bg-gray-950">
-    <div class="mx-auto flex w-full max-w-4xl items-center justify-between px-4 py-10 xl:max-w-7xl">
-        <a href="{{ route('gear.index') }}" class="flex items-center">
-            <img src="{{ asset('logo.jpg') }}" width="32" height="32" class="mr-3 size-8 rounded-sm" alt="">
-            <span class="text-2xl font-semibold">Seasonal Gear</span>
-        </a>
+    <div class="mx-auto flex w-full max-w-4xl flex-wrap items-center justify-between gap-y-4 px-4 py-10 xl:max-w-7xl">
+        <div class="flex items-center gap-4 sm:gap-6">
+            <a href="{{ route('gear.index') }}" class="flex items-center">
+                <img src="{{ asset('logo.jpg') }}" width="32" height="32" class="mr-3 size-8 rounded-sm" alt="">
+                <span class="text-2xl font-semibold">Seasonal Gear</span>
+            </a>
+
+            <nav aria-label="Game Version" class="flex gap-1.5">
+                @foreach ($gameVersions as $version)
+                    <a href="{{ $version['href'] }}" @if ($version['current']) aria-current="{{ $version['current'] }}" @endif @class([
+                        'flex items-center gap-2 rounded-md border px-2 py-1 text-sm focus-visible:outline-2 focus-visible:outline-teal-500',
+                        'border-teal-500 bg-teal-500/10 font-bold ring-1 ring-teal-500 ring-inset dark:bg-teal-950/60' => $version['current'] !== null,
+                        'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300 hover:text-gray-900 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-100' => $version['current'] === null,
+                    ])>
+                        <img src="{{ asset('images/game-versions/'.$version['icon']) }}" alt="" width="24" height="24" class="size-6 shrink-0 object-contain">
+                        {{-- phones show only the logos, next to the site name --}}
+                        <span class="sr-only sm:not-sr-only">{{ $version['label'] }}</span>
+                    </a>
+                @endforeach
+            </nav>
+        </div>
 
         <div class="flex items-center gap-4 sm:gap-6">
             <nav aria-label="Main" class="flex gap-3 text-sm sm:gap-4">
-                @foreach (['gear.*' => ['Retail', route('gear.index')], 'statistics.*' => ['Statistics', route('statistics.index')], 'forever.*' => ['Forever', route('forever.index')]] as $pattern => [$label, $href])
-                    <a href="{{ $href }}" @if (request()->routeIs($pattern)) aria-current="page" @endif class="hover:text-primary-500 aria-[current=page]:font-semibold dark:hover:text-primary-400">{{ $label }}</a>
-                @endforeach
+                <a href="{{ route('statistics.index') }}" @if (request()->routeIs('statistics.*')) aria-current="page" @endif class="hover:text-primary-500 aria-[current=page]:font-semibold dark:hover:text-primary-400">Statistics</a>
             </nav>
 
             <div class="hidden flex-col items-end sm:flex text-sm text-gray-500 dark:text-gray-400">

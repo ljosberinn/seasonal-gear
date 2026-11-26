@@ -61,16 +61,13 @@ class ForeverCatalog
      * previews what picking that option yields. Stats are AND-ed, so a stat counts items that also
      * have every already picked stat.
      *
-     * @return array{classes: array<string, int>, slots: array<string, int>, stats: array<string, int>, anyClass: int, anySlot: int, anyStat: int}
+     * @return array{slots: array<string, int>, stats: array<string, int>, anySlot: int, anyStat: int}
      */
     public function counts(ForeverFilter $filter): array
     {
-        $classes = array_keys($this->proficiencies());
         $counts = [
-            'classes' => array_fill_keys($classes, 0),
             'slots' => array_fill_keys(array_column(Slot::cases(), 'value'), 0),
             'stats' => array_fill_keys(ForeverStat::keys(), 0),
-            'anyClass' => 0,
             'anySlot' => 0,
             'anyStat' => 0,
         ];
@@ -83,16 +80,6 @@ class ForeverCatalog
             $matchesClass = $this->matchesClass($item, $filter->class);
             $matchesSlot = $this->matchesSlot($item, $filter);
             $matchesStats = $this->hasStats($item, $filter->stats);
-
-            if ($matchesSlot && $matchesStats) {
-                $counts['anyClass']++;
-
-                foreach ($classes as $class) {
-                    if ($this->matchesClass($item, $class)) {
-                        $counts['classes'][$class]++;
-                    }
-                }
-            }
 
             if ($matchesClass && $matchesStats) {
                 $counts['anySlot']++;
@@ -143,7 +130,7 @@ class ForeverCatalog
     }
 
     /**
-     * Resolved once, since counting runs this for every class and item.
+     * Resolved once, since filtering and counting run this for every item.
      *
      * @return array<string, array{mask: int, armor: int, shield: bool, weapons: array<int, true>}>
      */

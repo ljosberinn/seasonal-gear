@@ -3,19 +3,25 @@
     use App\Gear\GearCatalog;
     use App\Gear\Slot;
 
+    // full class strings so Tailwind picks them up; Stamina stays uncolored
+    $statColors = [
+        'agi' => ['text' => 'text-yellow-600 dark:text-yellow-400', 'dot' => 'bg-yellow-500'],
+        'int' => ['text' => 'text-blue-600 dark:text-blue-400', 'dot' => 'bg-blue-500'],
+        'spi' => ['text' => 'text-sky-500 dark:text-sky-300', 'dot' => 'bg-sky-300'],
+        'str' => ['text' => 'text-amber-800 dark:text-amber-600', 'dot' => 'bg-amber-800'],
+    ];
     // the rarer stat groups start collapsed unless one of their stats is picked
     $primaryGroups = ['attributes', 'defense', 'physical', 'spell'];
     $statsByGroup = collect(ForeverStat::cases())->groupBy(fn (ForeverStat $stat): string => $stat->group());
     $showsMoreStats = collect($filter->stats)->contains(fn (string $key): bool => ! in_array(ForeverStat::fromKey($key)->group(), $primaryGroups, true));
     $classOptions = [
-        ['href' => request()->fullUrlWithQuery(['class' => null, 'page' => null]), 'label' => 'All Classes', 'active' => $filter->class === null, 'icon' => 'inv_misc_questionmark', 'color' => null, 'count' => $counts['anyClass']],
+        ['href' => request()->fullUrlWithQuery(['class' => null, 'page' => null]), 'label' => 'All', 'active' => $filter->class === null, 'icon' => 'inv_misc_questionmark', 'color' => null],
         ...collect($classes)->sortBy('name')->map(fn (array $class, string $key): array => [
             'href' => request()->fullUrlWithQuery(['class' => $key, 'page' => null]),
             'label' => $class['name'],
             'active' => $filter->class === $key,
             'icon' => $class['icon'],
             'color' => $class['color'],
-            'count' => $counts['classes'][$key],
         ])->values(),
     ];
     $selectedClass = collect($classOptions)->firstWhere('active', true);
@@ -30,7 +36,7 @@
 
             <ul class="hidden grid-cols-5 gap-1.5 sm:grid lg:grid-cols-10">
                 @foreach ($classOptions as $option)
-                    <li><x-filter.card class="h-full" :href="$option['href']" :active="$option['active']" :icon="$option['icon']" :color="$option['color']" :count="$option['count']">{{ $option['label'] }}</x-filter.card></li>
+                    <li><x-filter.card class="h-full" :href="$option['href']" :active="$option['active']" :icon="$option['icon']" :color="$option['color']">{{ $option['label'] }}</x-filter.card></li>
                 @endforeach
             </ul>
         </nav>
@@ -77,14 +83,14 @@
                 </div>
 
                 @foreach ($primaryGroups as $group)
-                    <x-forever.stat-row :label="ForeverStat::GROUPS[$group]" :stats="$statsByGroup[$group]" :picked="$filter->stats" :counts="$counts['stats']" />
+                    <x-forever.stat-row :label="ForeverStat::GROUPS[$group]" :stats="$statsByGroup[$group]" :picked="$filter->stats" :counts="$counts['stats']" :colors="$statColors" />
                 @endforeach
 
                 <details @if ($showsMoreStats) open @endif>
                     <summary class="cursor-pointer text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">More Stats</summary>
                     <div class="mt-2 flex flex-col gap-2">
                         @foreach (array_diff(array_keys(ForeverStat::GROUPS), $primaryGroups) as $group)
-                            <x-forever.stat-row :label="ForeverStat::GROUPS[$group]" :stats="$statsByGroup[$group]" :picked="$filter->stats" :counts="$counts['stats']" />
+                            <x-forever.stat-row :label="ForeverStat::GROUPS[$group]" :stats="$statsByGroup[$group]" :picked="$filter->stats" :counts="$counts['stats']" :colors="$statColors" />
                         @endforeach
                     </div>
                 </details>
@@ -139,10 +145,13 @@
                                     <td class="px-3 py-2">
                                         <div class="flex flex-wrap gap-x-3">
                                             @foreach ($item['stats'] as $key => $value)
+                                                @php($isPicked = in_array($key, $filter->stats, true))
                                                 <span @class([
                                                     'whitespace-nowrap',
-                                                    'font-semibold text-teal-700 dark:text-teal-400' => in_array($key, $filter->stats, true),
+                                                    'font-semibold' => $isPicked,
                                                     'text-red-600 dark:text-red-400' => $value < 0,
+                                                    $statColors[$key]['text'] ?? '' => $value > 0 && isset($statColors[$key]),
+                                                    'text-teal-700 dark:text-teal-400' => $value > 0 && $isPicked && ! isset($statColors[$key]),
                                                 ])>{{ ForeverStat::fromKey($key)->format($value, $ratingsPerPercent) }}</span>
                                             @endforeach
                                         </div>
