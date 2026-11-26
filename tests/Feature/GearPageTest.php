@@ -214,6 +214,13 @@ class GearPageTest extends TestCase
             ->assertDontSee('>Type</th>', false);
     }
 
+    public function test_collapses_whitespace_between_tags(): void
+    {
+        $content = $this->get(route('gear.index'))->assertOk()->getContent();
+
+        $this->assertDoesNotMatchRegularExpression('/>\s{2,}</', $content);
+    }
+
     public function test_lists_classes_alphabetically(): void
     {
         $this->get(route('gear.index'))
