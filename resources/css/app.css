@@ -51,3 +51,16 @@
         --viz-below: #e66767;
     }
 }
+
+/* Wowhead's 44px item icons crowd the table on narrow screens; zoom keeps their border image aligned */
+span.iconmedium {
+    zoom: 0.6;
+
+    @variant sm {
+        zoom: 0.8;
+    }
+
+    @variant lg {
+        zoom: 1;
+    }
+}
