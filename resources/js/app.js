@@ -63,10 +63,3 @@ for (const select of document.querySelectorAll('select[data-navigate]')) {
 for (const form of document.querySelectorAll('form[data-auto-submit]')) {
     form.addEventListener('change', () => form.requestSubmit());
 }
-
-for (const range of document.querySelectorAll('input[type="range"][data-output]')) {
-    const output = document.getElementById(range.dataset.output);
-    range.addEventListener('input', () => {
-        output.value = range.value;
-    });
-}

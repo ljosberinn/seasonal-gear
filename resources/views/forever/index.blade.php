@@ -56,7 +56,7 @@
 
                 <x-forever.range legend="Required Level" name="level" :min="1" :max="$maxLevel" :low="$filter->minLevel" :high="$filter->maxLevel" />
 
-                <x-forever.range legend="Item Level" name="item_level" :min="$itemLevelBounds[0]" :max="$itemLevelBounds[1]" :low="$filter->minItemLevel" :high="$filter->maxItemLevel" />
+                <x-forever.range legend="Item Level" name="item_level" :min="1" :low="$filter->minItemLevel" :high="$filter->maxItemLevel" />
 
                 @if (! $filter->isEmpty())
                     <a href="{{ route('forever.index') }}" class="ml-auto text-sm text-gray-500 underline underline-offset-4 hover:text-primary-500 dark:text-gray-400 dark:hover:text-primary-400">Reset Filters</a>

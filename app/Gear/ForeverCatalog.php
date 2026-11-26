@@ -40,16 +40,6 @@ class ForeverCatalog
     }
 
     /**
-     * @return array{int, int} lowest and highest item level in the dataset
-     */
-    public function itemLevelBounds(): array
-    {
-        $itemLevels = array_column($this->dataset()['items'], 'itemLevel');
-
-        return [min($itemLevels), max($itemLevels)];
-    }
-
-    /**
      * @return list<ForeverItem> grouped by slot in slot order, highest item level first within a slot
      */
     public function search(ForeverFilter $filter): array
