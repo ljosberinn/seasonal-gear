@@ -77,7 +77,7 @@ class SeasonResolver
     ) {}
 
     /**
-     * @return array{build: string, season: array{slug: string, name: string}, instances: array<string, array{name: string, achievementId: ?int}>, tracks: array<string, string>, items: list<array<string, mixed>>, sources: list<Source>}
+     * @return array{build: string, hotfixes: array<string, string>, season: array{slug: string, name: string}, instances: array<string, array{name: string, achievementId: ?int}>, tracks: array<string, string>, items: list<array<string, mixed>>, sources: list<Source>}
      */
     public function resolve(string $build): array
     {
@@ -150,6 +150,7 @@ class SeasonResolver
 
         return [
             'build' => $build,
+            'hotfixes' => $this->db2->hotfixes(),
             'season' => ['slug' => $this->season['slug'], 'name' => $this->season['name']],
             'instances' => $this->instanceAchievements($instances),
             'tracks' => array_column($this->tracks, 'name', 'key'),

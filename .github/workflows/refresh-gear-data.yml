@@ -31,14 +31,18 @@ jobs:
 
       - uses: ramsey/composer-install@v3
 
-      # Table downloads run concurrently inside the command (Http::pool).
+      # Table downloads run concurrently inside the command (Http::pool). Scheduled runs skip the
+      # download while the committed dataset has the latest build and hotfixes; manual runs don't.
       - name: Import
         env:
           BUILD: ${{ inputs.build }}
-        run: php artisan gear:import --no-interaction ${BUILD:+"--build=$BUILD"}
+          FORCE: ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }}
+        run: php artisan gear:import --no-interaction ${BUILD:+"--build=$BUILD"} $FORCE
 
       - name: Import Forever
-        run: php artisan forever:import --no-interaction
+        env:
+          FORCE: ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }}
+        run: php artisan forever:import --no-interaction $FORCE
 
       - uses: actions/upload-artifact@v4
         with:

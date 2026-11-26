@@ -23,6 +23,23 @@ class Db2Directory
         return $directory.DIRECTORY_SEPARATOR.'gt_'.$name.'.txt';
     }
 
+    public static function hotfixesPath(string $directory): string
+    {
+        return $directory.DIRECTORY_SEPARATOR.'hotfixes.json';
+    }
+
+    /**
+     * Exports made without hotfix times report none.
+     *
+     * @return array<string, string> table => time of its newest hotfix
+     */
+    public function hotfixes(): array
+    {
+        $path = self::hotfixesPath($this->path);
+
+        return is_file($path) ? json_decode((string) file_get_contents($path), true, flags: JSON_THROW_ON_ERROR) : [];
+    }
+
     /**
      * @return Generator<int, array<string, string>>
      */

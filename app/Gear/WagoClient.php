@@ -54,6 +54,11 @@ class WagoClient
         'combat_ratings' => 1391670,
     ];
 
+    /**
+     * Sent only for tables that have hotfixes, with the time of the newest one.
+     */
+    private const string HOTFIX_HEADER = 'X-Hotfix-Modified-At';
+
     public const array FOREVER_TABLES = ['Item', 'ItemSparse', 'RandPropPoints'];
 
     /**
@@ -83,7 +88,8 @@ class WagoClient
     }
 
     /**
-     * Downloads the tables with hotfixes applied, since hotfixes can change item stats.
+     * Downloads the tables with hotfixes applied, since hotfixes can change item stats, and records
+     * each table's newest hotfix for {@see Db2Directory::hotfixes()}.
      *
      * @param  list<string>  $tables
      * @param  array<string, int>  $gameTables  file name => CASC file data ID
@@ -100,7 +106,7 @@ class WagoClient
             foreach ($tables as $table) {
                 $requests[] = $this->configure($pool->as($table))
                     ->sink(Db2Directory::tablePath($directory, $table))
-                    ->get("/db2/{$table}/csv", ['build' => $build, 'useHotfixes' => 'true']);
+                    ->get("/db2/{$table}/csv", $this->tableQuery($build));
             }
 
             foreach ($gameTables as $name => $fileDataId) {
@@ -112,13 +118,64 @@ class WagoClient
             return $requests;
         }, concurrency: (int) config('gear.wago.concurrency'));
 
+        $this->ensureSuccessful($responses);
+
+        file_put_contents(
+            Db2Directory::hotfixesPath($directory),
+            json_encode($this->hotfixTimes(array_intersect_key($responses, array_flip($tables))), JSON_THROW_ON_ERROR),
+        );
+    }
+
+    /**
+     * Reads each table's newest hotfix without downloading it.
+     *
+     * @param  list<string>  $tables
+     * @return array<string, string> table => time of its newest hotfix
+     */
+    public function hotfixes(string $build, array $tables = self::TABLES): array
+    {
+        $responses = Http::pool(fn (Pool $pool): array => array_map(
+            fn (string $table): mixed => $this->configure($pool->as($table))->head("/db2/{$table}/csv", $this->tableQuery($build)),
+            $tables,
+        ), concurrency: (int) config('gear.wago.concurrency'));
+
+        $this->ensureSuccessful($responses);
+
+        return $this->hotfixTimes($responses);
+    }
+
+    /**
+     * @return array{build: string, useHotfixes: string}
+     */
+    private function tableQuery(string $build): array
+    {
+        return ['build' => $build, 'useHotfixes' => 'true'];
+    }
+
+    /**
+     * @param  array<string, mixed>  $responses
+     */
+    private function ensureSuccessful(array $responses): void
+    {
         foreach ($responses as $name => $response) {
             if (! $response instanceof Response) {
-                throw new RuntimeException("Downloading {$name} failed.", previous: $response instanceof Throwable ? $response : null);
+                throw new RuntimeException("Requesting {$name} failed.", previous: $response instanceof Throwable ? $response : null);
             }
 
             $response->throw();
         }
+    }
+
+    /**
+     * @param  array<string, Response>  $responses  by table
+     * @return array<string, string>
+     */
+    private function hotfixTimes(array $responses): array
+    {
+        $times = array_filter(array_map(fn (Response $response): string => $response->header(self::HOTFIX_HEADER), $responses));
+        ksort($times);
+
+        return $times;
     }
 
     private function request(): PendingRequest
