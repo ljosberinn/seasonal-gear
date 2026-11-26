@@ -14,7 +14,7 @@
     $formAction = $classKey === null ? route('gear.index') : route('gear.class', array_filter(['class' => $classKey, 'spec' => $specKey]));
     $allSources = array_keys(GearCatalog::SOURCE_TYPES);
     $showsAllSources = array_diff($allSources, $filter->sources) === [];
-    $hasFilters = $filter->slot !== null || $filter->stats !== [] || collect($filter->sources)->sort()->values()->all() !== collect(GearCatalog::DEFAULT_SOURCE_TYPES)->sort()->values()->all();
+    $hasFilters = $filter->slot !== null || $filter->track !== null || $filter->stats !== [] || collect($filter->sources)->sort()->values()->all() !== collect(GearCatalog::DEFAULT_SOURCE_TYPES)->sort()->values()->all();
     $specOptionsFor = fn (string $key): array => [
         ['href' => route('gear.class', ['class' => $key] + $query), 'label' => 'All Specs', 'active' => $classKey === $key && $specKey === null, 'icon' => $classes[$key]['icon'], 'color' => $classes[$key]['color']],
         ...collect($classes[$key]['specs'])->map(fn (array $spec, string $specKeyOption): array => [
@@ -86,19 +86,20 @@
             </div>
 
             <div role="group" aria-label="Slot and Secondary Stats" class="flex flex-wrap items-center gap-2">
-                <div class="relative">
-                    <select name="slot" aria-label="Slot" @class([
-                        'cursor-pointer appearance-none rounded-md border py-0.5 pr-8 pl-3 text-sm focus-visible:outline-2 focus-visible:outline-teal-500',
-                        'border-teal-500 bg-teal-500/10 font-bold text-gray-950 ring-1 ring-teal-500 ring-inset dark:bg-teal-950/60 dark:text-white' => $filter->slot !== null,
-                        'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300 hover:text-gray-900 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-100' => $filter->slot === null,
-                    ])>
-                        <option value="">Any Slot ({{ $counts['anySlot'] }})</option>
-                        @foreach (Slot::cases() as $slot)
-                            <option value="{{ $slot->value }}" @selected($filter->slot === $slot)>{{ $slot->label() }} ({{ $counts['slots'][$slot->value] }})</option>
-                        @endforeach
-                    </select>
-                    <x-icon.chevron-down class="pointer-events-none absolute top-1/2 right-2 size-4 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                </div>
+                <x-filter.select name="slot" aria-label="Slot" :active="$filter->slot !== null">
+                    <option value="">Any Slot ({{ $counts['anySlot'] }})</option>
+                    @foreach (Slot::cases() as $slotOption)
+                        <option value="{{ $slotOption->value }}" @selected($filter->slot === $slotOption)>{{ $slotOption->label() }} ({{ $counts['slots'][$slotOption->value] }})</option>
+                    @endforeach
+                </x-filter.select>
+
+                {{-- picks the upgrade rank Wowhead renders; items off that track fall back to their nearest one --}}
+                <x-filter.select name="track" aria-label="Upgrade Track" :active="$filter->track !== null">
+                    <option value="">Highest Track</option>
+                    @foreach ($tracks as $key => $name)
+                        <option value="{{ $key }}" @selected($filter->track === $key)>{{ $name }}</option>
+                    @endforeach
+                </x-filter.select>
 
                 <x-filter.divider />
 
@@ -130,6 +131,7 @@
                 <thead class="bg-gray-50 text-left text-xs tracking-wide text-gray-500 uppercase dark:bg-gray-900/40 dark:text-gray-400">
                     <tr>
                         <th class="px-3 py-2">Item</th>
+                        <th class="px-3 py-2 text-right">Item Level</th>
                         <th class="px-3 py-2">Slot</th>
                         <th class="px-3 py-2">Type</th>
                         <th class="px-3 py-2">Stats</th>
@@ -140,7 +142,8 @@
                     @forelse ($items as $item)
                         <tr>
                             <td class="px-3 py-2">
-                                <a href="https://www.wowhead.com/item={{ $item['id'] }}{{ $item['itemLevel'] ? '?ilvl='.$item['itemLevel'] : '' }}" @if ($item['itemLevel']) data-wowhead="ilvl={{ $item['itemLevel'] }}" @endif class="group inline-flex items-center gap-2" target="_blank" rel="noopener">
+                                @php($wowheadParams = $item['rank'] ? 'bonus='.$item['rank']['bonusList'].'&ilvl='.$item['rank']['itemLevel'] : null)
+                                <a href="https://www.wowhead.com/item={{ $item['id'] }}{{ $wowheadParams ? '?'.$wowheadParams : '' }}" @if ($wowheadParams) data-wowhead="{{ $wowheadParams }}" @endif class="group inline-flex items-center gap-2" target="_blank" rel="noopener">
                                     {{-- Wowhead's script prepends the item icon in here --}}
                                     <span class="flex flex-col">
                                         <span @class([
@@ -155,6 +158,7 @@
                                     </span>
                                 </a>
                             </td>
+                            <td class="px-3 py-2 text-right tabular-nums">{{ $item['rank']['itemLevel'] ?? '–' }}</td>
                             <td class="px-3 py-2 whitespace-nowrap">{{ Slot::from($item['slot'])->label() }}</td>
                             <td class="px-3 py-2 whitespace-nowrap">{{ GearCatalog::typeLabel($item) }}</td>
                             <td class="px-3 py-2">
@@ -196,7 +200,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-3 py-8 text-center text-gray-500 dark:text-gray-400">No items match these filters.</td>
+                            <td colspan="6" class="px-3 py-8 text-center text-gray-500 dark:text-gray-400">No items match these filters.</td>
                         </tr>
                     @endforelse
                 </tbody>

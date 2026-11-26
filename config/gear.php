@@ -23,6 +23,10 @@ return [
         'start_time_event' => 1552,
         'ilvl_scaling_id' => 12,
 
+        // IblGroupPointsModSet IDs that drop at the track's highest above-cap rank (Mythic Coiled Altar
+        // and Ula'tek at Myth 344). The points table isn't in client DB2, so they're listed by hand.
+        'top_rank_points_mod_sets' => [2970],
+
         // Map InstanceType says raid, but these are single-encounter instances.
         'special_instances' => [1317, 1324],
 

@@ -38,6 +38,7 @@ class WagoClient
         'ModifierTree',
         'PlayerCondition',
         'RandPropPoints',
+        'SharedString',
         'WorldStateExpression',
     ];
 

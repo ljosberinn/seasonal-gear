@@ -132,7 +132,7 @@ All S2 groups have `PlayerConditionID = 143187` and `ItemGroupIlvlScalingID = 12
 Myth bonus lists: 12849 … 12854 (ranks 1–6), 12855, 12856, 13848 (ranks 7–9).
 
 - Ranks 2–6 carry an `ItemExtendedCostID`. That's the upgrade cost, e.g. 11477–11481 = 50g + 20 Myth Mistcrest (currency 3446). Rank 1 is the drop rank, so it has no cost.
-- \*Ranks above 6 have `Flags = 3` (every other entry has 2) and no cost. You can't upgrade into them, and tooltips still say "x/6". So bit 0x1 is read as "above the normal cap". Nothing in the client DB2 points at these lists: no tree node, no override, no cost. The 344 neck gets there through the server-side Venomcursed mechanic. How 337/341 are reached isn't in DB2.
+- \*Ranks above 6 have `Flags = 3` (every other entry has 2) and no cost. You can't upgrade into them, and tooltips still say "x/6". So bit 0x1 is read as "above the normal cap". Nothing in the client DB2 points at these lists: no tree node, no override, no cost. Rank 9 (344) is the Mythic drop rank of The Coiled Altar and Ula'tek, see `IblGroupPointsModSetID` 2970 below. 341 is the Ascendant Venomstone upgrade of Myth 6/6 (list 12856 is named "Ascendant Venomforged: Myth"), a server-side mechanic. How 337 is reached isn't in DB2.
 - `ItemGroupIlvlScalingEntry` for scaling 12 lists the five Mistcrest currencies (3442–3446) with `ConditionalCostScaling = 0.5` behind a PlayerCondition. That's the catch-up crest discount.
 - Groups 626–630 also reference S2 track names, but they use the older type 48 (curve + pre-squish ilvl) and have no costs. They aren't on the drop path of either item, so ignore them.
 
@@ -163,7 +163,7 @@ S2 dungeon tree 5939 is swapped in for the S1 tree 5780 via `ChallengeModeItemBo
 
 Other contexts (102, 103, 146–148, 162, 173–179, 189, 190, 14) map to tracks as well. They're presumably delves, world content and vault, but that's unconfirmed.
 
-The **starting rank** inside the group comes from `IblGroupPointsModSetID` on the node. Values seen: 2962–2967, 2970, 4366, 4426–4428, 4629. Mythic raid varies by item: 4366 for the ring, 2970 for the neck. That table isn't in the client DB2 list on wago.tools, so the drop rank can't be derived from DB2. The rank after upgrades is always fully defined by the type 49 bonus in the link, so this only matters for predicting the drop ilvl.
+The **starting rank** inside the group comes from `IblGroupPointsModSetID` on the node. Values seen: 2962–2967, 2970, 4366, 4426–4428, 4629. Mythic raid varies by item: 4366 for the ring, 2970 for the neck. That table isn't in the client DB2 list on wago.tools, so the drop rank can't be derived from DB2. One exception is pinned in config: 2970 only sits on Myth nodes of tree 6109 (Mythic Coiled Altar and Ula'tek, via 6108) and their Nebulous Voidcaches (6114), and those drop at rank 9 = 344, matching the 344 neck. Elsewhere 5998 uses 4366 in the same slot. The rank after upgrades is always fully defined by the type 49 bonus in the link, so this only matters for predicting the drop ilvl.
 
 ### Stat formula
 

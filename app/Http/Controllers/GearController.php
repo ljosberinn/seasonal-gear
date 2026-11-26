@@ -27,6 +27,7 @@ class GearController extends Controller
             'stats.*' => [Rule::in(Stat::SECONDARY_KEYS)],
             'sources' => ['array'],
             'sources.*' => [Rule::in(array_keys(GearCatalog::SOURCE_TYPES))],
+            'track' => ['nullable', Rule::in(array_keys($catalog->tracks()))],
         ]);
 
         $filter = new GearFilter(
@@ -35,12 +36,14 @@ class GearController extends Controller
             sources: $request->has('sources') ? array_values(array_unique($validated['sources'])) : GearCatalog::DEFAULT_SOURCE_TYPES,
             class: $selectedClass,
             specs: $spec === null ? [] : [$spec],
+            track: $validated['track'] ?? null,
         );
 
         return view('gear.index', [
             'meta' => $catalog->meta(),
             'items' => $catalog->search($filter),
             'counts' => $catalog->counts($filter),
+            'tracks' => $catalog->tracks(),
             'filter' => $filter,
             'classes' => $classes,
             'classKey' => $class,
