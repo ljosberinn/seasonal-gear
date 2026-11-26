@@ -2,10 +2,19 @@
 
 return [
 
+    'user_agent' => env('GEAR_USER_AGENT', 'seasonal-gear (+https://github.com/ljosberinn/seasonal-gear)'),
+
     'wago' => [
         'base_url' => env('WAGO_BASE_URL', 'https://wago.tools'),
         'concurrency' => (int) env('WAGO_CONCURRENCY', 6),
-        'user_agent' => env('WAGO_USER_AGENT', 'seasonal-gear (+https://github.com/ljosberinn/seasonal-gear)'),
+    ],
+
+    /*
+    | Wowhead's tooltip API names achievement icons the way wow.zamimg.com serves them: by name once
+    | Wowhead knows it, by file data ID before that. The client listfile can't tell the two apart.
+    */
+    'wowhead' => [
+        'base_url' => env('WOWHEAD_BASE_URL', 'https://nether.wowhead.com'),
     ],
 
     /*

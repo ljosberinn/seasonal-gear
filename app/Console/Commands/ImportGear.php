@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Gear\Db2Directory;
 use App\Gear\SeasonResolver;
 use App\Gear\WagoClient;
+use App\Gear\WowheadClient;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -23,7 +24,7 @@ class ImportGear extends Command
      */
     private const array REQUIRED_SOURCE_TYPES = ['raid', 'dungeon', 'tier', 'catalyst', 'delve', 'world', 'crafted'];
 
-    public function handle(WagoClient $wago): int
+    public function handle(WagoClient $wago, WowheadClient $wowhead): int
     {
         $build = $this->option('build') ?: $wago->latestLiveBuild();
         $directory = $this->option('from') ?: storage_path('app/private/db2/'.$build);
@@ -37,6 +38,14 @@ class ImportGear extends Command
         $this->components->task('Resolving season items', function () use ($build, $directory, &$dataset): void {
             $resolver = new SeasonResolver(new Db2Directory($directory), config('gear.season'), config('gear.expansion'));
             $dataset = $resolver->resolve($build);
+        });
+
+        $this->components->task('Resolving instance icons on Wowhead', function () use ($wowhead, &$dataset): void {
+            $icons = $wowhead->achievementIcons(array_values(array_filter(array_column($dataset['instances'], 'achievementId'))));
+
+            foreach ($dataset['instances'] as &$instance) {
+                $instance['icon'] = $icons[$instance['achievementId']] ?? null;
+            }
         });
 
         $counts = array_count_values(array_column($dataset['sources'], 'type'));

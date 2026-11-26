@@ -83,11 +83,6 @@ class WagoClient
                     ->get("/db2/{$table}/csv", ['build' => $build, 'useHotfixes' => 'true']);
             }
 
-            // the community listfile, narrowed to icons, to name the achievement icons
-            $requests[] = $this->configure($pool->as('icon_files'))
-                ->sink(Db2Directory::iconFilesPath($directory))
-                ->get('/api/files', ['search' => 'interface/icons/']);
-
             foreach (self::GAME_TABLES as $name => $fileDataId) {
                 $requests[] = $this->configure($pool->as($name))
                     ->sink(Db2Directory::gameTablePath($directory, $name))
@@ -114,7 +109,7 @@ class WagoClient
     private function configure(PendingRequest $request): PendingRequest
     {
         return $request->baseUrl((string) config('gear.wago.base_url'))
-            ->withUserAgent((string) config('gear.wago.user_agent'))
+            ->withUserAgent((string) config('gear.user_agent'))
             ->connectTimeout(10)
             ->timeout(300)
             ->retry([1000, 5000, 15000], 0, fn (Throwable $exception): bool => $exception instanceof ConnectionException

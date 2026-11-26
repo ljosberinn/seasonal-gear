@@ -17,7 +17,7 @@
     ];
 @endphp
 
-<x-layout title="Statistics" :build="$meta['build']">
+<x-layout title="Statistics" :build="$meta['build']" :preview="$preview">
     <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
         <h1 class="text-2xl font-semibold">Statistics</h1>
         <p class="mt-2 max-w-3xl text-gray-600 dark:text-gray-400">
@@ -169,7 +169,7 @@
                             <tr>
                                 <td class="px-3 py-1.5 whitespace-nowrap">
                                     <a href="{{ route('statistics.instance', $instance['id']) }}" class="inline-flex items-center gap-2 hover:underline">
-                                        <x-stats.instance-icon :icon="$instance['icon']" :icon-file-id="$instance['iconFileId']" />
+                                        <x-stats.instance-icon :icon="$instance['icon']" />
                                         {{ $instance['name'] }}
                                     </a>
                                 </td>

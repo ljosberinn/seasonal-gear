@@ -42,9 +42,9 @@ trait UsesGearDataset
             'build' => '12.1.5.70961',
             'season' => ['slug' => 'test', 'name' => 'Test Season'],
             'instances' => [
-                1320 => ['name' => 'The Venomous Abyss', 'icon' => 'inv_121_achievement_raid_ulatek', 'iconFileId' => 8039569],
-                1313 => ['name' => 'Voidscar Arena', 'icon' => 'inv_achievement_dungeon_voidscararena', 'iconFileId' => 7439626],
-                1309 => ['name' => 'The Blinding Vale', 'icon' => null, 'iconFileId' => null],
+                1320 => ['name' => 'The Venomous Abyss', 'achievementId' => 63521, 'icon' => '8039569'],
+                1313 => ['name' => 'Voidscar Arena', 'achievementId' => 61508, 'icon' => 'inv_achievement_dungeon_voidscararena'],
+                1309 => ['name' => 'The Blinding Vale', 'achievementId' => null, 'icon' => null],
             ],
             'tracks' => ['champion' => 'Champion', 'hero' => 'Hero', 'myth' => 'Myth'],
             'items' => [

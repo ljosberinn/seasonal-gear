@@ -146,13 +146,31 @@ class GearPageTest extends TestCase
     {
         $this->get(route('gear.class', ['class' => 'demon-hunter', 'spec' => 'devourer']))
             ->assertOk()
-            ->assertSee('https://www.archon.gg/wow/builds/devourer/demon-hunter/mythic-plus/overview/10/all-dungeons/this-week', false)
+            ->assertSee('https://www.archon.gg/wow/builds/devourer/demon-hunter/mythic-plus/overview/10/all-dungeons/this-week?utm_source=seasonal-gear', false)
             ->assertSee('builds/specs/demonhunter-3.jpg', false)
             ->assertSee('Devourer Demon Hunter</span> players currently use', false);
 
         $this->get(route('gear.class', ['class' => 'demon-hunter']))
             ->assertOk()
             ->assertDontSee('archon.gg');
+    }
+
+    public function test_preview_describes_the_selection(): void
+    {
+        $this->get(route('gear.index'))
+            ->assertOk()
+            ->assertSee('<meta property="og:description" content="6 items available in Test Season.">', false)
+            ->assertSee('<meta property="og:image" content="'.asset('logo.jpg').'">', false);
+
+        $this->get(route('gear.class', ['class' => 'paladin', 'spec' => 'retribution', 'stats' => ['haste', 'vers'], 'sources' => ['world']]))
+            ->assertOk()
+            ->assertSee('<meta property="og:description" content="1 item available for Retribution Paladin using Haste/Vers from World.">', false)
+            ->assertSee('<meta property="og:image" content="https://wow.zamimg.com/images/wow/icons/large/spell_holy_auraoflight.jpg">', false);
+
+        $this->get(route('gear.class', ['class' => 'paladin', 'slot' => 'head', 'sources' => self::ALL_SOURCES]))
+            ->assertOk()
+            ->assertSee('content="2 Head items available for Paladins from all sources."', false)
+            ->assertSee('icons/large/classicon_paladin.jpg', false);
     }
 
     public function test_spec_override_limits_items_without_a_primary_stat(): void

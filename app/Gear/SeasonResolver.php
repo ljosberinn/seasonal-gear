@@ -75,7 +75,7 @@ class SeasonResolver
     ) {}
 
     /**
-     * @return array{build: string, season: array{slug: string, name: string}, instances: array<string, array{name: string, icon: ?string, iconFileId: ?int}>, tracks: array<string, string>, items: list<array<string, mixed>>, sources: list<Source>}
+     * @return array{build: string, season: array{slug: string, name: string}, instances: array<string, array{name: string, achievementId: ?int}>, tracks: array<string, string>, items: list<array<string, mixed>>, sources: list<Source>}
      */
     public function resolve(string $build): array
     {
@@ -149,7 +149,7 @@ class SeasonResolver
         return [
             'build' => $build,
             'season' => ['slug' => $this->season['slug'], 'name' => $this->season['name']],
-            'instances' => $this->instanceIcons($instances),
+            'instances' => $this->instanceAchievements($instances),
             'tracks' => array_column($this->tracks, 'name', 'key'),
             'items' => $this->describeItems($sources, $items, $sparse, $itemTrees),
             'sources' => $this->sortSources(array_map(fn (array $source): array => array_diff_key($source, ['tracks' => true]), $sources)),
@@ -211,19 +211,19 @@ class SeasonResolver
     }
 
     /**
-     * Each instance's achievement icon: the achievement named after the instance, else the icon most of
-     * its achievements share. Statistics are skipped since they all use one generic icon.
+     * The achievement whose icon stands for each instance: the one named after the instance, else one
+     * with the icon most of its achievements share. Statistics are skipped since they all use one
+     * generic icon. `gear:import` resolves the icon itself through Wowhead.
      *
      * @param  array<string, array{name: string, type: string, mapId: string}>  $instances
-     * @return array<string, array{name: string, icon: ?string, iconFileId: ?int}>
+     * @return array<string, array{name: string, achievementId: ?int}>
      */
-    private function instanceIcons(array $instances): array
+    private function instanceAchievements(array $instances): array
     {
         $mapIds = array_fill_keys(array_column($instances, 'mapId'), true);
         $achievements = $this->db2->grouped('Achievement', 'Instance_ID', fn (array $row): bool => isset($mapIds[$row['Instance_ID']])
             && $row['IconFileID'] !== '0'
             && ((int) $row['Flags'] & self::ACHIEVEMENT_FLAG_STATISTIC) === 0);
-        $iconNames = $this->db2->iconNames();
         $normalize = fn (string $name): string => strtolower((string) preg_replace('/^The /', '', $name));
         $result = [];
 
@@ -232,12 +232,11 @@ class SeasonResolver
             $named = collect($candidates)->first(fn (array $row): bool => $normalize($row['Title_lang']) === $normalize($instance['name']));
             $counts = array_count_values(array_column($candidates, 'IconFileID'));
             arsort($counts);
-            $fileId = $named['IconFileID'] ?? array_key_first($counts);
+            $achievement = $named ?? collect($candidates)->firstWhere('IconFileID', (string) array_key_first($counts));
 
             $result[$id] = [
                 'name' => $instance['name'],
-                'icon' => $fileId === null ? null : $iconNames[(int) $fileId] ?? null,
-                'iconFileId' => $fileId === null ? null : (int) $fileId,
+                'achievementId' => $achievement === null ? null : (int) $achievement['ID'],
             ];
         }
 

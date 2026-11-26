@@ -23,23 +23,6 @@ class Db2Directory
         return $directory.DIRECTORY_SEPARATOR.'gt_'.$name.'.txt';
     }
 
-    public static function iconFilesPath(string $directory): string
-    {
-        return $directory.DIRECTORY_SEPARATOR.'icon_files.json';
-    }
-
-    /**
-     * Icon names as zamimg.com serves them, by file data ID.
-     *
-     * @return array<int, string>
-     */
-    public function iconNames(): array
-    {
-        $files = json_decode((string) file_get_contents(self::iconFilesPath($this->path)), true, flags: JSON_THROW_ON_ERROR);
-
-        return array_map(fn (string $path): string => basename($path, '.blp'), $files);
-    }
-
     /**
      * @return Generator<int, array<string, string>>
      */

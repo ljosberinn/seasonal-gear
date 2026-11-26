@@ -41,7 +41,7 @@ class GearCatalog
 
     private const array ARMOR_TYPES = [1 => 'Cloth', 2 => 'Leather', 3 => 'Mail', 4 => 'Plate', 6 => 'Shield'];
 
-    /** @var array{build: string, season: array{slug: string, name: string}, instances: array<string, array{name: string, icon: ?string, iconFileId: ?int}>, tracks: array<string, string>, items: list<array<string, mixed>>, sources: list<array<string, mixed>>}|null */
+    /** @var array{build: string, season: array{slug: string, name: string}, instances: array<string, array{name: string, achievementId: ?int, icon: ?string}>, tracks: array<string, string>, items: list<array<string, mixed>>, sources: list<array<string, mixed>>}|null */
     private ?array $dataset = null;
 
     public function __construct(private readonly string $path) {}
@@ -57,7 +57,7 @@ class GearCatalog
     }
 
     /**
-     * @return array<string, array{name: string, icon: ?string, iconFileId: ?int}> by journal instance ID
+     * @return array<string, array{name: string, achievementId: ?int, icon: ?string}> by journal instance ID
      */
     public function instances(): array
     {

@@ -13,6 +13,17 @@
 
         <title>{{ isset($title) ? $title.' · ' : '' }}{{ config('app.name') }}</title>
 
+        @isset($preview)
+            <meta name="description" content="{{ $preview['description'] }}">
+            <meta property="og:type" content="website">
+            <meta property="og:site_name" content="{{ config('app.name') }}">
+            <meta property="og:title" content="{{ $title ?? config('app.name') }}">
+            <meta property="og:description" content="{{ $preview['description'] }}">
+            <meta property="og:url" content="{{ url()->full() }}">
+            <meta property="og:image" content="{{ $preview['image'] }}">
+            <meta name="twitter:card" content="summary">
+        @endisset
+
         {{-- inline so the stored theme applies before first paint; mirrors resources/js/theme.js --}}
         <script>
             (() => {

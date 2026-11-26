@@ -9,12 +9,12 @@
     $armorSlots = array_values(array_filter(Slot::cases(), fn (Slot $slot): bool => $slot->isArmor()));
 @endphp
 
-<x-layout :title="$instance['name'].' Statistics'" :build="$meta['build']">
+<x-layout :title="$instance['name'].' Statistics'" :build="$meta['build']" :preview="$preview">
     <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
         <x-stats.back-link />
 
         <h1 class="mt-4 flex items-center gap-3 text-2xl font-semibold">
-            <x-stats.instance-icon :icon="$instance['icon']" :icon-file-id="$instance['iconFileId']" class="size-8" />
+            <x-stats.instance-icon :icon="$instance['icon']" class="size-8" />
             {{ $instance['name'] }}
         </h1>
         <p class="mt-2 text-gray-600 dark:text-gray-400">{{ GearCatalog::SOURCE_TYPES[$instance['type']] }}</p>

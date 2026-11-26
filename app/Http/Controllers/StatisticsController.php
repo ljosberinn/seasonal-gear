@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Gear\GearCatalog;
 use App\Gear\GearStatistics;
+use App\Gear\PagePreview;
 use Illuminate\View\View;
 
 class StatisticsController extends Controller
@@ -13,9 +14,11 @@ class StatisticsController extends Controller
         $overall = $statistics->overall();
         $specs = $statistics->specs();
         $instances = $statistics->instances();
+        $meta = $catalog->meta();
 
         return view('statistics.index', [
-            'meta' => $catalog->meta(),
+            'meta' => $meta,
+            'preview' => PagePreview::statistics($overall, count($specs), $meta['season']['name']),
             'overall' => $overall,
             'specs' => $specs,
             'instances' => $instances,
@@ -31,21 +34,27 @@ class StatisticsController extends Controller
             abort(404);
         }
 
+        $specStatistics = $statistics->spec($class, $spec);
+
         return view('statistics.spec', [
             'meta' => $catalog->meta(),
+            'preview' => PagePreview::specStatistics($specStatistics, $selectedClass, $spec),
             'class' => $selectedClass,
             'classKey' => $class,
             'specKey' => $spec,
             'overall' => $statistics->overall(),
-            'statistics' => $statistics->spec($class, $spec),
+            'statistics' => $specStatistics,
         ]);
     }
 
     public function instance(GearCatalog $catalog, GearStatistics $statistics, int $instance): View
     {
+        $instanceStatistics = $statistics->instance($instance) ?? abort(404);
+
         return view('statistics.instance', [
             'meta' => $catalog->meta(),
-            'instance' => $statistics->instance($instance) ?? abort(404),
+            'preview' => PagePreview::instanceStatistics($instanceStatistics),
+            'instance' => $instanceStatistics,
             'overall' => $statistics->overall(),
         ]);
     }
