@@ -2,6 +2,7 @@
 
 namespace App\Gear;
 
+use Closure;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -30,6 +31,8 @@ class SeasonResolver
 
     private const int ARMOR_SUBCLASS_COSMETIC = 5;
 
+    private const int INVENTORY_TYPE_NECK = 2;
+
     private const int INVENTORY_TYPE_TRINKET = 12;
 
     private const int BONUS_SOCKET = 6;
@@ -53,7 +56,7 @@ class SeasonResolver
     /** @var array<string, list<array<string, string>>> */
     private array $challengeModeOverrides = [];
 
-    /** @var array<int, array{key: string, name: string, top: Rank, aboveCap: Rank}> season group ID => track, lowest first */
+    /** @var array<int, array{key: string, name: string, top: Rank, aboveCap: Rank, ascendant?: Rank}> season group ID => track, lowest first */
     private array $tracks = [];
 
     /** @var array<string, array<int, bool>> */
@@ -62,7 +65,7 @@ class SeasonResolver
     private int $endTimeEvent = PHP_INT_MAX;
 
     /**
-     * @param  array{slug: string, name: string, expansion_id: int, start_time_event: int, ilvl_scaling_id: int, top_rank_points_mod_sets: list<int>, min_group: int, catalyst_bonus_trees: list<int>}  $season
+     * @param  array{slug: string, name: string, expansion_id: int, start_time_event: int, ilvl_scaling_id: int, top_rank_points_mod_sets: list<int>, ascendant_bonus_lists: list<int>, min_group: int, catalyst_bonus_trees: list<int>}  $season
      * @param  array<string, array{bonus_trees: list<int>, max_group?: int}>  $expansion
      */
     public function __construct(
@@ -139,7 +142,9 @@ class SeasonResolver
         }
 
         $sources = array_values(array_filter($sources, fn (array $source): bool => $this->isGear($items[$source['itemId']] ?? null, $sparse[$source['itemId']] ?? null)));
-        $sources = $this->withMinimumTrack($this->withItemLevels($sources, $itemTrees));
+        $isAscendable = fn (int $itemId): bool => (int) $items[$itemId]['ClassID'] === self::ITEM_CLASS_WEAPON
+            || in_array((int) $sparse[$itemId]['InventoryType'], [self::INVENTORY_TYPE_NECK, self::INVENTORY_TYPE_TRINKET], true);
+        $sources = $this->withMinimumTrack($this->withItemLevels($sources, $itemTrees, $isAscendable));
 
         return [
             'build' => $build,
@@ -359,12 +364,17 @@ class SeasonResolver
 
         $groups = $this->db2->keyed('ItemBonusListGroup', filter: fn (array $row): bool => (int) $row['ItemGroupIlvlScalingID'] === $this->season['ilvl_scaling_id']);
         $topLists = [];
+        $ascendantLists = array_fill_keys(array_map(strval(...), $this->season['ascendant_bonus_lists']), null);
 
         foreach ($this->db2->rows('ItemBonusListGroupEntry') as $entry) {
             $group = $entry['ItemBonusListGroupID'];
 
             if (! isset($groups[$group])) {
                 continue;
+            }
+
+            if (array_key_exists($entry['ItemBonusListID'], $ascendantLists)) {
+                $ascendantLists[$entry['ItemBonusListID']] = $group;
             }
 
             $tier = ((int) $entry['Flags'] & self::ENTRY_FLAG_ABOVE_CAP) !== 0 ? 'aboveCap' : 'top';
@@ -374,7 +384,7 @@ class SeasonResolver
             }
         }
 
-        $listIds = [];
+        $listIds = array_map(fn (): bool => true, $ascendantLists);
 
         foreach ($topLists as $tiers) {
             foreach ($tiers as $top) {
@@ -421,6 +431,14 @@ class SeasonResolver
             throw new RuntimeException("No upgrade tracks use ItemGroupIlvlScalingID {$this->season['ilvl_scaling_id']}.");
         }
 
+        foreach ($ascendantLists as $list => $group) {
+            if ($group === null || ! isset($this->tracks[$group])) {
+                throw new RuntimeException("Ascendant bonus list {$list} isn't on a season upgrade track.");
+            }
+
+            $this->tracks[$group]['ascendant'] = $rank(['list' => $list]);
+        }
+
         uasort($this->tracks, fn (array $a, array $b): int => $a['top']['itemLevel'] <=> $b['top']['itemLevel']);
     }
 
@@ -464,9 +482,10 @@ class SeasonResolver
     /**
      * @param  list<array<string, mixed>>  $sources
      * @param  array<string, list<array<string, string>>>  $itemTrees
+     * @param  Closure(int): bool  $isAscendable
      * @return list<Source&array{tracks: array<string, Rank>}>
      */
-    private function withItemLevels(array $sources, array $itemTrees): array
+    private function withItemLevels(array $sources, array $itemTrees, Closure $isAscendable): array
     {
         $caps = [];
 
@@ -493,6 +512,10 @@ class SeasonResolver
                     }
 
                     $rank = $dropsAboveCap ? $track['aboveCap'] : $track['top'];
+
+                    if (isset($track['ascendant']) && $track['ascendant']['itemLevel'] > $rank['itemLevel'] && $isAscendable($source['itemId'])) {
+                        $rank = $track['ascendant'];
+                    }
 
                     if ($rank['itemLevel'] > ($source['tracks'][$track['key']]['itemLevel'] ?? 0)) {
                         $source['tracks'][$track['key']] = $rank;

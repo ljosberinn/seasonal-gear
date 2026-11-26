@@ -28,6 +28,10 @@ return [
         // and Ula'tek at Myth 344). The points table isn't in client DB2, so they're listed by hand.
         'top_rank_points_mod_sets' => [2970],
 
+        // Ascendant Venomstones lift fully upgraded Hero and Myth necks, trinkets and weapons to these
+        // ranks (Hero 328, Myth 341). The upgrade is server-side, so DB2 doesn't tie the lists to items.
+        'ascendant_bonus_lists' => [12848, 12856],
+
         // Hero track, which keystones +6 and up drop; sources that can't reach it are dropped.
         'min_group' => 617,
 
