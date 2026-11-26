@@ -2,6 +2,7 @@
 
 namespace App\Gear;
 
+use Illuminate\Support\Facades\File;
 use RuntimeException;
 
 /**
@@ -210,10 +211,10 @@ class ForeverCatalog
             return $this->dataset;
         }
 
-        if (! is_file($this->path)) {
+        if (! File::exists($this->path)) {
             throw new RuntimeException("Forever dataset missing at {$this->path}; run `php artisan forever:import`.");
         }
 
-        return $this->dataset = json_decode((string) file_get_contents($this->path), true, flags: JSON_THROW_ON_ERROR);
+        return $this->dataset = File::json($this->path, JSON_THROW_ON_ERROR);
     }
 }

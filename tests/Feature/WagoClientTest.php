@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Gear\Db2Directory;
 use App\Gear\WagoClient;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -41,8 +42,7 @@ class WagoClientTest extends TestCase
 
             $this->assertSame(['ItemSparse' => '2026-11-18 08:40:18'], (new Db2Directory($directory))->hotfixes());
         } finally {
-            array_map(unlink(...), glob($directory.DIRECTORY_SEPARATOR.'*'));
-            rmdir($directory);
+            File::deleteDirectory($directory);
         }
     }
 }

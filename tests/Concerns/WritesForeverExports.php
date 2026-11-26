@@ -3,7 +3,7 @@
 namespace Tests\Concerns;
 
 use App\Gear\Db2Directory;
-use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\File;
 
 /**
  * Writes the DB2 exports `forever:import` reads into a temporary directory, removed by `removeForeverExports()`.
@@ -15,12 +15,12 @@ trait WritesForeverExports
     protected function createForeverExportsDirectory(): void
     {
         $this->directory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'forever-'.bin2hex(random_bytes(4));
-        mkdir($this->directory);
+        File::makeDirectory($this->directory);
     }
 
     protected function removeForeverExports(): void
     {
-        (new Filesystem)->deleteDirectory($this->directory);
+        File::deleteDirectory($this->directory);
     }
 
     /**
@@ -62,7 +62,7 @@ trait WritesForeverExports
             [88, 58, 45, 33, 25, 19, 45, 35, 25, 19, 14, 34, 26, 19, 14, 11],
         ]);
 
-        file_put_contents(Db2Directory::gameTablePath($this->directory, 'combat_ratings_by_level'), implode("\n", [
+        File::put(Db2Directory::gameTablePath($this->directory, 'combat_ratings_by_level'), implode("\n", [
             "Level\tDefense Skill\tDodge\tParry\tBlock\tHit - Melee\tCrit - Melee\tHaste - Melee\tExpertise",
             "59\t1\t12\t15\t5\t10\t14\t10\t10",
             "60\t1\t12\t15\t5\t10\t14\t10\t10",
