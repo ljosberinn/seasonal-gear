@@ -36,7 +36,8 @@ class GearCatalog
 
     private const array WEAPON_TYPES = [
         0 => 'Axe', 1 => 'Axe', 2 => 'Bow', 3 => 'Gun', 4 => 'Mace', 5 => 'Mace', 6 => 'Polearm', 7 => 'Sword',
-        8 => 'Sword', 9 => 'Warglaive', 10 => 'Staff', 13 => 'Fist Weapon', 15 => 'Dagger', 18 => 'Crossbow', 19 => 'Wand',
+        8 => 'Sword', 9 => 'Warglaive', 10 => 'Staff', 13 => 'Fist Weapon', 15 => 'Dagger', 16 => 'Thrown', 18 => 'Crossbow', 19 => 'Wand',
+        20 => 'Fishing Pole',
     ];
 
     private const array ARMOR_TYPES = [1 => 'Cloth', 2 => 'Leather', 3 => 'Mail', 4 => 'Plate', 6 => 'Shield'];

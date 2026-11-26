@@ -85,8 +85,8 @@ class StatisticsPageTest extends TestCase
             ->assertSee('Protection Paladin')
             ->assertSeeInOrder(['Head', 'Off Hand']);
 
-        $this->get('/statistics/paladin/arcane')->assertNotFound();
-        $this->get('/statistics/tinker/arcane')->assertNotFound();
+        $this->get('/retail/statistics/paladin/arcane')->assertNotFound();
+        $this->get('/retail/statistics/tinker/arcane')->assertNotFound();
     }
 
     public function test_previews_describe_the_statistics(): void
@@ -120,5 +120,13 @@ class StatisticsPageTest extends TestCase
             ->assertSee('icons/medium/8039569.jpg', false);
 
         $this->get(route('statistics.instance', 999))->assertNotFound();
+    }
+
+    public function test_marks_retail_as_the_game_version_of_the_statistics(): void
+    {
+        $content = $this->get(route('statistics.index'))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('#href="'.preg_quote(route('gear.index'), '#').'"\s+aria-current="true"#', $content);
+        $this->assertMatchesRegularExpression('#href="'.preg_quote(route('statistics.index'), '#').'"\s+aria-current="page"#', $content);
     }
 }

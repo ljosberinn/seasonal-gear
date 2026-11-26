@@ -237,8 +237,15 @@ class GearPageTest extends TestCase
 
     public function test_unknown_class_or_spec_is_not_found(): void
     {
-        $this->get('/tinker')->assertNotFound();
-        $this->get('/paladin/arcane')->assertNotFound();
+        $this->get('/retail/tinker')->assertNotFound();
+        $this->get('/retail/paladin/arcane')->assertNotFound();
+    }
+
+    public function test_links_to_the_statistics(): void
+    {
+        $this->get(route('gear.index'))
+            ->assertOk()
+            ->assertSee('href="'.route('statistics.index').'"', false);
     }
 
     public function test_rejects_unknown_filter_values(): void
