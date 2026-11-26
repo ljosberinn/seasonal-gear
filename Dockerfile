@@ -1,11 +1,15 @@
-FROM dunglas/frankenphp:1-php8.5-bookworm AS base
+# Vercel stores the whole image for every deployment, and Alpine is about a third of Debian's size.
+FROM dunglas/frankenphp:1-php8.5-alpine AS base
 
 RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
-    && install-php-extensions intl zip opcache
+    && install-php-extensions opcache
 
 WORKDIR /app
 
 FROM base AS dependencies
+
+# Composer unpacks dist archives with it; the runtime image never needs it.
+RUN install-php-extensions zip
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY composer.json composer.lock ./
