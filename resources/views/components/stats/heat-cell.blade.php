@@ -4,6 +4,7 @@
     'tone' => 'scale',
     'intensity' => 0,
     'title' => null,
+    'href' => null,
 ])
 
 @php
@@ -16,4 +17,10 @@
     };
 @endphp
 
-<td @if ($color) style="background-color: {{ $color }}" @endif @if ($title) title="{{ $title }}" @endif {{ $attributes->class(['px-2 py-1.5 text-center tabular-nums', 'font-bold' => $tone === 'gap']) }}>{{ $value }}</td>
+<td @if ($color) style="background-color: {{ $color }}" @endif @if ($title) title="{{ $title }}" @endif {{ $attributes->class(['px-2 py-1.5 text-center tabular-nums', 'font-bold' => $tone === 'gap']) }}>
+    @if ($href)
+        <a href="{{ $href }}" class="hover:underline">{{ $value }}</a>
+    @else
+        {{ $value }}
+    @endif
+</td>

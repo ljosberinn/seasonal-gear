@@ -34,6 +34,21 @@ class StatisticsPageTest extends TestCase
         $this->assertSame(['raid' => 3, 'tier' => 1, 'dungeon' => 2], $overall['bySource']);
     }
 
+    public function test_slot_counts_link_to_the_matching_gear(): void
+    {
+        $allSources = ['raid', 'tier', 'dungeon', 'delve', 'world', 'crafted'];
+
+        $this->get(route('statistics.index'))
+            ->assertOk()
+            ->assertSee(e(route('gear.class', ['class' => 'paladin', 'spec' => 'protection', 'slot' => 'head'])), false)
+            // nothing from season content, so the link opens every source
+            ->assertSee(e(route('gear.class', ['class' => 'paladin', 'spec' => 'protection', 'slot' => 'off-hand', 'sources' => $allSources])), false);
+
+        $this->get(route('statistics.spec', ['class' => 'paladin', 'spec' => 'protection']))
+            ->assertOk()
+            ->assertSee(e(route('gear.class', ['class' => 'paladin', 'spec' => 'protection', 'slot' => 'head'])), false);
+    }
+
     public function test_coverage_tells_empty_slots_from_unusable_ones(): void
     {
         $specs = collect($this->app->make(GearStatistics::class)->specs())->keyBy(fn (array $spec): string => "{$spec['classKey']}/{$spec['specKey']}");

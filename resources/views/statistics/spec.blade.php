@@ -43,7 +43,7 @@
         </div>
 
         <x-stats.section title="Slots">
-            <x-slot:description>Options per slot by source and by stat pair. Darker pair cells hold a bigger part of that slot's items. "Other" covers items with one secondary or none, which is most trinkets. A highlighted 0 is a slot season content leaves empty.</x-slot:description>
+            <x-slot:description>Options per slot by source and by stat pair. Darker pair cells hold a bigger part of that slot's items. "Other" covers items with one secondary or none, which is most trinkets. A highlighted 0 is a slot season content leaves empty. Slots link to the matching gear.</x-slot:description>
             <div class="overflow-x-auto rounded-md border border-gray-200 dark:border-gray-800">
                 <table class="min-w-full text-sm">
                     <thead class="bg-gray-50 text-xs text-gray-500 dark:bg-gray-900/40 dark:text-gray-400">
@@ -59,10 +59,13 @@
                             <th class="px-2 py-2">Other</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800 *:even:bg-gray-50 dark:*:even:bg-gray-900/40">
                         @foreach ($statistics['slots'] as $slot => $row)
                             <tr>
-                                <td class="px-3 py-1.5 whitespace-nowrap">{{ Slot::from($slot)->label() }}</td>
+                                <td class="px-3 py-1.5 whitespace-nowrap">
+                                    {{-- season content has nothing for an empty slot, so its link opens every source instead --}}
+                                    <a href="{{ route('gear.class', ['class' => $classKey, 'spec' => $specKey, 'slot' => $slot] + ($row['items'] === 0 ? ['sources' => array_keys(GearCatalog::SOURCE_TYPES)] : [])) }}" class="hover:underline">{{ Slot::from($slot)->label() }}</a>
+                                </td>
                                 @if ($row['items'] === 0)
                                     <x-stats.heat-cell tone="gap" :value="0" :title="'No season '.Slot::from($slot)->label()" />
                                 @else

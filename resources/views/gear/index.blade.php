@@ -142,7 +142,7 @@
                         <th class="px-3 py-2">Source</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800 *:even:bg-gray-50 dark:*:even:bg-gray-900/40">
                     @forelse ($items as $item)
                         <tr>
                             <td class="px-3 py-2">

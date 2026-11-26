@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
  */
 class GearStatistics
 {
-    /** Delve, world and crafted gear is either capped below Myth or picks its own stats, so it would blur the picture. */
+    /** Other sources' gear either can't reach the top upgrade track or picks its own stats, so it would blur the picture. */
     public const array SOURCES = ['raid', 'tier', 'dungeon'];
 
     public const array STAT_NAMES = ['crit' => 'Critical Strike', 'haste' => 'Haste', 'mastery' => 'Mastery', 'vers' => 'Versatility'];

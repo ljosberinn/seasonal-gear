@@ -22,7 +22,7 @@
         <h1 class="text-2xl font-semibold">Statistics</h1>
         <p class="mt-2 max-w-3xl text-gray-600 dark:text-gray-400">
             How {{ $meta['season']['name'] }} raid, tier set and dungeon loot is spread across specs, slots and secondary stats.
-            Delve, world and crafted gear is left out, since it either stops below Myth or lets you pick the stats.
+            Other sources are left out, since their gear either can't reach the highest upgrade track or lets you pick the stats.
         </p>
 
         <div class="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-5">
@@ -69,7 +69,7 @@
                             @endforeach
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800 *:even:bg-gray-50 dark:*:even:bg-gray-900/40">
                         @foreach ($specs as $spec)
                             <tr>
                                 <td class="px-3 py-1.5 whitespace-nowrap">
@@ -100,7 +100,7 @@
         </x-stats.section>
 
         <x-stats.section title="Slot Coverage">
-            <x-slot:description>Season items per slot for each spec. Darker cells have more options than other specs get for that slot. A highlighted 0 is a slot season content leaves empty while delves, world drops or crafting do cover it; a dash is a slot the spec can't use.</x-slot:description>
+            <x-slot:description>Season items per slot for each spec. Darker cells have more options than other specs get for that slot. A highlighted 0 is a slot season content leaves empty while other sources do cover it; a dash is a slot the spec can't use. Counts link to the matching gear.</x-slot:description>
             <div class="overflow-x-auto rounded-md border border-gray-200 dark:border-gray-800">
                 <table class="min-w-full text-sm">
                     <thead class="bg-gray-50 text-xs text-gray-500 dark:bg-gray-900/40 dark:text-gray-400">
@@ -111,7 +111,7 @@
                             @endforeach
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800 *:even:bg-gray-50 dark:*:even:bg-gray-900/40">
                         @foreach ($specs as $spec)
                             <tr>
                                 <td class="px-3 py-1 whitespace-nowrap">
@@ -125,9 +125,9 @@
                                     @if ($count === null)
                                         <x-stats.heat-cell tone="none" value="–" class="text-gray-400 dark:text-gray-600" :title="$spec['specName'].' can\'t use '.$slot->label()" />
                                     @elseif ($count === 0)
-                                        <x-stats.heat-cell tone="gap" :value="0" :title="'No season '.$slot->label().' for '.$spec['specName'].' '.$spec['className']" />
+                                        <x-stats.heat-cell tone="gap" :value="0" :href="route('gear.class', ['class' => $spec['classKey'], 'spec' => $spec['specKey'], 'slot' => $slot->value, 'sources' => array_keys(GearCatalog::SOURCE_TYPES)])" :title="'No season '.$slot->label().' for '.$spec['specName'].' '.$spec['className']" />
                                     @else
-                                        <x-stats.heat-cell :value="$count" :intensity="$count / $slotMax[$slot->value]" :title="$count.' '.$slot->label().' options'" />
+                                        <x-stats.heat-cell :value="$count" :intensity="$count / $slotMax[$slot->value]" :href="route('gear.class', ['class' => $spec['classKey'], 'spec' => $spec['specKey'], 'slot' => $slot->value])" :title="$count.' '.$slot->label().' options'" />
                                     @endif
                                 @endforeach
                             </tr>
@@ -151,7 +151,7 @@
                             @endforeach
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800 *:even:bg-gray-50 dark:*:even:bg-gray-900/40">
                         @foreach ($instances as $instance)
                             <tr>
                                 <td class="px-3 py-1.5 whitespace-nowrap">

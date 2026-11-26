@@ -50,7 +50,7 @@
                             @endforeach
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800 *:even:bg-gray-50 dark:*:even:bg-gray-900/40">
                         @foreach ($instance['encounters'] as $encounter)
                             <tr>
                                 <td class="px-3 py-1.5 whitespace-nowrap">{{ $encounter['name'] }}</td>
@@ -83,7 +83,7 @@
                                 @endforeach
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-800 *:even:bg-gray-50 dark:*:even:bg-gray-900/40">
                             @php($armorMax = max(1, ...array_values(array_map(fn (array $types): int => max($types), $instance['armor']))))
                             @foreach ($armorSlots as $slot)
                                 <tr>
