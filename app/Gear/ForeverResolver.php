@@ -18,9 +18,10 @@ class ForeverResolver
     private const int NO_STAT = -1;
 
     /**
-     * Unshipped debug items, e.g. "Test Haste Chest" or "Ring of Uber Resists (TEST)".
+     * Unshipped debug and placeholder items, e.g. "Test Haste Chest", "Ring of Uber Resists (TEST)",
+     * "Flowing Ritual Robes DEPRECATED" or "90 Epic Frost Robes".
      */
-    private const string TEST_ITEM_PATTERN = '/\btest\b/i';
+    private const string PLACEHOLDER_ITEM_PATTERN = '/\btest\b|\bdeprecated\b|^\d+ /i';
 
     public function __construct(private readonly Db2Directory $db2, private readonly int $maxLevel) {}
 
@@ -42,7 +43,7 @@ class ForeverResolver
 
             // Requirements above the level cap only show up on placeholder items.
             if ($item === null || $slot === null || $quality < self::MIN_QUALITY || (int) $row['RequiredLevel'] > $this->maxLevel
-                || preg_match(self::TEST_ITEM_PATTERN, $row['Display_lang'])) {
+                || preg_match(self::PLACEHOLDER_ITEM_PATTERN, $row['Display_lang'])) {
                 continue;
             }
 

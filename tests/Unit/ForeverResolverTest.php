@@ -70,10 +70,13 @@ class ForeverResolverTest extends TestCase
             [900004, 'Placeholder Ring', 4, 0, 3, 45, 70, 11, -1, [[7, 6428]]],
             [900005, 'Plain Ring', 4, 0, 3, 45, 40, 11, -1, []],
             [900006, 'Fancy Shirt', 4, 0, 3, 45, 40, 4, -1, [[7, 6428]]],
-            [900007, 'Kept Ring', 4, 0, 3, 45, 40, 11, -1, [[7, 6428]]],
+            [900007, 'Flowing Ritual Robes DEPRECATED', 4, 0, 3, 45, 40, 20, -1, [[7, 6428]]],
+            [900008, 'Deprecated Silver-thread Cowl', 4, 0, 3, 45, 40, 1, -1, [[7, 6428]]],
+            [900009, '90 Epic Frost Robes', 4, 0, 4, 45, 40, 20, -1, [[7, 6428]]],
+            [900010, 'Kept Ring', 4, 0, 3, 45, 40, 11, -1, [[7, 6428]]],
         ]);
 
-        $this->assertSame([900007], array_column($this->resolve()['items'], 'id'));
+        $this->assertSame([900010], array_column($this->resolve()['items'], 'id'));
     }
 
     public function test_reports_stat_ids_it_cannot_name(): void
