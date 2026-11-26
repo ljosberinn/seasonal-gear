@@ -192,6 +192,13 @@ class GearPageTest extends TestCase
             ->assertDontSee('>Type</th>', false);
     }
 
+    public function test_lists_classes_alphabetically(): void
+    {
+        $this->get(route('gear.index'))
+            ->assertOk()
+            ->assertSeeInOrder(['All Classes', 'Death Knight', 'Demon Hunter', 'Druid', 'Evoker', 'Hunter', 'Mage', 'Monk', 'Paladin', 'Priest', 'Rogue', 'Shaman', 'Warlock', 'Warrior']);
+    }
+
     public function test_unknown_class_or_spec_is_not_found(): void
     {
         $this->get('/tinker')->assertNotFound();

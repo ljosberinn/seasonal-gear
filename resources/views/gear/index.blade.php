@@ -26,7 +26,7 @@
     ];
     $classOptions = [
         ['href' => route('gear.index', $query), 'label' => 'All Classes', 'cardLabel' => 'All Classes', 'active' => $classKey === null, 'icon' => 'inv_misc_questionmark', 'cardIcon' => 'inv_misc_questionmark', 'color' => null, 'specs' => []],
-        ...collect($classes)->map(fn (array $class, string $key): array => [
+        ...collect($classes)->sortBy('name')->map(fn (array $class, string $key): array => [
             'href' => route('gear.class', ['class' => $key] + $query),
             'label' => $class['name'],
             // without a spec row on wider screens, the active class card names the picked spec

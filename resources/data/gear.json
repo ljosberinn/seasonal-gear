@@ -6232,7 +6232,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": {
                 "id": 1957,
                 "name": "Sunfire Silk Trappings"
@@ -6262,7 +6262,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": {
                 "id": 1957,
                 "name": "Sunfire Silk Trappings"
@@ -6292,7 +6292,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": {
                 "id": 1957,
                 "name": "Sunfire Silk Trappings"
@@ -6322,7 +6322,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": {
                 "id": 1958,
                 "name": "Arcanoweave Trappings"
@@ -6352,7 +6352,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": {
                 "id": 1958,
                 "name": "Arcanoweave Trappings"
@@ -6382,7 +6382,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": {
                 "id": 1958,
                 "name": "Arcanoweave Trappings"
@@ -6412,7 +6412,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": null
         },
         {
@@ -6439,7 +6439,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": null
         },
         {
@@ -7032,7 +7032,7 @@
             "sockets": 1,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": null
         },
         {
@@ -7057,7 +7057,7 @@
             "sockets": 1,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": null
         },
         {
@@ -7109,7 +7109,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": null
         },
         {
@@ -8435,7 +8435,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": null
         },
         {
@@ -8463,7 +8463,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": null
         },
         {
@@ -8491,7 +8491,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": null
         },
         {
@@ -8519,7 +8519,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": null
         },
         {
@@ -8547,7 +8547,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": {
                 "id": 1967,
                 "name": "Root Warden's Regalia"
@@ -8578,7 +8578,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": {
                 "id": 1967,
                 "name": "Root Warden's Regalia"
@@ -8609,7 +8609,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": {
                 "id": 1967,
                 "name": "Root Warden's Regalia"
@@ -8640,7 +8640,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": {
                 "id": 1966,
                 "name": "Murder Row Materials"
@@ -8671,7 +8671,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": {
                 "id": 1966,
                 "name": "Murder Row Materials"
@@ -8702,7 +8702,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": {
                 "id": 1966,
                 "name": "Murder Row Materials"
@@ -8729,7 +8729,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": null
         },
         {
@@ -10244,7 +10244,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": null
         },
         {
@@ -10270,7 +10270,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": null
         },
         {
@@ -10296,7 +10296,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": null
         },
         {
@@ -10322,7 +10322,7 @@
             "sockets": 0,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": null
         },
         {
@@ -23855,7 +23855,7 @@
             "sockets": 1,
             "onUse": false,
             "onEquip": false,
-            "embellished": false,
+            "embellished": true,
             "itemSet": null
         },
         {

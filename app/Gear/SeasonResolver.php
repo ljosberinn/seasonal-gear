@@ -39,6 +39,8 @@ class SeasonResolver
 
     private const int BONUS_UPGRADE_TRACK = 34;
 
+    private const int BONUS_LIMIT_CATEGORY = 35;
+
     private const int BONUS_ITEM_LEVEL = 49;
 
     private const int ENTRY_FLAG_ABOVE_CAP = 0x1;
@@ -497,7 +499,7 @@ class SeasonResolver
         $effects = $this->effects($itemLevels);
         $embellishedCategories = $this->db2->keyed('ItemLimitCategory', filter: fn (array $row): bool => str_ends_with($row['Name_lang'], 'Embellished'));
         $specOverrides = $this->db2->grouped('ItemSpecOverride', 'ItemID', fn (array $row): bool => isset($itemLevels[$row['ItemID']]));
-        $guaranteedSockets = $this->guaranteedSockets($itemLevels, $sparse, $itemTrees);
+        $guaranteedBonuses = $this->guaranteedBonuses($itemLevels, $sparse, $itemTrees);
         $setIds = array_fill_keys(array_filter(array_map(fn (int $id): string => $sparse[$id]['ItemSet'], array_keys($itemLevels))), true);
         $sets = $this->db2->keyed('ItemSet', filter: fn (array $row): bool => isset($setIds[$row['ID']]));
         $calculator = StatCalculator::fromDirectory($this->db2);
@@ -553,10 +555,10 @@ class SeasonResolver
                 'itemLevel' => $itemLevel,
                 'tracks' => $this->orderedTracks($itemTracks[$id] ?? []),
                 'stats' => $itemLevel === null ? null : $calculator->compute($inventoryType, (int) $items[$id]['SubclassID'], $allocations, $itemLevel),
-                'sockets' => $nativeSockets + ($guaranteedSockets[$id] ?? 0),
+                'sockets' => $nativeSockets + ($guaranteedBonuses[$id]['sockets'] ?? 0),
                 'onUse' => $effects[$id]['onUse'] ?? false,
                 'onEquip' => $effects[$id]['onEquip'] ?? false,
-                'embellished' => isset($embellishedCategories[$row['LimitCategory']]),
+                'embellished' => isset($embellishedCategories[$guaranteedBonuses[$id]['limitCategory'] ?? $row['LimitCategory']]),
                 'itemSet' => $setId === 0 ? null : ['id' => $setId, 'name' => $sets[$setId]['Name_lang'] ?? null],
             ];
         }
@@ -606,14 +608,15 @@ class SeasonResolver
     }
 
     /**
-     * Sockets added by context-free bonus lists, limited by each subtree's `InventoryTypeSlotMask`.
+     * Sockets and limit category (e.g. crafted gear made Embellished) set by context-free bonus lists,
+     * limited by each subtree's `InventoryTypeSlotMask`.
      *
      * @param  array<int, mixed>  $itemIds
      * @param  array<string, array<string, string>>  $sparse
      * @param  array<string, list<array<string, string>>>  $itemTrees
-     * @return array<int, int>
+     * @return array<int, array{sockets: int, limitCategory: ?string}>
      */
-    private function guaranteedSockets(array $itemIds, array $sparse, array $itemTrees): array
+    private function guaranteedBonuses(array $itemIds, array $sparse, array $itemTrees): array
     {
         $masks = [];
 
@@ -636,6 +639,7 @@ class SeasonResolver
 
         $wanted = array_fill_keys(array_merge(...array_values($listsByItem) ?: [[]]), true);
         $sockets = [];
+        $limitCategories = [];
         $randomRolls = [];
 
         foreach ($this->db2->rows('ItemBonus') as $bonus) {
@@ -647,6 +651,7 @@ class SeasonResolver
 
             match ((int) $bonus['Type']) {
                 self::BONUS_SOCKET => $sockets[$list] = ($sockets[$list] ?? 0) + (int) $bonus['Value_0'],
+                self::BONUS_LIMIT_CATEGORY => $limitCategories[$list] = $bonus['Value_0'],
                 self::BONUS_RANDOM_ROLL_TOAST => $randomRolls[$list] = true,
                 default => null,
             };
@@ -655,9 +660,12 @@ class SeasonResolver
         $result = [];
 
         foreach ($listsByItem as $itemId => $lists) {
+            $result[$itemId] = ['sockets' => 0, 'limitCategory' => null];
+
             foreach ($lists as $list) {
                 if (! isset($randomRolls[$list])) {
-                    $result[$itemId] = ($result[$itemId] ?? 0) + ($sockets[$list] ?? 0);
+                    $result[$itemId]['sockets'] += $sockets[$list] ?? 0;
+                    $result[$itemId]['limitCategory'] = $limitCategories[$list] ?? $result[$itemId]['limitCategory'];
                 }
             }
         }
