@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Gear\GearCatalog;
 use App\Gear\GearFilter;
+use App\Gear\PagePreview;
 use App\Gear\Slot;
 use App\Gear\Stat;
 use Illuminate\Http\Request;
@@ -39,9 +40,13 @@ class GearController extends Controller
             track: $validated['track'] ?? null,
         );
 
+        $items = $catalog->search($filter);
+        $meta = $catalog->meta();
+
         return view('gear.index', [
-            'meta' => $catalog->meta(),
-            'items' => $catalog->search($filter),
+            'meta' => $meta,
+            'preview' => PagePreview::gear($filter, count($items), $selectedClass, $spec, $meta['season']['name']),
+            'items' => $items,
             'counts' => $catalog->counts($filter),
             'tracks' => $catalog->tracks(),
             'filter' => $filter,

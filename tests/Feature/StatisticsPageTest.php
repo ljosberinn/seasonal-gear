@@ -89,6 +89,23 @@ class StatisticsPageTest extends TestCase
         $this->get('/statistics/tinker/arcane')->assertNotFound();
     }
 
+    public function test_previews_describe_the_statistics(): void
+    {
+        $this->get(route('statistics.index'))
+            ->assertOk()
+            ->assertSee('spread across 40 specs, slots and secondary stats. Critical Strike is the most common secondary at 100%, Haste the rarest at 17%.', false);
+
+        $this->get(route('statistics.spec', ['class' => 'paladin', 'spec' => 'protection']))
+            ->assertOk()
+            ->assertSee('content="3 raid, tier set and dungeon items for Protection Paladin.', false)
+            ->assertSee('icons/large/ability_paladin_shieldofthetemplar.jpg', false);
+
+        $this->get(route('statistics.instance', 1320))
+            ->assertOk()
+            ->assertSee('content="4 items from The Venomous Abyss.', false)
+            ->assertSee('<meta property="og:image" content="https://wow.zamimg.com/images/wow/icons/large/8039569.jpg">', false);
+    }
+
     public function test_instance_page_counts_tier_pieces_toward_the_raid(): void
     {
         $instance = $this->app->make(GearStatistics::class)->instance(1320);

@@ -9,7 +9,7 @@
     $armorSlots = array_values(array_filter(Slot::cases(), fn (Slot $slot): bool => $slot->isArmor()));
 @endphp
 
-<x-layout :title="$instance['name'].' Statistics'" :build="$meta['build']">
+<x-layout :title="$instance['name'].' Statistics'" :build="$meta['build']" :preview="$preview">
     <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
         <x-stats.back-link />
 

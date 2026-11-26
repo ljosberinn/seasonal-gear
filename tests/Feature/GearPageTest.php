@@ -155,6 +155,24 @@ class GearPageTest extends TestCase
             ->assertDontSee('archon.gg');
     }
 
+    public function test_preview_describes_the_selection(): void
+    {
+        $this->get(route('gear.index'))
+            ->assertOk()
+            ->assertSee('<meta property="og:description" content="6 items available in Test Season.">', false)
+            ->assertSee('<meta property="og:image" content="'.asset('logo.jpg').'">', false);
+
+        $this->get(route('gear.class', ['class' => 'paladin', 'spec' => 'retribution', 'stats' => ['haste', 'vers'], 'sources' => ['world']]))
+            ->assertOk()
+            ->assertSee('<meta property="og:description" content="1 item available for Retribution Paladin using Haste/Vers from World.">', false)
+            ->assertSee('<meta property="og:image" content="https://wow.zamimg.com/images/wow/icons/large/spell_holy_auraoflight.jpg">', false);
+
+        $this->get(route('gear.class', ['class' => 'paladin', 'slot' => 'head', 'sources' => self::ALL_SOURCES]))
+            ->assertOk()
+            ->assertSee('content="2 Head items available for Paladins from all sources."', false)
+            ->assertSee('icons/large/classicon_paladin.jpg', false);
+    }
+
     public function test_spec_override_limits_items_without_a_primary_stat(): void
     {
         $this->get(route('gear.class', ['class' => 'warrior', 'spec' => 'arms']))

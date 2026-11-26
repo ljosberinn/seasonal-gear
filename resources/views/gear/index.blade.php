@@ -44,7 +44,7 @@
     $title = collect([$classKey ? $classes[$classKey]['name'] : null, $specKey ? $classes[$classKey]['specs'][$specKey]['name'] : null])->filter()->reverse()->implode(' ');
 @endphp
 
-<x-layout :title="$title ?: null" :build="$meta['build']">
+<x-layout :title="$title ?: null" :build="$meta['build']" :preview="$preview">
     <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
         <h1 class="sr-only">{{ $meta['season']['name'] }} Gear</h1>
 

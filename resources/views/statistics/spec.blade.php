@@ -9,7 +9,7 @@
     $pairs = GearStatistics::pairKeys();
 @endphp
 
-<x-layout :title="$spec['name'].' '.$class['name'].' Statistics'" :build="$meta['build']">
+<x-layout :title="$spec['name'].' '.$class['name'].' Statistics'" :build="$meta['build']" :preview="$preview">
     <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
         <x-stats.back-link />
 
