@@ -41,6 +41,13 @@
     $specOptions = $classKey === null ? [] : $specOptionsFor($classKey);
     // a picked slot already implies the type, and slots like neck or back have none
     $showsType = $filter->slot === null && collect($items)->contains(fn (array $item): bool => GearCatalog::typeLabel($item) !== '');
+    $exportRows = collect($items)->map(fn (array $item): array => [
+        'id' => $item['id'],
+        'name' => $item['name'],
+        'slot' => Slot::from($item['slot'])->exportKey(),
+        // the upgrade rank's item level, which the Wowhead tooltip links render at
+        'max_itemlevel' => $item['rank']['itemLevel'] ?? null,
+    ]);
     $title = collect([$classKey ? $classes[$classKey]['name'] : null, $specKey ? $classes[$classKey]['specs'][$specKey]['name'] : null])->filter()->reverse()->implode(' ');
 @endphp
 
@@ -147,7 +154,7 @@
                             @endforeach
                         </ul>
                     </div>
-                    <script type="application/json" data-export-rows>@json(collect($items)->map(fn (array $item): array => ['id' => $item['id'], 'name' => $item['name'], 'slot' => Slot::from($item['slot'])->exportKey()]))</script>
+                    <script type="application/json" data-export-rows>@json($exportRows)</script>
                 </div>
             @endif
         </div>

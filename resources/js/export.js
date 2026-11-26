@@ -1,7 +1,7 @@
-const columns = ['id', 'name', 'slot'];
+const columns = ['id', 'name', 'slot', 'max_itemlevel'];
 
 function csvField(value) {
-    const text = String(value);
+    const text = String(value ?? '');
 
     return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }

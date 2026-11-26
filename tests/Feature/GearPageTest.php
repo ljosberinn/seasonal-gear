@@ -251,9 +251,9 @@ class GearPageTest extends TestCase
     public function test_exports_the_listed_items_with_equipment_slots(): void
     {
         $this->assertSame([
-            ['id' => 268265, 'name' => 'Aqirbane Reliquary', 'slot' => 'neck'],
-            ['id' => 268249, 'name' => "Vile Alchemist's Band", 'slot' => 'finger'],
-            ['id' => 270175, 'name' => "Voracious Heart of Ula'tek", 'slot' => 'trinket'],
+            ['id' => 268265, 'name' => 'Aqirbane Reliquary', 'slot' => 'neck', 'max_itemlevel' => 344],
+            ['id' => 268249, 'name' => "Vile Alchemist's Band", 'slot' => 'finger', 'max_itemlevel' => 334],
+            ['id' => 270175, 'name' => "Voracious Heart of Ula'tek", 'slot' => 'trinket', 'max_itemlevel' => 334],
         ], $this->exportRows(route('gear.index', ['sources' => ['raid']])));
 
         $this->assertSame(
@@ -261,6 +261,17 @@ class GearPageTest extends TestCase
             collect($this->exportRows(route('gear.index', ['sources' => self::ALL_SOURCES])))
                 ->pluck('slot', 'name')
                 ->only(['Greatsword of Testing', 'Bulwark of Testing'])
+                ->all(),
+        );
+    }
+
+    public function test_export_item_level_matches_the_linked_upgrade_rank(): void
+    {
+        $this->assertSame(
+            ['Aqirbane Reliquary' => 321, "Martyr's Crown" => null],
+            collect($this->exportRows(route('gear.index', ['track' => 'hero', 'sources' => self::ALL_SOURCES])))
+                ->pluck('max_itemlevel', 'name')
+                ->only(['Aqirbane Reliquary', "Martyr's Crown"])
                 ->all(),
         );
     }
@@ -288,7 +299,7 @@ class GearPageTest extends TestCase
     }
 
     /**
-     * @return list<array{id: int, name: string, slot: string}>
+     * @return list<array{id: int, name: string, slot: string, max_itemlevel: ?int}>
      */
     private function exportRows(string $url): array
     {
