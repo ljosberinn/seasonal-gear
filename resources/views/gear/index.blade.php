@@ -125,6 +125,10 @@
             </div>
         </form>
 
+        @if ($specKey !== null)
+            <x-archon-banner class="mt-6" :class-key="$classKey" :spec-key="$specKey" :player-class="$classes[$classKey]" />
+        @endif
+
         <p class="mt-6 text-sm text-gray-500 dark:text-gray-400">{{ count($items) }} {{ Str::plural('item', count($items)) }}</p>
 
         <div class="mt-2 overflow-x-auto rounded-md border border-gray-200 dark:border-gray-800">
