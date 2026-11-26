@@ -227,7 +227,7 @@ class SeasonResolver
         $achievements = $this->db2->grouped('Achievement', 'Instance_ID', fn (array $row): bool => isset($mapIds[$row['Instance_ID']])
             && $row['IconFileID'] !== '0'
             && ((int) $row['Flags'] & self::ACHIEVEMENT_FLAG_STATISTIC) === 0);
-        $normalize = fn (string $name): string => strtolower((string) preg_replace('/^The /', '', $name));
+        $normalize = fn (string $name): string => Str::of($name)->chopStart('The ')->lower()->value();
         $result = [];
 
         foreach ($instances as $id => $instance) {

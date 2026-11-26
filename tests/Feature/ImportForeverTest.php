@@ -37,7 +37,7 @@ class ImportForeverTest extends TestCase
             ->expectsOutputToContain('Skipped unknown stat IDs (ID => stat count): {"999":1}')
             ->assertSuccessful();
 
-        $dataset = json_decode(File::get($output), true);
+        $dataset = File::json($output);
 
         $this->assertSame('1.60.1.71139', $dataset['build']);
         $this->assertSame(['ItemSparse' => '2026-11-26 04:47:19'], $dataset['hotfixes']);

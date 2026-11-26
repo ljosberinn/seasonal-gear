@@ -2,6 +2,8 @@
 
 namespace App\Gear;
 
+use Illuminate\Support\Str;
+
 /**
  * `ItemSparse.StatModifier_bonusStat_*` values (ItemModType) on WoW Forever items. Forever reuses
  * retired retail IDs and adds its own from 83 on; each was matched against Wowhead's Forever tooltips.
@@ -121,7 +123,7 @@ enum ForeverStat: int
             self::RangedAttackPower => 'rap',
             self::ManaRegeneration => 'mp5',
             self::HealthRegeneration => 'hp5',
-            default => strtolower((string) preg_replace('/(?<!^)[A-Z]/', '-$0', $this->name)),
+            default => Str::kebab($this->name),
         };
     }
 
@@ -147,7 +149,7 @@ enum ForeverStat: int
             self::SpellDamageVersusUndead => 'Spell Damage vs. Undead',
             self::SpellDamageVersusDragonkin => 'Spell Damage vs. Dragonkin',
             self::SpellDamageVersusBeasts => 'Spell Damage vs. Beasts',
-            default => (string) preg_replace('/(?<!^)[A-Z]/', ' $0', $this->name),
+            default => Str::headline($this->name),
         };
     }
 
