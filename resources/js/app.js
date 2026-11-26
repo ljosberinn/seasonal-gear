@@ -1,3 +1,4 @@
+import { initFlyouts } from './flyout';
 import { applyTheme, getStoredTheme, setTheme } from './theme';
 
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
@@ -48,6 +49,12 @@ document.addEventListener('keydown', (event) => {
         themeButton.focus();
     }
 });
+
+initFlyouts();
+
+for (const select of document.querySelectorAll('select[data-navigate]')) {
+    select.addEventListener('change', () => window.location.assign(select.value));
+}
 
 for (const form of document.querySelectorAll('form[data-auto-submit]')) {
     form.addEventListener('change', () => form.requestSubmit());

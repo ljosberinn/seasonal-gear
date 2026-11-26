@@ -32,7 +32,7 @@
     </head>
     <body class="bg-white font-sans text-black antialiased dark:bg-gray-950 dark:text-white">
         <div class="flex min-h-screen flex-col justify-between [--pattern-fg:var(--color-gray-950)]/5 dark:[--pattern-fg:var(--color-white)]/10">
-            <x-site-header />
+            <x-site-header :build="$build ?? null" />
             <div class="grid flex-1 grid-cols-1 grid-rows-[1fr] md:grid-cols-[1fr_min(96rem,100%)_1fr]">
                 <div aria-hidden="true" class="{{ $railClass }} col-start-1"></div>
                 <main class="col-start-1 row-start-1 min-w-0 md:col-start-2">

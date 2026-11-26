@@ -13,31 +13,64 @@
     $query = request()->query();
     $formAction = $classKey === null ? route('gear.index') : route('gear.class', array_filter(['class' => $classKey, 'spec' => $specKey]));
     $hasFilters = $filter->slot !== null || $filter->stats !== [] || $filter->sources !== [];
+    $specOptionsFor = fn (string $key): array => [
+        ['href' => route('gear.class', ['class' => $key] + $query), 'label' => 'All Specs', 'active' => $classKey === $key && $specKey === null, 'icon' => $classes[$key]['icon'], 'color' => $classes[$key]['color']],
+        ...collect($classes[$key]['specs'])->map(fn (array $spec, string $specKeyOption): array => [
+            'href' => route('gear.class', ['class' => $key, 'spec' => $specKeyOption] + $query),
+            'label' => $spec['name'],
+            'active' => $classKey === $key && $specKey === $specKeyOption,
+            'icon' => $spec['icon'],
+            'color' => $classes[$key]['color'],
+        ])->values(),
+    ];
+    $classOptions = [
+        ['href' => route('gear.index', $query), 'label' => 'All Classes', 'cardLabel' => 'All Classes', 'active' => $classKey === null, 'icon' => null, 'cardIcon' => null, 'color' => null, 'specs' => []],
+        ...collect($classes)->map(fn (array $class, string $key): array => [
+            'href' => route('gear.class', ['class' => $key] + $query),
+            'label' => $class['name'],
+            // without a spec row on wider screens, the active class card names the picked spec
+            'cardLabel' => $classKey === $key && $specKey !== null ? $class['specs'][$specKey]['name'].' '.$class['name'] : $class['name'],
+            'active' => $classKey === $key,
+            'icon' => $class['icon'],
+            'cardIcon' => $classKey === $key && $specKey !== null ? $class['specs'][$specKey]['icon'] : $class['icon'],
+            'color' => $class['color'],
+            'specs' => $specOptionsFor($key),
+        ])->values(),
+    ];
+    $specOptions = $classKey === null ? [] : $specOptionsFor($classKey);
     $title = collect([$classKey ? $classes[$classKey]['name'] : null, $specKey ? $classes[$classKey]['specs'][$specKey]['name'] : null])->filter()->reverse()->implode(' ');
 @endphp
 
-<x-layout :title="$title ?: null">
+<x-layout :title="$title ?: null" :build="$meta['build']">
     <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        <div class="flex flex-wrap items-baseline justify-between gap-2">
-            <h1 class="text-3xl font-bold tracking-tight">{{ $meta['season']['name'] }} Gear</h1>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Build {{ $meta['build'] }}</p>
-        </div>
+        <h1 class="sr-only">{{ $meta['season']['name'] }} Gear</h1>
 
-        <nav class="mt-6 flex flex-wrap gap-2" aria-label="Class">
-            <x-filter.chip :href="route('gear.index', $query)" :active="$classKey === null">All Classes</x-filter.chip>
-            @foreach ($classes as $key => $class)
-                <x-filter.chip :href="route('gear.class', ['class' => $key] + $query)" :active="$classKey === $key" :color="$class['color']" :icon="$class['icon']">{{ $class['name'] }}</x-filter.chip>
+        <nav aria-label="Class and Specialization">
+            {{-- phones pick class and spec from two dropdowns, wider screens from cards whose spec flyout opens on hover --}}
+            @foreach (['Class' => $classOptions, 'Specialization' => $specOptions] as $label => $options)
+                @if ($options !== [])
+                    @php($selected = collect($options)->firstWhere('active', true))
+                    <x-filter.nav-select @class(['sm:hidden', 'mt-1.5' => ! $loop->first]) :label="$label" :options="$options" :icon="$selected['icon']" :color="$selected['color']" />
+                @endif
             @endforeach
-        </nav>
 
-        @if ($classKey !== null)
-            <nav class="mt-2 flex flex-wrap gap-2" aria-label="Specialization">
-                <x-filter.chip :href="route('gear.class', ['class' => $classKey] + $query)" :active="$specKey === null" :color="$classes[$classKey]['color']" :icon="$classes[$classKey]['icon']">All Specs</x-filter.chip>
-                @foreach ($classes[$classKey]['specs'] as $key => $spec)
-                    <x-filter.chip :href="route('gear.class', ['class' => $classKey, 'spec' => $key] + $query)" :active="$specKey === $key" :color="$classes[$classKey]['color']" :icon="$spec['icon']">{{ $spec['name'] }}</x-filter.chip>
+            <ul data-flyout-container class="hidden grid-cols-4 gap-1.5 sm:grid lg:grid-cols-7">
+                @foreach ($classOptions as $index => $option)
+                    <li data-flyout class="relative">
+                        <x-filter.card data-flyout-trigger class="h-full" :aria-controls="$option['specs'] === [] ? null : 'specs-'.$index" :aria-expanded="$option['specs'] === [] ? null : 'false'" :href="$option['href']" :active="$option['active']" :icon="$option['cardIcon']" :color="$option['color']">{{ $option['cardLabel'] }}</x-filter.card>
+                        @if ($option['specs'] !== [])
+                            <div id="specs-{{ $index }}" data-flyout-panel hidden class="absolute top-full left-0 z-20 w-56 pt-1.5">
+                                <ul class="grid gap-1 rounded-md border border-gray-200 bg-white p-1.5 shadow-lg dark:border-gray-800 dark:bg-gray-950">
+                                    @foreach ($option['specs'] as $spec)
+                                        <li><x-filter.card :href="$spec['href']" :active="$spec['active']" :icon="$spec['icon']" :color="$spec['color']">{{ $spec['label'] }}</x-filter.card></li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+                    </li>
                 @endforeach
-            </nav>
-        @endif
+            </ul>
+        </nav>
 
         <form method="get" action="{{ $formAction }}" data-auto-submit class="z-10 mt-6 flex flex-col gap-3 rounded-md border border-gray-200 bg-white/90 p-3 shadow-sm backdrop-blur lg:sticky lg:top-0 dark:border-gray-800 dark:bg-gray-950/90">
             <div role="group" aria-label="Source" class="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-5">
@@ -144,13 +177,8 @@
                             <td class="px-3 py-2">
                                 @foreach ($item['sources'] as $source)
                                     <div class="whitespace-nowrap">
-                                        <span class="text-gray-500 dark:text-gray-400">{{ GearCatalog::SOURCE_TYPES[$source['type']] }}</span>
-                                        @if ($source['instance'])
-                                            · {{ $source['instance'] }}
-                                        @endif
-                                        @if ($source['encounter'])
-                                            · {{ $source['encounter'] }}
-                                        @endif
+                                        {{-- world drops and crafts have no instance to name --}}
+                                        {{ collect([$source['instance'], $source['encounter']])->filter()->implode(' > ') ?: GearCatalog::SOURCE_TYPES[$source['type']] }}
                                     </div>
                                 @endforeach
                             </td>
