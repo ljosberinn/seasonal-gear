@@ -74,6 +74,17 @@ class GearPageTest extends TestCase
             ->assertSee('data-wowhead="bonus=13987:13848&amp;ilvl=344"', false);
     }
 
+    public function test_crafted_item_links_carry_the_crafted_step_of_the_track(): void
+    {
+        $this->get(route('gear.index', ['sources' => ['crafted']]))
+            ->assertOk()
+            ->assertSee('data-wowhead="bonus=12497:13751&amp;ilvl=331"', false);
+
+        $this->get(route('gear.index', ['sources' => ['crafted'], 'track' => 'hero']))
+            ->assertOk()
+            ->assertSee('data-wowhead="bonus=12497:13751&amp;ilvl=318"', false);
+    }
+
     public function test_item_links_keep_default_bonus_lists_on_every_track(): void
     {
         $this->get(route('gear.index', ['track' => 'hero']))
@@ -268,7 +279,7 @@ class GearPageTest extends TestCase
     public function test_export_item_level_matches_the_linked_upgrade_rank(): void
     {
         $this->assertSame(
-            ['Aqirbane Reliquary' => 321, "Martyr's Crown" => null],
+            ['Aqirbane Reliquary' => 321, "Martyr's Crown" => 318],
             collect($this->exportRows(route('gear.index', ['track' => 'hero', 'sources' => self::ALL_SOURCES])))
                 ->pluck('max_itemlevel', 'name')
                 ->only(['Aqirbane Reliquary', "Martyr's Crown"])
