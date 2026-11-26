@@ -218,6 +218,25 @@ class GearCatalog
     }
 
     /**
+     * Wowhead tooltip query for a search result: its default bonus lists plus the linked rank.
+     *
+     * @param  array<string, mixed>  $item
+     */
+    public static function wowheadParams(array $item): ?string
+    {
+        $rank = $item['rank'];
+        $bonusLists = $rank === null ? $item['defaultBonusLists'] : [...$item['defaultBonusLists'], $rank['bonusList']];
+
+        if ($bonusLists === []) {
+            return null;
+        }
+
+        $params = 'bonus='.implode(':', $bonusLists);
+
+        return $rank === null ? $params : "{$params}&ilvl={$rank['itemLevel']}";
+    }
+
+    /**
      * @param  array<string, mixed>  $item
      */
     public static function typeLabel(array $item): string

@@ -150,7 +150,7 @@
                     @forelse ($items as $item)
                         <tr>
                             <td class="px-3 py-2">
-                                @php($wowheadParams = $item['rank'] ? 'bonus='.$item['rank']['bonusList'].'&ilvl='.$item['rank']['itemLevel'] : null)
+                                @php($wowheadParams = GearCatalog::wowheadParams($item))
                                 <a href="https://www.wowhead.com/item={{ $item['id'] }}{{ $wowheadParams ? '?'.$wowheadParams : '' }}" @if ($wowheadParams) data-wowhead="{{ $wowheadParams }}" @endif class="group inline-flex items-center gap-2" target="_blank" rel="noopener">
                                     {{-- Wowhead's script prepends the item icon in here --}}
                                     <span class="flex flex-col">

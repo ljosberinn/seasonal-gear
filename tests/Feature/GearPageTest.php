@@ -52,7 +52,7 @@ class GearPageTest extends TestCase
             ->assertOk()
             ->assertSee('wow.zamimg.com/js/tooltips.js', false)
             ->assertSee('item=268249?bonus=12854&amp;ilvl=334', false)
-            ->assertSee('data-wowhead="bonus=13848&amp;ilvl=344"', false);
+            ->assertSee('data-wowhead="bonus=13987:13848&amp;ilvl=344"', false);
     }
 
     public function test_upgrade_track_picks_the_linked_rank_or_the_nearest_reachable_track(): void
@@ -71,7 +71,14 @@ class GearPageTest extends TestCase
 
         $this->get(route('gear.index', ['track' => 'myth']))
             ->assertOk()
-            ->assertSee('data-wowhead="bonus=13848&amp;ilvl=344"', false);
+            ->assertSee('data-wowhead="bonus=13987:13848&amp;ilvl=344"', false);
+    }
+
+    public function test_item_links_keep_default_bonus_lists_on_every_track(): void
+    {
+        $this->get(route('gear.index', ['track' => 'hero']))
+            ->assertOk()
+            ->assertSee('data-wowhead="bonus=13987:12846&amp;ilvl=321"', false);
     }
 
     public function test_orders_by_potential_item_level_before_stat_matches(): void

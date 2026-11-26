@@ -29,7 +29,7 @@ trait UsesGearDataset
             'id' => $id, 'name' => $name, 'slot' => $slot, 'inventoryType' => $inventoryType, 'classId' => $classId,
             'subclassId' => $subclassId, 'quality' => 4, 'allowableClass' => -1, 'specs' => [], 'primaries' => $primaries,
             'secondaries' => $secondaries, 'choiceStats' => false, 'itemLevel' => 334, 'tracks' => ['hero' => $hero, 'myth' => $myth],
-            'stats' => ['sta' => 1000] + $secondaries, 'sockets' => 0, 'onUse' => false, 'onEquip' => false, 'embellished' => false, 'itemSet' => null,
+            'defaultBonusLists' => [], 'stats' => ['sta' => 1000] + $secondaries, 'sockets' => 0, 'onUse' => false, 'onEquip' => false, 'embellished' => false, 'itemSet' => null,
             ...$extra,
         ];
         $instanceIds = ['The Venomous Abyss' => 1320, 'Voidscar Arena' => 1313, 'The Blinding Vale' => 1309];
@@ -48,7 +48,7 @@ trait UsesGearDataset
             ],
             'tracks' => ['champion' => 'Champion', 'hero' => 'Hero', 'myth' => 'Myth'],
             'items' => [
-                $item(268265, 'Aqirbane Reliquary', 'neck', 2, 4, 0, [], ['crit' => 3000, 'haste' => 3000], ['itemLevel' => 344, 'tracks' => ['hero' => $hero, 'myth' => ['bonusList' => 13848, 'itemLevel' => 344]]]),
+                $item(268265, 'Aqirbane Reliquary', 'neck', 2, 4, 0, [], ['crit' => 3000, 'haste' => 3000], ['itemLevel' => 344, 'tracks' => ['hero' => $hero, 'myth' => ['bonusList' => 13848, 'itemLevel' => 344]], 'defaultBonusLists' => [13987]]),
                 $item(268249, "Vile Alchemist's Band", 'finger', 11, 4, 0, [], ['mastery' => 14350, 'crit' => 3150]),
                 $item(251229, 'Visor of the Predator', 'head', 1, 4, 4, ['str', 'int'], ['crit' => 4550, 'mastery' => 2450]),
                 $item(251199, 'Worldroot Canopy', 'head', 1, 4, 1, ['int'], ['mastery' => 3500, 'crit' => 3500]),
