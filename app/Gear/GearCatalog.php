@@ -11,8 +11,8 @@ class GearCatalog
 {
     public const array SOURCE_TYPES = [
         'raid' => 'Raid',
-        'special' => 'Special encounter',
-        'tier' => 'Tier set',
+        'special' => 'Special Encounter',
+        'tier' => 'Tier Set',
         'dungeon' => 'Dungeon',
         'delve' => 'Delves',
         'world' => 'World',
@@ -79,6 +79,69 @@ class GearCatalog
     }
 
     /**
+     * Result count per filter option, each counted against the other groups' active filters so it
+     * previews what picking that option yields. Stats are AND-ed, so a stat counts items that also
+     * have every already picked stat.
+     *
+     * @return array{slots: array<string, int>, stats: array<string, int>, sources: array<string, int>, anySlot: int, anyStat: int, anySource: int}
+     */
+    public function counts(GearFilter $filter): array
+    {
+        $dataset = $this->dataset();
+        $sourceTypesByItem = [];
+
+        foreach ($dataset['sources'] as $source) {
+            $sourceTypesByItem[$source['itemId']][$source['type']] = true;
+        }
+
+        $counts = [
+            'slots' => array_fill_keys(array_column(Slot::cases(), 'value'), 0),
+            'stats' => array_fill_keys(Stat::SECONDARY_KEYS, 0),
+            'sources' => array_fill_keys(array_keys(self::SOURCE_TYPES), 0),
+            'anySlot' => 0,
+            'anyStat' => 0,
+            'anySource' => 0,
+        ];
+
+        foreach ($dataset['items'] as $item) {
+            $sourceTypes = $sourceTypesByItem[$item['id']] ?? [];
+
+            if ($sourceTypes === [] || ($filter->class !== null && ! $this->isUsableBy($item, $filter->class, $filter->specs))) {
+                continue;
+            }
+
+            $matchesSlot = $filter->slot === null || $item['slot'] === $filter->slot->value;
+            $matchesStats = $this->hasStats($item, $filter->stats);
+            $matchesSource = $filter->sources === [] || array_intersect_key($sourceTypes, array_flip($filter->sources)) !== [];
+
+            if ($matchesStats && $matchesSource) {
+                $counts['anySlot']++;
+                $counts['slots'][$item['slot']]++;
+            }
+
+            if ($matchesSlot && $matchesSource) {
+                $counts['anyStat']++;
+
+                foreach (Stat::SECONDARY_KEYS as $stat) {
+                    if ($this->hasStats($item, [...$filter->stats, $stat])) {
+                        $counts['stats'][$stat]++;
+                    }
+                }
+            }
+
+            if ($matchesSlot && $matchesStats) {
+                $counts['anySource']++;
+
+                foreach (array_keys($sourceTypes) as $type) {
+                    $counts['sources'][$type]++;
+                }
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
      * @param  array<string, mixed>  $item
      */
     public static function typeLabel(array $item): string
@@ -88,7 +151,7 @@ class GearCatalog
         }
 
         if ($item['inventoryType'] === self::INVENTORY_TYPE_HELD_IN_OFF_HAND) {
-            return 'Held In Off-hand';
+            return 'Held In Off-Hand';
         }
 
         return self::ARMOR_TYPES[$item['subclassId']] ?? '';
@@ -103,12 +166,21 @@ class GearCatalog
             return false;
         }
 
-        // Crafted items take whichever secondaries the crafter picks.
-        if (! $item['choiceStats'] && array_diff($filter->stats, array_keys($item['secondaries'])) !== []) {
+        if (! $this->hasStats($item, $filter->stats)) {
             return false;
         }
 
         return $filter->class === null || $this->isUsableBy($item, $filter->class, $filter->specs);
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     * @param  list<string>  $stats
+     */
+    private function hasStats(array $item, array $stats): bool
+    {
+        // Crafted items take whichever secondaries the crafter picks.
+        return $item['choiceStats'] || array_diff($stats, array_keys($item['secondaries'])) === [];
     }
 
     /**

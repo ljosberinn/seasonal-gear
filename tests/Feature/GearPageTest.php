@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Gear\GearCatalog;
+use App\Gear\GearFilter;
+use App\Gear\Slot;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
@@ -62,6 +65,18 @@ class GearPageTest extends TestCase
             ->assertSee('Vile Alchemist')
             ->assertDontSee('Visor of the Predator')
             ->assertDontSee('Martyr');
+    }
+
+    public function test_counts_each_option_against_the_other_groups_filters(): void
+    {
+        $counts = $this->app->make(GearCatalog::class)->counts(new GearFilter(slot: Slot::Head, stats: ['crit'], sources: ['dungeon']));
+
+        $this->assertSame(4, $counts['anySource']);
+        $this->assertSame(['dungeon' => 2, 'delve' => 1, 'crafted' => 1], array_filter($counts['sources']));
+        $this->assertSame(2, $counts['anyStat']);
+        $this->assertSame(['crit' => 2, 'mastery' => 2], array_filter($counts['stats']));
+        $this->assertSame(2, $counts['anySlot']);
+        $this->assertSame(['head' => 2], array_filter($counts['slots']));
     }
 
     public function test_class_route_limits_armor_type_and_class_restricted_items(): void

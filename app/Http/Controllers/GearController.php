@@ -40,6 +40,7 @@ class GearController extends Controller
         return view('gear.index', [
             'meta' => $catalog->meta(),
             'items' => $catalog->search($filter),
+            'counts' => $catalog->counts($filter),
             'filter' => $filter,
             'classes' => $classes,
             'classKey' => $class,
