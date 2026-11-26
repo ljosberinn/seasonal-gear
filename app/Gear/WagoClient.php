@@ -108,6 +108,7 @@ class WagoClient
     private function configure(PendingRequest $request): PendingRequest
     {
         return $request->baseUrl((string) config('gear.wago.base_url'))
+            ->withUserAgent((string) config('gear.wago.user_agent'))
             ->connectTimeout(10)
             ->timeout(300)
             ->retry([1000, 5000, 15000], 0, fn (Throwable $exception): bool => $exception instanceof ConnectionException

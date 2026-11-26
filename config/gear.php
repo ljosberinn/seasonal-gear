@@ -5,6 +5,7 @@ return [
     'wago' => [
         'base_url' => env('WAGO_BASE_URL', 'https://wago.tools'),
         'concurrency' => (int) env('WAGO_CONCURRENCY', 6),
+        'user_agent' => env('WAGO_USER_AGENT', 'seasonal-gear (+https://github.com/ljosberinn/seasonal-gear)'),
     ],
 
     /*
