@@ -125,10 +125,6 @@ class GearStatistics
             }
         }
 
-        if ($specs !== [] && $gapSlots === []) {
-            $highlights[] = 'Every spec can fill every slot from season content.';
-        }
-
         if ($gapSlots !== []) {
             arsort($gapSlots);
             $slot = array_key_first($gapSlots);
