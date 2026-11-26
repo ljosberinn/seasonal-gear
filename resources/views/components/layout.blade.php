@@ -9,6 +9,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff">
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+        <link rel="icon" type="image/jpeg" href="{{ asset('logo.jpg') }}">
 
         <title>{{ isset($title) ? $title.' · ' : '' }}{{ config('app.name') }}</title>
 

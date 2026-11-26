@@ -37,8 +37,3 @@
         color-scheme: dark;
     }
 }
-
-/* a modal <dialog> doesn't stop the page behind it from scrolling */
-html:has(dialog:modal) {
-    overflow: hidden;
-}

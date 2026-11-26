@@ -49,11 +49,6 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-const mobileNav = document.querySelector('[data-mobile-nav]');
-
-document.querySelector('[data-mobile-nav-open]')?.addEventListener('click', () => mobileNav.showModal());
-document.querySelector('[data-mobile-nav-close]')?.addEventListener('click', () => mobileNav.close());
-
 for (const form of document.querySelectorAll('form[data-auto-submit]')) {
     form.addEventListener('change', () => form.requestSubmit());
 }
