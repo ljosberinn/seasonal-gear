@@ -125,6 +125,10 @@ class GearStatistics
             }
         }
 
+        if ($specs !== [] && $gapSlots === []) {
+            $highlights[] = 'Every spec can fill every slot from season content.';
+        }
+
         if ($gapSlots !== []) {
             arsort($gapSlots);
             $slot = array_key_first($gapSlots);
@@ -228,7 +232,7 @@ class GearStatistics
     /**
      * Raids first, then dungeons. Tier pieces count toward the raid whose tokens they come from.
      *
-     * @return list<array{id: int, name: string, type: string, profile: Profile}>
+     * @return list<array{id: int, name: string, type: string, icon: ?string, iconFileId: ?int, profile: Profile}>
      */
     public function instances(): array
     {
@@ -247,9 +251,17 @@ class GearStatistics
         }
 
         $rows = [];
+        $icons = $this->catalog->instances();
 
         foreach ($groups as $id => $group) {
-            $rows[] = ['id' => $id, 'name' => $group['name'], 'type' => $group['type'], 'profile' => self::profile(array_values($group['items']))];
+            $rows[] = [
+                'id' => $id,
+                'name' => $group['name'],
+                'type' => $group['type'],
+                'icon' => $icons[$id]['icon'] ?? null,
+                'iconFileId' => $icons[$id]['iconFileId'] ?? null,
+                'profile' => self::profile(array_values($group['items'])),
+            ];
         }
 
         usort($rows, fn (array $a, array $b): int => [$a['type'] === 'dungeon', $a['name']] <=> [$b['type'] === 'dungeon', $b['name']]);
@@ -258,7 +270,7 @@ class GearStatistics
     }
 
     /**
-     * @return array{name: string, type: string, profile: Profile, encounters: list<array{name: string, profile: Profile}>, armor: array<string, array<string, int>>}|null
+     * @return array{name: string, type: string, icon: ?string, iconFileId: ?int, profile: Profile, encounters: list<array{name: string, profile: Profile}>, armor: array<string, array<string, int>>}|null
      */
     public function instance(int $instanceId): ?array
     {
@@ -296,6 +308,8 @@ class GearStatistics
         return [
             'name' => $name,
             'type' => $type,
+            'icon' => $this->catalog->instances()[$instanceId]['icon'] ?? null,
+            'iconFileId' => $this->catalog->instances()[$instanceId]['iconFileId'] ?? null,
             'profile' => self::profile(array_values($items)),
             'encounters' => collect($encounters)
                 ->map(fn (array $items, string $encounter): array => ['name' => $encounter, 'profile' => self::profile(array_values($items))])

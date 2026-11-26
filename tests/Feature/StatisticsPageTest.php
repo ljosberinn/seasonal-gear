@@ -42,6 +42,8 @@ class StatisticsPageTest extends TestCase
         $this->assertSame(0, $specs['paladin/protection']['coverage']['off-hand']);
         $this->assertNull($specs['paladin/retribution']['coverage']['off-hand']);
         $this->assertSame(1, $specs['paladin/retribution']['coverage']['head']);
+        // Holy wields one-handers only, so the world-drop Intellect maul isn't a gap for it
+        $this->assertNull($specs['paladin/holy']['coverage']['two-hand']);
     }
 
     public function test_spec_page_breaks_down_slots(): void
@@ -65,7 +67,9 @@ class StatisticsPageTest extends TestCase
 
         $this->get(route('statistics.instance', 1320))
             ->assertOk()
-            ->assertSee('Ula&#039;tek', false);
+            ->assertSee('Ula&#039;tek', false)
+            ->assertSee('icons/medium/inv_121_achievement_raid_ulatek.jpg', false)
+            ->assertSee('icons/medium/8039569.jpg', false);
 
         $this->get(route('statistics.instance', 999))->assertNotFound();
     }

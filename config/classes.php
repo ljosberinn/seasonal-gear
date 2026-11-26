@@ -29,7 +29,7 @@ return [
     'paladin' => [
         'id' => 2, 'name' => 'Paladin', 'color' => '#F48CBA', 'icon' => 'classicon_paladin', 'armor' => $plate,
         'specs' => [
-            'holy' => ['id' => 65, 'name' => 'Holy', 'icon' => 'spell_holy_holybolt', 'primary' => 'int', 'weapons' => [$axe, $mace, $sword, ...$twoHanders], 'shield' => true, 'off_hand' => true],
+            'holy' => ['id' => 65, 'name' => 'Holy', 'icon' => 'spell_holy_holybolt', 'primary' => 'int', 'weapons' => [$axe, $mace, $sword], 'shield' => true, 'off_hand' => true],
             'protection' => ['id' => 66, 'name' => 'Protection', 'icon' => 'ability_paladin_shieldofthetemplar', 'primary' => 'str', 'weapons' => [$axe, $mace, $sword], 'shield' => true],
             'retribution' => ['id' => 70, 'name' => 'Retribution', 'icon' => 'spell_holy_auraoflight', 'primary' => 'str', 'weapons' => $twoHanders],
         ],

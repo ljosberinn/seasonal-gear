@@ -4,6 +4,68 @@
         "slug": "midnight-season-2",
         "name": "Midnight Season 2"
     },
+    "instances": {
+        "1030": {
+            "name": "Temple of Sethraliss",
+            "icon": "achievement_dungeon_templeofsethraliss",
+            "iconFileId": 2011143
+        },
+        "1041": {
+            "name": "Kings' Rest",
+            "icon": "achievement_dungeon_kingsrest",
+            "iconFileId": 2011123
+        },
+        "1202": {
+            "name": "Ruby Life Pools",
+            "icon": "achievement_dungeon_lifepools",
+            "iconFileId": 4578416
+        },
+        "1304": {
+            "name": "Murder Row",
+            "icon": "inv_achievement_dungeon_murderrow",
+            "iconFileId": 7266213
+        },
+        "1309": {
+            "name": "The Blinding Vale",
+            "icon": "inv_achievement_dungeon_lightbloom",
+            "iconFileId": 7354408
+        },
+        "1311": {
+            "name": "Den of Nalorakk",
+            "icon": "inv_achievement_dungeon_proveyourworth",
+            "iconFileId": 7266214
+        },
+        "1313": {
+            "name": "Voidscar Arena",
+            "icon": "inv_achievement_dungeon_voidscararena",
+            "iconFileId": 7439626
+        },
+        "1317": {
+            "name": "The Tidebound Grotto",
+            "icon": "achievement_boss_elitenagamale",
+            "iconFileId": 3012069
+        },
+        "1319": {
+            "name": "Keystone Dungeons",
+            "icon": null,
+            "iconFileId": null
+        },
+        "1320": {
+            "name": "The Venomous Abyss",
+            "icon": "inv_121_achievement_raid_ulatek",
+            "iconFileId": 8039569
+        },
+        "1322": {
+            "name": "Altar of Fangs",
+            "icon": "inv_achievement_dungeon_altaroffangs",
+            "iconFileId": 7956175
+        },
+        "1324": {
+            "name": "The Unbinding of Kith'ix",
+            "icon": "inv_1215_raid_achievement_kithix",
+            "iconFileId": 8214194
+        }
+    },
     "tracks": {
         "adventurer": "Adventurer",
         "veteran": "Veteran",

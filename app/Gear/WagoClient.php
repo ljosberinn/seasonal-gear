@@ -14,6 +14,7 @@ use Throwable;
 class WagoClient
 {
     public const array TABLES = [
+        'Achievement',
         'ChallengeModeItemBonusOverride',
         'CraftingData',
         'Item',
@@ -81,6 +82,11 @@ class WagoClient
                     ->sink(Db2Directory::tablePath($directory, $table))
                     ->get("/db2/{$table}/csv", ['build' => $build, 'useHotfixes' => 'true']);
             }
+
+            // the community listfile, narrowed to icons, to name the achievement icons
+            $requests[] = $this->configure($pool->as('icon_files'))
+                ->sink(Db2Directory::iconFilesPath($directory))
+                ->get('/api/files', ['search' => 'interface/icons/']);
 
             foreach (self::GAME_TABLES as $name => $fileDataId) {
                 $requests[] = $this->configure($pool->as($name))

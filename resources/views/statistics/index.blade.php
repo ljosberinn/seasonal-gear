@@ -115,7 +115,10 @@
                         @foreach ($specs as $spec)
                             <tr>
                                 <td class="px-3 py-1 whitespace-nowrap">
-                                    <a href="{{ route('statistics.spec', ['class' => $spec['classKey'], 'spec' => $spec['specKey']]) }}" class="hover:underline">{{ $spec['specName'] }} <span class="text-gray-500 dark:text-gray-400">{{ $spec['className'] }}</span></a>
+                                    <a href="{{ route('statistics.spec', ['class' => $spec['classKey'], 'spec' => $spec['specKey']]) }}" class="inline-flex items-center gap-2 hover:underline">
+                                        <img src="https://wow.zamimg.com/images/wow/icons/medium/{{ $spec['icon'] }}.jpg" alt="" width="20" height="20" class="size-5 rounded-sm">
+                                        <span>{{ $spec['specName'] }} <span class="text-gray-500 dark:text-gray-400">{{ $spec['className'] }}</span></span>
+                                    </a>
                                 </td>
                                 @foreach ($slots as $slot)
                                     @php($count = $spec['coverage'][$slot->value])
@@ -151,7 +154,12 @@
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                         @foreach ($instances as $instance)
                             <tr>
-                                <td class="px-3 py-1.5 whitespace-nowrap"><a href="{{ route('statistics.instance', $instance['id']) }}" class="hover:underline">{{ $instance['name'] }}</a></td>
+                                <td class="px-3 py-1.5 whitespace-nowrap">
+                                    <a href="{{ route('statistics.instance', $instance['id']) }}" class="inline-flex items-center gap-2 hover:underline">
+                                        <x-stats.instance-icon :icon="$instance['icon']" :icon-file-id="$instance['iconFileId']" />
+                                        {{ $instance['name'] }}
+                                    </a>
+                                </td>
                                 <td class="px-3 py-1.5 text-gray-600 dark:text-gray-400">{{ GearCatalog::SOURCE_TYPES[$instance['type']] }}</td>
                                 <td class="px-2 py-1.5 text-center tabular-nums">{{ $instance['profile']['items'] }}</td>
                                 @foreach (Stat::SECONDARY_KEYS as $stat)
