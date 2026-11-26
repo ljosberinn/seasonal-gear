@@ -1,5 +1,19 @@
 {
     "build": "12.1.5.70961",
+    "hotfixes": {
+        "Achievement": "2026-11-17 20:48:14",
+        "Item": "2026-11-18 08:40:18",
+        "ItemBonus": "2026-11-17 20:48:14",
+        "ItemBonusTreeNode": "2026-11-17 20:48:14",
+        "ItemEffect": "2026-11-17 20:48:14",
+        "ItemScalingConfig": "2026-11-17 20:48:14",
+        "ItemSparse": "2026-11-18 08:40:18",
+        "ItemXItemEffect": "2026-11-17 20:48:14",
+        "ModifierTree": "2026-11-18 03:57:19",
+        "PlayerCondition": "2026-11-18 08:28:14",
+        "Spell": "2026-11-24 23:35:17",
+        "WorldStateExpression": "2026-11-17 20:48:14"
+    },
     "season": {
         "slug": "midnight-season-2",
         "name": "Midnight Season 2"
