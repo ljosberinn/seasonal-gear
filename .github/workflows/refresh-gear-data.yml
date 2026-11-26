@@ -31,8 +31,8 @@ jobs:
 
       - uses: ramsey/composer-install@v3
 
-      # Table downloads run concurrently inside the command (Http::pool). Scheduled runs skip the
-      # download while the committed dataset has the latest build and hotfixes; manual runs don't.
+      # Table downloads run concurrently inside the command (Http::pool). Scheduled runs keep the
+      # committed dataset while it has the latest build and hotfixes; manual runs rewrite it.
       - name: Import
         env:
           BUILD: ${{ inputs.build }}

@@ -106,7 +106,7 @@ class WagoClient
             foreach ($tables as $table) {
                 $requests[] = $this->configure($pool->as($table))
                     ->sink(Db2Directory::tablePath($directory, $table))
-                    ->get("/db2/{$table}/csv", $this->tableQuery($build));
+                    ->get("/db2/{$table}/csv", ['build' => $build, 'useHotfixes' => 'true']);
             }
 
             foreach ($gameTables as $name => $fileDataId) {
@@ -118,52 +118,18 @@ class WagoClient
             return $requests;
         }, concurrency: (int) config('gear.wago.concurrency'));
 
-        $this->ensureSuccessful($responses);
+        foreach ($responses as $name => $response) {
+            if (! $response instanceof Response) {
+                throw new RuntimeException("Downloading {$name} failed.", previous: $response instanceof Throwable ? $response : null);
+            }
+
+            $response->throw();
+        }
 
         file_put_contents(
             Db2Directory::hotfixesPath($directory),
             json_encode($this->hotfixTimes(array_intersect_key($responses, array_flip($tables))), JSON_THROW_ON_ERROR),
         );
-    }
-
-    /**
-     * Reads each table's newest hotfix without downloading it.
-     *
-     * @param  list<string>  $tables
-     * @return array<string, string> table => time of its newest hotfix
-     */
-    public function hotfixes(string $build, array $tables = self::TABLES): array
-    {
-        $responses = Http::pool(fn (Pool $pool): array => array_map(
-            fn (string $table): mixed => $this->configure($pool->as($table))->head("/db2/{$table}/csv", $this->tableQuery($build)),
-            $tables,
-        ), concurrency: (int) config('gear.wago.concurrency'));
-
-        $this->ensureSuccessful($responses);
-
-        return $this->hotfixTimes($responses);
-    }
-
-    /**
-     * @return array{build: string, useHotfixes: string}
-     */
-    private function tableQuery(string $build): array
-    {
-        return ['build' => $build, 'useHotfixes' => 'true'];
-    }
-
-    /**
-     * @param  array<string, mixed>  $responses
-     */
-    private function ensureSuccessful(array $responses): void
-    {
-        foreach ($responses as $name => $response) {
-            if (! $response instanceof Response) {
-                throw new RuntimeException("Requesting {$name} failed.", previous: $response instanceof Throwable ? $response : null);
-            }
-
-            $response->throw();
-        }
     }
 
     /**

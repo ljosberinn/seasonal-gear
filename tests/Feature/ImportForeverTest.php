@@ -57,17 +57,20 @@ class ImportForeverTest extends TestCase
         $this->assertFileDoesNotExist($output);
     }
 
-    public function test_skips_the_download_while_build_and_hotfixes_are_unchanged(): void
+    public function test_keeps_the_dataset_while_build_and_hotfixes_are_unchanged(): void
     {
         $output = $this->directory.DIRECTORY_SEPARATOR.'forever.json';
-        File::put($output, json_encode(['build' => '1.60.1.71139', 'hotfixes' => ['ItemSparse' => '2026-11-26 04:47:19']]));
+        $previous = json_encode(['build' => '1.60.1.71139', 'hotfixes' => ['ItemSparse' => '2026-11-26 04:47:19']]);
+        File::put($output, $previous);
         $this->fakeHotfixes('2026-11-26 04:47:19');
+        $this->app->useStoragePath($this->directory);
 
         $this->artisan('forever:import', ['--build' => '1.60.1.71139', '--output' => $output])
             ->expectsOutputToContain('Dataset already has build 1.60.1.71139 and its current hotfixes.')
             ->assertSuccessful();
 
-        Http::assertNotSent(fn (Request $request): bool => $request->method() === 'GET');
+        $this->assertSame($previous, File::get($output));
+        $this->assertDirectoryDoesNotExist(storage_path('app/private/db2/wowf-1.60.1.71139'));
     }
 
     public function test_lists_tables_with_new_hotfixes_before_importing(): void
@@ -82,7 +85,6 @@ class ImportForeverTest extends TestCase
             ->expectsOutputToContain('No items resolved.')
             ->assertFailed();
 
-        Http::assertSent(fn (Request $request): bool => $request->method() === 'GET' && str_contains($request->url(), '/db2/ItemSparse/csv'));
     }
 
     /**
@@ -100,7 +102,7 @@ class ImportForeverTest extends TestCase
             preg_match('#/db2/(\w+)/csv#', $request->url(), $match);
 
             return Http::response(
-                $request->method() === 'GET' ? File::get(Db2Directory::tablePath($this->directory, $match[1])) : '',
+                File::get(Db2Directory::tablePath($this->directory, $match[1])),
                 headers: $match[1] === 'ItemSparse' ? ['X-Hotfix-Modified-At' => $itemSparseHotfix] : [],
             );
         });

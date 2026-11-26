@@ -26,20 +26,6 @@ class WagoClientTest extends TestCase
         $this->assertSame('1.60.1.71139', $this->app->make(WagoClient::class)->latestBuild('wowf'));
     }
 
-    public function test_reads_hotfix_times_without_downloading_the_tables(): void
-    {
-        Http::fake([
-            '*/db2/ItemSparse/csv*' => Http::response(headers: ['X-Hotfix-Modified-At' => '2026-11-18 08:40:18']),
-            '*/db2/Item/csv*' => Http::response(),
-        ]);
-
-        $hotfixes = $this->app->make(WagoClient::class)->hotfixes('1.60.1.71139', ['ItemSparse', 'Item']);
-
-        $this->assertSame(['ItemSparse' => '2026-11-18 08:40:18'], $hotfixes);
-        Http::assertSentCount(2);
-        Http::assertSent(fn (Request $request): bool => $request->method() === 'HEAD' && $request['useHotfixes'] === 'true');
-    }
-
     public function test_records_the_hotfix_times_of_downloaded_tables(): void
     {
         $directory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'wago-'.bin2hex(random_bytes(4));

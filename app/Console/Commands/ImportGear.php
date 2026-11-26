@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Console\Commands\Concerns\ComparesHotfixes;
+use App\Console\Commands\Concerns\ManagesWagoExports;
 use App\Gear\Db2Directory;
 use App\Gear\SeasonResolver;
 use App\Gear\WagoClient;
@@ -16,12 +16,12 @@ use Illuminate\Support\Facades\File;
     {--build= : Game build to import; defaults to the latest live build on wago.tools}
     {--from= : Directory with previously downloaded exports; skips downloading}
     {--keep : Keep the downloaded exports and print their location}
-    {--force : Import even when the dataset already has the build and its current hotfixes}
+    {--force : Write the dataset even when it already has the build and its current hotfixes}
     {--output= : Where to write the dataset; defaults to config(gear.data_path)}')]
 #[Description('Download DB2 tables from wago.tools and write the current season item dataset')]
 class ImportGear extends Command
 {
-    use ComparesHotfixes;
+    use ManagesWagoExports;
 
     /**
      * Source types the dataset must contain; a missing one means the season config or DB2 drifted.
@@ -34,14 +34,15 @@ class ImportGear extends Command
         $directory = $this->option('from') ?: storage_path('app/private/db2/'.$build);
         $output = $this->option('output') ?: config('gear.data_path');
 
-        if (! $this->option('from') && ! $this->option('force') && $this->isUpToDate($wago, $output, $build, WagoClient::TABLES)) {
-            $this->components->info("Dataset already has build {$build} and its current hotfixes.");
-
-            return self::SUCCESS;
-        }
-
         if (! $this->option('from')) {
             $this->components->task("Downloading DB2 exports for {$build}", fn () => $wago->download($build, $directory));
+
+            if (! $this->option('force') && $this->isUpToDate($output, $build, (new Db2Directory($directory))->hotfixes())) {
+                $this->components->info("Dataset already has build {$build} and its current hotfixes.");
+                $this->discardExports($directory);
+
+                return self::SUCCESS;
+            }
         }
 
         $dataset = null;
@@ -77,9 +78,7 @@ class ImportGear extends Command
         $this->components->info("Wrote {$output}");
 
         if (! $this->option('from')) {
-            $this->option('keep')
-                ? $this->line("Exports kept in {$directory}")
-                : File::deleteDirectory($directory);
+            $this->discardExports($directory);
         }
 
         return self::SUCCESS;
