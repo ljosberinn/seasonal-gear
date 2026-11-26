@@ -21,7 +21,13 @@
         </a>
 
         <div class="flex items-center gap-4 sm:gap-6">
-            <div class="flex flex-col items-end text-sm text-gray-500 dark:text-gray-400">
+            <nav aria-label="Main" class="flex gap-3 text-sm sm:gap-4">
+                @foreach (['gear.*' => ['Gear', route('gear.index')], 'statistics.*' => ['Statistics', route('statistics.index')]] as $pattern => [$label, $href])
+                    <a href="{{ $href }}" @if (request()->routeIs($pattern)) aria-current="page" @endif class="hover:text-primary-500 aria-[current=page]:font-semibold dark:hover:text-primary-400">{{ $label }}</a>
+                @endforeach
+            </nav>
+
+            <div class="hidden flex-col items-end sm:flex text-sm text-gray-500 dark:text-gray-400">
                 @if ($build)
                     <span>Build {{ $build }}</span>
                 @endif

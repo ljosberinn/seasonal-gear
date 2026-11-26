@@ -31,9 +31,6 @@ return [
         // Hero track, which keystones +6 and up drop; sources that can't reach it are dropped.
         'min_group' => 617,
 
-        // Map InstanceType says raid, but these are single-encounter instances.
-        'special_instances' => [1317, 1324],
-
         // Bonus tree shared by tier pieces and catalyst-only pieces.
         'catalyst_bonus_trees' => [5997],
     ],

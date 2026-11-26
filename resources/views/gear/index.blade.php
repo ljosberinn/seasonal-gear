@@ -76,7 +76,7 @@
         </nav>
 
         <form method="get" action="{{ $formAction }}" data-auto-submit class="z-10 mt-6 flex flex-col gap-3 rounded-md border border-gray-200 bg-white/90 p-3 shadow-sm backdrop-blur lg:sticky lg:top-0 dark:border-gray-800 dark:bg-gray-950/90">
-            <div role="group" aria-label="Source" class="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-5">
+            <div role="group" aria-label="Source" class="grid grid-cols-2 gap-1.5 sm:grid-cols-4 lg:grid-cols-7">
                 <x-filter.card :href="request()->fullUrlWithQuery(['sources' => $allSources])" :active="$showsAllSources" :count="$counts['anySource']">All Sources</x-filter.card>
                 @foreach (GearCatalog::SOURCE_TYPES as $key => $label)
                     <x-filter.card :active="in_array($key, $filter->sources, true)" :count="$counts['sources'][$key]">

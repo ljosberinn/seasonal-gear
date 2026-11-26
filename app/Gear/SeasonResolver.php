@@ -60,7 +60,7 @@ class SeasonResolver
     private int $endTimeEvent = PHP_INT_MAX;
 
     /**
-     * @param  array{slug: string, name: string, expansion_id: int, start_time_event: int, ilvl_scaling_id: int, top_rank_points_mod_sets: list<int>, min_group: int, special_instances: list<int>, catalyst_bonus_trees: list<int>}  $season
+     * @param  array{slug: string, name: string, expansion_id: int, start_time_event: int, ilvl_scaling_id: int, top_rank_points_mod_sets: list<int>, min_group: int, catalyst_bonus_trees: list<int>}  $season
      * @param  array<string, array{bonus_trees: list<int>, max_group?: int}>  $expansion
      */
     public function __construct(
@@ -196,7 +196,6 @@ class SeasonResolver
 
         foreach ($journalInstances as $id => $instance) {
             $type = match (true) {
-                in_array((int) $id, $this->season['special_instances'], true) => 'special',
                 ($maps[$instance['MapID']]['InstanceType'] ?? null) === '2' => 'raid',
                 default => 'dungeon',
             };

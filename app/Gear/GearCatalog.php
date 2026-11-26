@@ -15,7 +15,6 @@ class GearCatalog
      */
     public const array SOURCE_TYPES = [
         'raid' => 'Raid',
-        'special' => 'Special Encounter',
         'tier' => 'Tier Set',
         'dungeon' => 'Dungeon',
         'delve' => 'Delves',
@@ -71,6 +70,28 @@ class GearCatalog
      */
     public function search(GearFilter $filter): array
     {
+        $results = [];
+
+        foreach ($this->fromSources($filter->sources) as $item) {
+            if ($this->matches($item, $filter)) {
+                $results[] = [...$item, 'rank' => $this->rankFor($item, $filter->track)];
+            }
+        }
+
+        usort($results, fn (array $a, array $b): int => [$b['itemLevel'] ?? 0, $this->statWeight($b, $filter), $a['name']]
+            <=> [$a['itemLevel'] ?? 0, $this->statWeight($a, $filter), $b['name']]);
+
+        return $results;
+    }
+
+    /**
+     * Unsorted and unfiltered apart from the sources, for callers that aggregate rather than list.
+     *
+     * @param  list<string>  $sources  source types to include; empty means all
+     * @return list<array<string, mixed>> items with their `sources` of those types
+     */
+    public function fromSources(array $sources): array
+    {
         $dataset = $this->dataset();
         $sourcesByItem = [];
 
@@ -79,7 +100,7 @@ class GearCatalog
                 continue;
             }
 
-            if ($filter->sources === [] || in_array($source['type'], $filter->sources, true)) {
+            if ($sources === [] || in_array($source['type'], $sources, true)) {
                 $sourcesByItem[$source['itemId']][] = $source;
             }
         }
@@ -87,15 +108,10 @@ class GearCatalog
         $results = [];
 
         foreach ($dataset['items'] as $item) {
-            if (! isset($sourcesByItem[$item['id']]) || ! $this->matches($item, $filter)) {
-                continue;
+            if (isset($sourcesByItem[$item['id']])) {
+                $results[] = [...$item, 'sources' => $sourcesByItem[$item['id']]];
             }
-
-            $results[] = [...$item, 'sources' => $sourcesByItem[$item['id']], 'rank' => $this->rankFor($item, $filter->track)];
         }
-
-        usort($results, fn (array $a, array $b): int => [$b['itemLevel'] ?? 0, $this->statWeight($b, $filter), $a['name']]
-            <=> [$a['itemLevel'] ?? 0, $this->statWeight($a, $filter), $b['name']]);
 
         return $results;
     }
@@ -245,7 +261,7 @@ class GearCatalog
      * @param  array{id: int, armor: int, specs: array<string, array{id: int, primary: string, weapons: list<int>, shield?: bool, off_hand?: bool}>}  $class
      * @param  list<string>  $specKeys
      */
-    private function isUsableBy(array $item, array $class, array $specKeys): bool
+    public function isUsableBy(array $item, array $class, array $specKeys): bool
     {
         $allowableClass = $item['allowableClass'];
 
