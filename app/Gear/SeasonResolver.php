@@ -40,6 +40,8 @@ class SeasonResolver
     // Tertiary stats and chance sockets carry this type; it marks a random roll, not a guaranteed bonus.
     private const int BONUS_RANDOM_ROLL_TOAST = 9;
 
+    private const int BONUS_ITEM_EFFECT = 23;
+
     private const int BONUS_UPGRADE_TRACK = 34;
 
     private const int BONUS_LIMIT_CATEGORY = 35;
@@ -572,7 +574,8 @@ class SeasonResolver
             }
         }
 
-        $effects = $this->effects($itemLevels);
+        $defaultBonusLists = array_map(fn (array $trees): array => $this->defaultBonusLists($trees), array_intersect_key($itemTrees, $itemLevels));
+        $effects = $this->effects($itemLevels, $defaultBonusLists);
         $embellishedCategories = $this->db2->keyed('ItemLimitCategory', filter: fn (array $row): bool => str_ends_with($row['Name_lang'], 'Embellished'));
         $specOverrides = $this->db2->grouped('ItemSpecOverride', 'ItemID', fn (array $row): bool => isset($itemLevels[$row['ItemID']]));
         $guaranteedBonuses = $this->guaranteedBonuses($itemLevels, $sparse, $itemTrees);
@@ -630,7 +633,7 @@ class SeasonResolver
                 'choiceStats' => $hasChoiceStats,
                 'itemLevel' => $itemLevel,
                 'tracks' => $this->orderedTracks($itemTracks[$id] ?? []),
-                'defaultBonusLists' => $this->defaultBonusLists($itemTrees[$id] ?? []),
+                'defaultBonusLists' => $defaultBonusLists[$id] ?? [],
                 'stats' => $itemLevel === null ? null : $calculator->compute($inventoryType, (int) $items[$id]['SubclassID'], $allocations, $itemLevel),
                 'sockets' => $nativeSockets + ($guaranteedBonuses[$id]['sockets'] ?? 0),
                 'onUse' => $effects[$id]['onUse'] ?? false,
@@ -681,11 +684,33 @@ class SeasonResolver
 
     /**
      * @param  array<int, mixed>  $itemIds
+     * @param  array<int, list<int>>  $defaultBonusLists
      * @return array<int, array{onUse: bool, onEquip: bool}>
      */
-    private function effects(array $itemIds): array
+    private function effects(array $itemIds, array $defaultBonusLists): array
     {
-        $links = $this->db2->grouped('ItemXItemEffect', 'ItemEffectID', fn (array $row): bool => isset($itemIds[$row['ItemID']]));
+        $links = [];
+
+        foreach ($this->db2->rows('ItemXItemEffect') as $row) {
+            if (isset($itemIds[$row['ItemID']])) {
+                $links[$row['ItemEffectID']][] = (int) $row['ItemID'];
+            }
+        }
+
+        $itemsByList = [];
+
+        foreach ($defaultBonusLists as $itemId => $lists) {
+            foreach ($lists as $list) {
+                $itemsByList[$list][] = $itemId;
+            }
+        }
+
+        foreach ($this->db2->rows('ItemBonus') as $bonus) {
+            if ((int) $bonus['Type'] === self::BONUS_ITEM_EFFECT && isset($itemsByList[$bonus['ParentItemBonusListID']])) {
+                $links[$bonus['Value_0']] = [...$links[$bonus['Value_0']] ?? [], ...$itemsByList[$bonus['ParentItemBonusListID']]];
+            }
+        }
+
         $effects = $this->db2->keyed('ItemEffect', filter: fn (array $row): bool => isset($links[$row['ID']]));
         $spellIds = array_fill_keys(array_column($effects, 'SpellID'), true);
 
@@ -698,8 +723,7 @@ class SeasonResolver
                 continue;
             }
 
-            foreach ($links[$effect['ID']] as $link) {
-                $itemId = (int) $link['ItemID'];
+            foreach ($links[$effect['ID']] as $itemId) {
                 $result[$itemId] ??= ['onUse' => false, 'onEquip' => false];
                 $result[$itemId]['onUse'] = $result[$itemId]['onUse'] || $effect['TriggerType'] === '0';
                 $result[$itemId]['onEquip'] = $result[$itemId]['onEquip'] || $effect['TriggerType'] === '1';

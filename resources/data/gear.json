@@ -15022,7 +15022,7 @@
             },
             "sockets": 0,
             "onUse": true,
-            "onEquip": false,
+            "onEquip": true,
             "embellished": false,
             "itemSet": null
         },
@@ -68343,7 +68343,7 @@
             },
             "sockets": 0,
             "onUse": false,
-            "onEquip": false,
+            "onEquip": true,
             "embellished": false,
             "itemSet": null
         },
@@ -68593,7 +68593,7 @@
             },
             "sockets": 0,
             "onUse": false,
-            "onEquip": false,
+            "onEquip": true,
             "embellished": false,
             "itemSet": null
         },
@@ -68960,7 +68960,7 @@
             },
             "sockets": 0,
             "onUse": false,
-            "onEquip": false,
+            "onEquip": true,
             "embellished": false,
             "itemSet": null
         },
@@ -82359,7 +82359,7 @@
             },
             "sockets": 0,
             "onUse": false,
-            "onEquip": false,
+            "onEquip": true,
             "embellished": false,
             "itemSet": null
         },
@@ -82410,7 +82410,7 @@
             },
             "sockets": 0,
             "onUse": false,
-            "onEquip": false,
+            "onEquip": true,
             "embellished": false,
             "itemSet": null
         },
@@ -82461,7 +82461,7 @@
             },
             "sockets": 0,
             "onUse": false,
-            "onEquip": false,
+            "onEquip": true,
             "embellished": false,
             "itemSet": null
         },
@@ -82512,7 +82512,7 @@
             },
             "sockets": 0,
             "onUse": false,
-            "onEquip": false,
+            "onEquip": true,
             "embellished": false,
             "itemSet": null
         },
@@ -102407,7 +102407,7 @@
             },
             "sockets": 0,
             "onUse": false,
-            "onEquip": false,
+            "onEquip": true,
             "embellished": false,
             "itemSet": null
         },
@@ -102460,7 +102460,7 @@
             },
             "sockets": 0,
             "onUse": false,
-            "onEquip": false,
+            "onEquip": true,
             "embellished": false,
             "itemSet": null
         },
@@ -102513,7 +102513,7 @@
             },
             "sockets": 0,
             "onUse": false,
-            "onEquip": false,
+            "onEquip": true,
             "embellished": false,
             "itemSet": null
         },
@@ -102566,7 +102566,7 @@
             },
             "sockets": 0,
             "onUse": false,
-            "onEquip": false,
+            "onEquip": true,
             "embellished": false,
             "itemSet": null
         },
