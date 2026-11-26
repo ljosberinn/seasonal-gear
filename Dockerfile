@@ -53,7 +53,7 @@ ENV PORT=80 \
     APP_DEBUG=false \
     LOG_CHANNEL=stderr \
     CACHE_STORE=array \
-    SESSION_DRIVER=cookie \
+    SESSION_DRIVER=array \
     QUEUE_CONNECTION=sync
 
 USER www-data
