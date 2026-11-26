@@ -169,7 +169,7 @@
                             <tr>
                                 <td class="px-3 py-1.5 whitespace-nowrap">
                                     <a href="{{ route('statistics.instance', $instance['id']) }}" class="inline-flex items-center gap-2 hover:underline">
-                                        <x-stats.instance-icon :icon="$instance['icon']" :icon-file-id="$instance['iconFileId']" />
+                                        <x-stats.instance-icon :icon="$instance['icon']" />
                                         {{ $instance['name'] }}
                                     </a>
                                 </td>

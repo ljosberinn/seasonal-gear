@@ -14,7 +14,7 @@
         <x-stats.back-link />
 
         <h1 class="mt-4 flex items-center gap-3 text-2xl font-semibold">
-            <x-stats.instance-icon :icon="$instance['icon']" :icon-file-id="$instance['iconFileId']" class="size-8" />
+            <x-stats.instance-icon :icon="$instance['icon']" class="size-8" />
             {{ $instance['name'] }}
         </h1>
         <p class="mt-2 text-gray-600 dark:text-gray-400">{{ GearCatalog::SOURCE_TYPES[$instance['type']] }}</p>

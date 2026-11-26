@@ -227,7 +227,7 @@ class GearStatistics
     /**
      * Raids first, then dungeons. Tier pieces count toward the raid whose tokens they come from.
      *
-     * @return list<array{id: int, name: string, type: string, icon: ?string, iconFileId: ?int, profile: Profile}>
+     * @return list<array{id: int, name: string, type: string, icon: ?string, profile: Profile}>
      */
     public function instances(): array
     {
@@ -254,7 +254,6 @@ class GearStatistics
                 'name' => $group['name'],
                 'type' => $group['type'],
                 'icon' => $icons[$id]['icon'] ?? null,
-                'iconFileId' => $icons[$id]['iconFileId'] ?? null,
                 'profile' => self::profile(array_values($group['items'])),
             ];
         }
@@ -265,7 +264,7 @@ class GearStatistics
     }
 
     /**
-     * @return array{name: string, type: string, icon: ?string, iconFileId: ?int, profile: Profile, encounters: list<array{name: string, profile: Profile}>, armor: array<string, array<string, int>>}|null
+     * @return array{name: string, type: string, icon: ?string, profile: Profile, encounters: list<array{name: string, profile: Profile}>, armor: array<string, array<string, int>>}|null
      */
     public function instance(int $instanceId): ?array
     {
@@ -304,7 +303,6 @@ class GearStatistics
             'name' => $name,
             'type' => $type,
             'icon' => $this->catalog->instances()[$instanceId]['icon'] ?? null,
-            'iconFileId' => $this->catalog->instances()[$instanceId]['iconFileId'] ?? null,
             'profile' => self::profile(array_values($items)),
             'encounters' => collect($encounters)
                 ->map(fn (array $items, string $encounter): array => ['name' => $encounter, 'profile' => self::profile(array_values($items))])

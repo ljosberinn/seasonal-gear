@@ -100,7 +100,6 @@ class StatisticsPageTest extends TestCase
         $this->get(route('statistics.instance', 1320))
             ->assertOk()
             ->assertSee('Ula&#039;tek', false)
-            ->assertSee('icons/medium/inv_121_achievement_raid_ulatek.jpg', false)
             ->assertSee('icons/medium/8039569.jpg', false);
 
         $this->get(route('statistics.instance', 999))->assertNotFound();
