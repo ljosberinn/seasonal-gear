@@ -3,6 +3,7 @@
 namespace App\Gear;
 
 use Generator;
+use Illuminate\Support\Facades\File;
 use RuntimeException;
 
 /**
@@ -37,7 +38,7 @@ class Db2Directory
     {
         $path = self::hotfixesPath($this->path);
 
-        return is_file($path) ? json_decode((string) file_get_contents($path), true, flags: JSON_THROW_ON_ERROR) : [];
+        return File::exists($path) ? File::json($path, JSON_THROW_ON_ERROR) : [];
     }
 
     /**
@@ -109,7 +110,7 @@ class Db2Directory
      */
     public function gameTable(string $name): array
     {
-        $lines = preg_split('/\r?\n/', trim((string) file_get_contents(self::gameTablePath($this->path, $name))));
+        $lines = preg_split('/\r?\n/', trim(File::get(self::gameTablePath($this->path, $name))));
         $header = explode("\t", (string) array_shift($lines));
         $result = [];
 
@@ -126,7 +127,7 @@ class Db2Directory
      */
     private function open(string $file)
     {
-        $handle = is_file($file) ? fopen($file, 'r') : false;
+        $handle = File::isFile($file) ? fopen($file, 'r') : false;
 
         if ($handle === false) {
             throw new RuntimeException("Missing DB2 export: {$file}");

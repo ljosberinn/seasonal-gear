@@ -4,8 +4,8 @@ namespace Tests\Unit;
 
 use App\Gear\Db2Directory;
 use App\Gear\ForeverResolver;
-use PHPUnit\Framework\TestCase;
 use Tests\Concerns\WritesForeverExports;
+use Tests\TestCase;
 
 class ForeverResolverTest extends TestCase
 {

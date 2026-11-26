@@ -14,7 +14,7 @@ trait ManagesWagoExports
      */
     private function isUpToDate(string $output, string $build, array $hotfixes): bool
     {
-        $previous = File::exists($output) ? json_decode(File::get($output), true) : null;
+        $previous = File::exists($output) ? File::json($output) : null;
 
         if (! is_array($previous) || ($previous['build'] ?? null) !== $build) {
             return false;

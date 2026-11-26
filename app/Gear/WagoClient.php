@@ -7,6 +7,7 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Pool;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 use Throwable;
@@ -96,9 +97,7 @@ class WagoClient
      */
     public function download(string $build, string $directory, array $tables = self::TABLES, array $gameTables = self::GAME_TABLES): void
     {
-        if (! is_dir($directory) && ! mkdir($directory, 0777, true) && ! is_dir($directory)) {
-            throw new RuntimeException("Cannot create {$directory}");
-        }
+        File::ensureDirectoryExists($directory);
 
         $responses = Http::pool(function (Pool $pool) use ($build, $directory, $tables, $gameTables): array {
             $requests = [];
@@ -126,10 +125,8 @@ class WagoClient
             $response->throw();
         }
 
-        file_put_contents(
-            Db2Directory::hotfixesPath($directory),
-            json_encode($this->hotfixTimes(array_intersect_key($responses, array_flip($tables))), JSON_THROW_ON_ERROR),
-        );
+        $hotfixes = $this->hotfixTimes(array_intersect_key($responses, array_flip($tables)));
+        File::put(Db2Directory::hotfixesPath($directory), json_encode($hotfixes, JSON_THROW_ON_ERROR));
     }
 
     /**
