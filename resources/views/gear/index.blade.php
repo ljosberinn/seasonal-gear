@@ -26,15 +26,15 @@
         <nav class="mt-6 flex flex-wrap gap-2" aria-label="Class">
             <x-filter.chip :href="route('gear.index', $query)" :active="$classKey === null">All Classes</x-filter.chip>
             @foreach ($classes as $key => $class)
-                <x-filter.chip :href="route('gear.class', ['class' => $key] + $query)" :active="$classKey === $key">{{ $class['name'] }}</x-filter.chip>
+                <x-filter.chip :href="route('gear.class', ['class' => $key] + $query)" :active="$classKey === $key" :color="$class['color']" :icon="$class['icon']">{{ $class['name'] }}</x-filter.chip>
             @endforeach
         </nav>
 
         @if ($classKey !== null)
             <nav class="mt-2 flex flex-wrap gap-2" aria-label="Specialization">
-                <x-filter.chip :href="route('gear.class', ['class' => $classKey] + $query)" :active="$specKey === null">All Specs</x-filter.chip>
+                <x-filter.chip :href="route('gear.class', ['class' => $classKey] + $query)" :active="$specKey === null" :color="$classes[$classKey]['color']" :icon="$classes[$classKey]['icon']">All Specs</x-filter.chip>
                 @foreach ($classes[$classKey]['specs'] as $key => $spec)
-                    <x-filter.chip :href="route('gear.class', ['class' => $classKey, 'spec' => $key] + $query)" :active="$specKey === $key">{{ $spec['name'] }}</x-filter.chip>
+                    <x-filter.chip :href="route('gear.class', ['class' => $classKey, 'spec' => $key] + $query)" :active="$specKey === $key" :color="$classes[$classKey]['color']" :icon="$spec['icon']">{{ $spec['name'] }}</x-filter.chip>
                 @endforeach
             </nav>
         @endif
