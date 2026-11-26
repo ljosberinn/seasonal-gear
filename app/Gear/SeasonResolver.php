@@ -630,6 +630,7 @@ class SeasonResolver
                 'choiceStats' => $hasChoiceStats,
                 'itemLevel' => $itemLevel,
                 'tracks' => $this->orderedTracks($itemTracks[$id] ?? []),
+                'defaultBonusLists' => $this->defaultBonusLists($itemTrees[$id] ?? []),
                 'stats' => $itemLevel === null ? null : $calculator->compute($inventoryType, (int) $items[$id]['SubclassID'], $allocations, $itemLevel),
                 'sockets' => $nativeSockets + ($guaranteedBonuses[$id]['sockets'] ?? 0),
                 'onUse' => $effects[$id]['onUse'] ?? false,
@@ -651,6 +652,31 @@ class SeasonResolver
         $ordered = array_intersect_key(array_flip(array_column($this->tracks, 'key')), $tracks);
 
         return $ordered === [] ? (object) [] : array_replace($ordered, $tracks);
+    }
+
+    /**
+     * Bonus lists an item drops with in every context, such as the "Venomcursed" label and its effect.
+     * Trees with several context-free nodes can roll among them (tertiary stats, chance sockets), so
+     * only trees made of a single such node count.
+     *
+     * @param  list<array<string, string>>  $trees  the item's ItemXBonusTree rows
+     * @return list<int>
+     */
+    private function defaultBonusLists(array $trees): array
+    {
+        $lists = [];
+
+        foreach ($trees as $row) {
+            $nodes = $this->treeNodes[$row['ItemBonusTreeID']] ?? [];
+
+            if (count($nodes) === 1 && $nodes[0]['ItemContext'] === '0' && $nodes[0]['ChildItemBonusListID'] !== '0') {
+                $lists[] = (int) $nodes[0]['ChildItemBonusListID'];
+            }
+        }
+
+        sort($lists);
+
+        return array_values(array_unique($lists));
     }
 
     /**
