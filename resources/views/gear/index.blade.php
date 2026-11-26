@@ -41,6 +41,13 @@
     $specOptions = $classKey === null ? [] : $specOptionsFor($classKey);
     // a picked slot already implies the type, and slots like neck or back have none
     $showsType = $filter->slot === null && collect($items)->contains(fn (array $item): bool => GearCatalog::typeLabel($item) !== '');
+    $exportRows = collect($items)->map(fn (array $item): array => [
+        'id' => $item['id'],
+        'name' => $item['name'],
+        'slot' => Slot::from($item['slot'])->exportKey(),
+        // the upgrade rank's item level, which the Wowhead tooltip links render at
+        'max_itemlevel' => $item['rank']['itemLevel'] ?? null,
+    ]);
     $title = collect([$classKey ? $classes[$classKey]['name'] : null, $specKey ? $classes[$classKey]['specs'][$specKey]['name'] : null])->filter()->reverse()->implode(' ');
 @endphp
 
@@ -129,7 +136,28 @@
             <x-archon-banner class="mt-6" :class-key="$classKey" :spec-key="$specKey" :player-class="$classes[$classKey]" />
         @endif
 
-        <p class="mt-6 text-sm text-gray-500 dark:text-gray-400">{{ count($items) }} {{ Str::plural('item', count($items)) }}</p>
+        <div data-flyout-container class="mt-6 flex items-center justify-between gap-3">
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ count($items) }} {{ Str::plural('item', count($items)) }}</p>
+
+            @if ($items !== [])
+                <div data-flyout data-export="{{ collect(['seasonal-gear', $classKey, $specKey])->filter()->implode('-') }}" class="relative">
+                    <button type="button" data-flyout-trigger aria-controls="export-formats" aria-expanded="false" class="flex cursor-pointer items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-sm text-gray-600 hover:border-gray-300 hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-teal-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-100">
+                        Export
+                        <x-icon.chevron-down class="size-4" />
+                    </button>
+                    <div id="export-formats" data-flyout-panel hidden class="absolute top-full left-0 z-20 w-32 pt-1.5">
+                        <ul class="grid gap-1 rounded-md border border-gray-200 bg-white p-1.5 shadow-lg dark:border-gray-800 dark:bg-gray-950">
+                            @foreach (['json' => 'JSON', 'csv' => 'CSV'] as $format => $label)
+                                <li>
+                                    <button type="button" data-export-format="{{ $format }}" class="w-full cursor-pointer rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-left text-sm text-gray-600 hover:border-gray-300 hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-teal-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-100">{{ $label }}</button>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    <script type="application/json" data-export-rows>@json($exportRows)</script>
+                </div>
+            @endif
+        </div>
 
         <div class="mt-2 overflow-x-auto rounded-md border border-gray-200 dark:border-gray-800">
             <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-800">

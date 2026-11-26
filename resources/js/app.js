@@ -1,3 +1,4 @@
+import { initExport } from './export';
 import { initFlyouts } from './flyout';
 import { initRelativeTimes } from './relative-time';
 import { applyTheme, getStoredTheme, setTheme } from './theme';
@@ -51,6 +52,7 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
+initExport();
 initFlyouts();
 initRelativeTimes();
 

@@ -67,7 +67,7 @@ class SeasonResolver
     private int $endTimeEvent = PHP_INT_MAX;
 
     /**
-     * @param  array{slug: string, name: string, expansion_id: int, start_time_event: int, ilvl_scaling_id: int, top_rank_points_mod_sets: list<int>, ascendant_bonus_lists: list<int>, min_group: int, catalyst_bonus_trees: list<int>}  $season
+     * @param  array{slug: string, name: string, expansion_id: int, start_time_event: int, ilvl_scaling_id: int, top_rank_points_mod_sets: list<int>, ascendant_bonus_lists: list<int>, min_group: int, catalyst_bonus_trees: list<int>, crafted: array{quality_bonus_list: int, reagent_bonus_list: int, item_levels: array<string, int>}}  $season
      * @param  array<string, array{bonus_trees: list<int>, max_group?: int}>  $expansion
      */
     public function __construct(
@@ -494,12 +494,14 @@ class SeasonResolver
             $caps[$type] = $this->tracks[(string) $this->expansion[$type]['max_group']]['top']['itemLevel'] ?? PHP_INT_MAX;
         }
 
+        $craftedTracks = $this->craftedTracks();
+
         foreach ($sources as &$source) {
             $source['tracks'] = [];
 
             if ($source['type'] === 'crafted') {
-                // Crafted item level comes from reagents, not upgrade tracks.
-                $source['itemLevel'] = null;
+                $source['tracks'] = $craftedTracks;
+                $source['itemLevel'] = max(array_column($craftedTracks, 'itemLevel'));
 
                 continue;
             }
@@ -531,8 +533,27 @@ class SeasonResolver
     }
 
     /**
+     * @return array<string, Rank>
+     */
+    private function craftedTracks(): array
+    {
+        $config = $this->season['crafted'];
+        $tracks = [];
+
+        foreach ($config['item_levels'] as $key => $itemLevel) {
+            if (! in_array($key, array_column($this->tracks, 'key'), true)) {
+                throw new RuntimeException("Crafted item level track {$key} isn't a season upgrade track.");
+            }
+
+            $tracks[$key] = ['bonusList' => $config['reagent_bonus_list'], 'itemLevel' => $itemLevel];
+        }
+
+        return $tracks;
+    }
+
+    /**
      * Drops sources without an upgrade track or whose best track is below the configured minimum.
-     * Crafted items are exempt since they never have a track.
+     * Crafted items are exempt since they reach every track through reagents.
      *
      * @param  list<Source&array{tracks: array<string, Rank>}>  $sources
      * @return list<Source&array{tracks: array<string, Rank>}>
@@ -575,6 +596,12 @@ class SeasonResolver
         }
 
         $defaultBonusLists = array_map(fn (array $trees): array => $this->defaultBonusLists($trees), array_intersect_key($itemTrees, $itemLevels));
+
+        foreach ($sources as $source) {
+            if ($source['type'] === 'crafted') {
+                $defaultBonusLists[$source['itemId']] = array_values(array_unique([...$defaultBonusLists[$source['itemId']] ?? [], $this->season['crafted']['quality_bonus_list']]));
+            }
+        }
         $effects = $this->effects($itemLevels, $defaultBonusLists);
         $embellishedCategories = $this->db2->keyed('ItemLimitCategory', filter: fn (array $row): bool => str_ends_with($row['Name_lang'], 'Embellished'));
         $specOverrides = $this->db2->grouped('ItemSpecOverride', 'ItemID', fn (array $row): bool => isset($itemLevels[$row['ItemID']]));

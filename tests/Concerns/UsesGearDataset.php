@@ -54,7 +54,7 @@ trait UsesGearDataset
                 $item(251199, 'Worldroot Canopy', 'head', 1, 4, 1, ['int'], ['mastery' => 3500, 'crit' => 3500]),
                 $item(900001, 'Hasty Helm', 'head', 1, 4, 4, ['str'], ['haste' => 4000, 'crit' => 3000], $heroOnly),
                 $item(271499, "Calamitous Echo's Sundered Peaks", 'shoulder', 3, 4, 3, ['agi', 'int'], ['crit' => 4846, 'vers' => 2154], ['allowableClass' => 4096]),
-                $item(239652, "Martyr's Crown", 'head', 1, 4, 1, ['int'], [], ['choiceStats' => true, 'embellished' => true, 'itemLevel' => null, 'tracks' => [], 'stats' => null]),
+                $item(239652, "Martyr's Crown", 'head', 1, 4, 1, ['int'], [], ['choiceStats' => true, 'embellished' => true, 'itemLevel' => 331, 'tracks' => ['hero' => ['bonusList' => 13751, 'itemLevel' => 318], 'myth' => ['bonusList' => 13751, 'itemLevel' => 331]], 'defaultBonusLists' => [12497]]),
                 $item(900002, 'Greatsword of Testing', 'two-hand', 17, 2, 8, ['str'], ['haste' => 3500, 'vers' => 3500]),
                 $item(900003, 'Staff of Testing', 'two-hand', 17, 2, 10, ['int'], ['haste' => 3500, 'vers' => 3500]),
                 $item(900006, 'Maul of Testing', 'two-hand', 17, 2, 5, ['int'], ['crit' => 3500, 'vers' => 3500]),

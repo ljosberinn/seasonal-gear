@@ -57,6 +57,18 @@ enum Slot: string
         };
     }
 
+    /**
+     * Equipment slot names used by exports, where every weapon that isn't held in the off hand goes in the main hand.
+     */
+    public function exportKey(): string
+    {
+        return match ($this) {
+            self::OneHand, self::TwoHand, self::MainHand, self::Ranged => 'main_hand',
+            self::OffHand => 'off_hand',
+            default => $this->value,
+        };
+    }
+
     public function isArmor(): bool
     {
         return in_array($this, [self::Head, self::Shoulder, self::Chest, self::Wrist, self::Hands, self::Waist, self::Legs, self::Feet], true);

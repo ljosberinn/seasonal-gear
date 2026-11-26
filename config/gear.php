@@ -46,6 +46,15 @@ return [
 
         // Bonus tree shared by tier pieces and catalyst-only pieces.
         'catalyst_bonus_trees' => [5997],
+
+        // Reagents set crafted item levels server-side, so DB2 doesn't tie them to items. Links carry
+        // the top crafting quality for its icon and a reagent list for the required level, while
+        // Wowhead's ilvl parameter picks the step.
+        'crafted' => [
+            'quality_bonus_list' => 12497,
+            'reagent_bonus_list' => 13751,
+            'item_levels' => ['adventurer' => 279, 'veteran' => 292, 'champion' => 305, 'hero' => 318, 'myth' => 331],
+        ],
     ],
 
     /*
