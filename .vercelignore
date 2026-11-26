@@ -4,7 +4,6 @@
 .env.*
 !.env.example
 .vercel
-database/database.sqlite
 node_modules
 public/build
 public/hot
