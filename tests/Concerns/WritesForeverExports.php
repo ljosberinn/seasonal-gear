@@ -3,6 +3,7 @@
 namespace Tests\Concerns;
 
 use App\Gear\Db2Directory;
+use Illuminate\Filesystem\Filesystem;
 
 /**
  * Writes the DB2 exports `forever:import` reads into a temporary directory, removed by `removeForeverExports()`.
@@ -19,8 +20,7 @@ trait WritesForeverExports
 
     protected function removeForeverExports(): void
     {
-        array_map(unlink(...), glob($this->directory.DIRECTORY_SEPARATOR.'*'));
-        rmdir($this->directory);
+        (new Filesystem)->deleteDirectory($this->directory);
     }
 
     /**

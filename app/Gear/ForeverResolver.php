@@ -26,7 +26,7 @@ class ForeverResolver
     public function __construct(private readonly Db2Directory $db2, private readonly int $maxLevel) {}
 
     /**
-     * @return array{build: string, ratingsPerPercent: array<string, float>, items: list<ForeverItem>, unknownStats: array<int, int>}
+     * @return array{build: string, hotfixes: array<string, string>, ratingsPerPercent: array<string, float>, items: list<ForeverItem>, unknownStats: array<int, int>}
      */
     public function resolve(string $build): array
     {
@@ -104,6 +104,7 @@ class ForeverResolver
 
         return [
             'build' => $build,
+            'hotfixes' => $this->db2->hotfixes(),
             'ratingsPerPercent' => $this->ratingsPerPercent(),
             'items' => $items,
             'unknownStats' => $unknownStats,

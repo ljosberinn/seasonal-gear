@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Gear\Db2Directory;
 use App\Gear\WagoClient;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -23,5 +24,25 @@ class WagoClientTest extends TestCase
         Http::fake(['*/api/builds/latest' => Http::response(['wow' => ['version' => '12.1.5.70961'], 'wowf' => ['version' => '1.60.1.71139']])]);
 
         $this->assertSame('1.60.1.71139', $this->app->make(WagoClient::class)->latestBuild('wowf'));
+    }
+
+    public function test_records_the_hotfix_times_of_downloaded_tables(): void
+    {
+        $directory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'wago-'.bin2hex(random_bytes(4));
+
+        Http::fake([
+            '*/db2/ItemSparse/csv*' => Http::response('ID', headers: ['X-Hotfix-Modified-At' => '2026-11-18 08:40:18']),
+            '*/db2/Item/csv*' => Http::response('ID'),
+            '*/api/casc/*' => Http::response('Level'),
+        ]);
+
+        try {
+            $this->app->make(WagoClient::class)->download('1.60.1.71139', $directory, ['ItemSparse', 'Item'], ['combat_ratings_by_level' => 1391669]);
+
+            $this->assertSame(['ItemSparse' => '2026-11-18 08:40:18'], (new Db2Directory($directory))->hotfixes());
+        } finally {
+            array_map(unlink(...), glob($directory.DIRECTORY_SEPARATOR.'*'));
+            rmdir($directory);
+        }
     }
 }
