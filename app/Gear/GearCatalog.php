@@ -9,6 +9,10 @@ use RuntimeException;
  */
 class GearCatalog
 {
+    /**
+     * Source types the site shows. `gear:import` still collects catalyst items, but they're left out
+     * here until the catalyst is usable this season.
+     */
     public const array SOURCE_TYPES = [
         'raid' => 'Raid',
         'special' => 'Special Encounter',
@@ -16,9 +20,14 @@ class GearCatalog
         'dungeon' => 'Dungeon',
         'delve' => 'Delves',
         'world' => 'World',
-        'catalyst' => 'Catalyst',
         'crafted' => 'Crafted',
     ];
+
+    /** Picked when the request names no sources. */
+    public const array DEFAULT_SOURCE_TYPES = ['raid', 'tier', 'dungeon'];
+
+    /** Secondaries at least this share of the next higher one read as roughly equal. */
+    private const float NEAR_EQUAL_RATIO = 0.9;
 
     private const int ITEM_CLASS_WEAPON = 2;
 
@@ -57,6 +66,10 @@ class GearCatalog
         $sourcesByItem = [];
 
         foreach ($dataset['sources'] as $source) {
+            if (! isset(self::SOURCE_TYPES[$source['type']])) {
+                continue;
+            }
+
             if ($filter->sources === [] || in_array($source['type'], $filter->sources, true)) {
                 $sourcesByItem[$source['itemId']][] = $source;
             }
@@ -91,6 +104,10 @@ class GearCatalog
         $sourceTypesByItem = [];
 
         foreach ($dataset['sources'] as $source) {
+            if (! isset(self::SOURCE_TYPES[$source['type']])) {
+                continue;
+            }
+
             $sourceTypesByItem[$source['itemId']][$source['type']] = true;
         }
 
@@ -142,12 +159,43 @@ class GearCatalog
     }
 
     /**
+     * Secondary stats from highest to lowest, each with how it compares to the one before it.
+     *
+     * @param  array<string, int>  $secondaries
+     * @return list<array{stat: string, relation: '='|'≈'|'>'|null}>
+     */
+    public static function rankSecondaries(array $secondaries): array
+    {
+        arsort($secondaries);
+
+        $ranked = [];
+        $previous = null;
+
+        foreach ($secondaries as $stat => $value) {
+            $ranked[] = ['stat' => $stat, 'relation' => match (true) {
+                $previous === null => null,
+                $value === $previous => '=',
+                $value >= $previous * self::NEAR_EQUAL_RATIO => '≈',
+                default => '>',
+            }];
+            $previous = $value;
+        }
+
+        return $ranked;
+    }
+
+    /**
      * @param  array<string, mixed>  $item
      */
     public static function typeLabel(array $item): string
     {
         if ($item['classId'] === self::ITEM_CLASS_WEAPON) {
             return self::WEAPON_TYPES[$item['subclassId']] ?? 'Weapon';
+        }
+
+        // Cloaks are cloth for every class, so the armor type would only suggest otherwise.
+        if ($item['slot'] === Slot::Back->value) {
+            return '';
         }
 
         if ($item['inventoryType'] === self::INVENTORY_TYPE_HELD_IN_OFF_HAND) {

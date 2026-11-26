@@ -1,6 +1,11 @@
 @props(['build' => null])
 
 @php
+    use Illuminate\Support\Carbon;
+
+    // assets are built during every deploy, so the manifest dates the running site
+    $manifest = public_path('build/manifest.json');
+    $builtAt = is_file($manifest) ? Carbon::createFromTimestamp(filemtime($manifest)) : null;
     $themes = [
         'light' => ['label' => 'Light', 'icon' => 'icon.sun'],
         'dark' => ['label' => 'Dark', 'icon' => 'icon.moon'],
@@ -16,9 +21,14 @@
         </a>
 
         <div class="flex items-center gap-4 sm:gap-6">
-            @if ($build)
-                <span class="text-sm text-gray-500 dark:text-gray-400">Build {{ $build }}</span>
-            @endif
+            <div class="flex flex-col items-end text-sm text-gray-500 dark:text-gray-400">
+                @if ($build)
+                    <span>Build {{ $build }}</span>
+                @endif
+                @if ($builtAt)
+                    <time datetime="{{ $builtAt->toIso8601String() }}" data-relative-time="Built" title="{{ $builtAt->toDayDateTimeString() }} UTC">Built {{ $builtAt->diffForHumans() }}</time>
+                @endif
+            </div>
 
             <div data-theme-switch class="relative flex items-center">
                 <button type="button" data-theme-button aria-label="Theme Switcher" aria-haspopup="menu" aria-expanded="false" aria-controls="theme-menu" class="flex cursor-pointer items-center justify-center hover:text-primary-500 dark:hover:text-primary-400">

@@ -32,7 +32,7 @@ class GearController extends Controller
         $filter = new GearFilter(
             slot: isset($validated['slot']) ? Slot::from($validated['slot']) : null,
             stats: array_values(array_unique($validated['stats'] ?? [])),
-            sources: array_values(array_unique($validated['sources'] ?? [])),
+            sources: $request->has('sources') ? array_values(array_unique($validated['sources'])) : GearCatalog::DEFAULT_SOURCE_TYPES,
             class: $selectedClass,
             specs: $spec === null ? [] : [$spec],
         );

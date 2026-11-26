@@ -10,6 +10,8 @@ use Tests\TestCase;
 
 class GearPageTest extends TestCase
 {
+    private const array ALL_SOURCES = ['raid', 'special', 'tier', 'dungeon', 'delve', 'world', 'crafted'];
+
     private string $datasetPath;
 
     protected function setUp(): void
@@ -29,14 +31,28 @@ class GearPageTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_lists_every_item_without_filters(): void
+    public function test_defaults_to_raid_tier_set_and_dungeon_sources(): void
     {
         $this->get(route('gear.index'))
             ->assertOk()
             ->assertSee('Test Season')
             ->assertSee('12.1.5.70961')
             ->assertSeeInOrder(['Visor of the Predator', 'Worldroot Canopy'])
-            ->assertSee('Vile Alchemist&#039;s Band', false);
+            ->assertSee('Vile Alchemist&#039;s Band', false)
+            ->assertSee('Calamitous Echo')
+            ->assertDontSee('Hasty Helm')
+            ->assertDontSee('Greatsword of Testing')
+            ->assertDontSee('Martyr');
+    }
+
+    public function test_hides_catalyst_items(): void
+    {
+        $this->get(route('gear.index', ['sources' => array_keys(GearCatalog::SOURCE_TYPES)]))
+            ->assertOk()
+            ->assertSee('Hasty Helm')
+            ->assertDontSee('Catalyzed Cowl');
+
+        $this->get(route('gear.index', ['sources' => ['catalyst']]))->assertSessionHasErrors('sources.0');
     }
 
     public function test_item_links_carry_wowhead_tooltip_item_level(): void
@@ -49,7 +65,7 @@ class GearPageTest extends TestCase
 
     public function test_filters_by_slot_and_all_selected_stats(): void
     {
-        $this->get(route('gear.index', ['slot' => 'head', 'stats' => ['mastery', 'crit']]))
+        $this->get(route('gear.index', ['slot' => 'head', 'stats' => ['mastery', 'crit'], 'sources' => self::ALL_SOURCES]))
             ->assertOk()
             ->assertSee('Visor of the Predator')
             ->assertSee('Worldroot Canopy')
@@ -95,14 +111,14 @@ class GearPageTest extends TestCase
 
     public function test_spec_route_limits_primary_stat_and_weapons(): void
     {
-        $this->get(route('gear.class', ['class' => 'paladin', 'spec' => 'retribution']))
+        $this->get(route('gear.class', ['class' => 'paladin', 'spec' => 'retribution', 'sources' => self::ALL_SOURCES]))
             ->assertOk()
             ->assertSee('Visor of the Predator')
             ->assertSee('Greatsword of Testing')
             ->assertDontSee('Staff of Testing')
             ->assertDontSee('Bulwark of Testing');
 
-        $this->get(route('gear.class', ['class' => 'paladin', 'spec' => 'protection']))
+        $this->get(route('gear.class', ['class' => 'paladin', 'spec' => 'protection', 'sources' => self::ALL_SOURCES]))
             ->assertOk()
             ->assertSee('Bulwark of Testing')
             ->assertDontSee('Greatsword of Testing');
@@ -150,6 +166,7 @@ class GearPageTest extends TestCase
                 $item(900002, 'Greatsword of Testing', 'two-hand', 17, 2, 8, ['str'], ['haste' => 3500, 'vers' => 3500]),
                 $item(900003, 'Staff of Testing', 'two-hand', 17, 2, 10, ['int'], ['haste' => 3500, 'vers' => 3500]),
                 $item(900004, 'Bulwark of Testing', 'off-hand', 14, 4, 6, ['str'], ['haste' => 3500, 'vers' => 3500]),
+                $item(900005, 'Catalyzed Cowl', 'head', 1, 4, 4, ['str'], ['haste' => 3500, 'crit' => 3500]),
             ],
             'sources' => [
                 $source(268249, 'raid', 'The Venomous Abyss'),
@@ -161,6 +178,7 @@ class GearPageTest extends TestCase
                 $source(900002, 'world'),
                 $source(900003, 'world'),
                 $source(900004, 'delve'),
+                $source(900005, 'catalyst', 'The Venomous Abyss'),
             ],
         ];
     }
