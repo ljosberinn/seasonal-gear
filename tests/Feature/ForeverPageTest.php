@@ -115,6 +115,32 @@ class ForeverPageTest extends TestCase
             ->assertDontSee('Zarmok');
     }
 
+    public function test_item_level_range_is_inclusive(): void
+    {
+        $this->useForeverDataset();
+
+        $this->get(route('forever.index', ['min_item_level' => 55, 'max_item_level' => 75]))
+            ->assertOk()
+            ->assertSee('Ghostweave Leggings')
+            ->assertSee('Barrier Shield')
+            ->assertSee('Styleen')
+            ->assertDontSee('Dreadnaught Legplates')
+            ->assertDontSee('Zarmok');
+    }
+
+    public function test_item_level_slider_spans_the_dataset(): void
+    {
+        $this->useForeverDataset();
+
+        $this->get(route('forever.index'))
+            ->assertOk()
+            ->assertSee('name="min_item_level" min="24" max="98" value="24"', false)
+            ->assertSee('name="max_item_level" min="24" max="98" value="98"', false);
+
+        $this->get(route('forever.index', ['min_item_level' => 23]))
+            ->assertSessionHasErrors(['min_item_level' => 'The min item level field must be between 24 and 98.']);
+    }
+
     public function test_required_level_bounds_dragged_past_each_other_still_form_a_range(): void
     {
         $this->useForeverDataset();

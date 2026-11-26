@@ -46,7 +46,7 @@
                 <input type="hidden" name="class" value="{{ $filter->class }}">
             @endif
 
-            <div role="group" aria-label="Slot and Required Level" class="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <div role="group" aria-label="Slot and Levels" class="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <x-filter.select name="slot" aria-label="Slot" :active="$filter->slot !== null">
                     <option value="">Any Slot ({{ $counts['anySlot'] }})</option>
                     @foreach (Slot::cases() as $slotOption)
@@ -54,19 +54,9 @@
                     @endforeach
                 </x-filter.select>
 
-                <fieldset @class([
-                    'flex flex-wrap items-center gap-2 text-sm',
-                    'font-bold' => $filter->minLevel !== null || $filter->maxLevel !== null,
-                ])>
-                    <legend class="float-left mr-1 text-gray-600 dark:text-gray-400">Required Level</legend>
-                    <label class="sr-only" for="min-level">Minimum Required Level</label>
-                    <input id="min-level" type="range" name="min_level" min="1" max="{{ $maxLevel }}" value="{{ $filter->minLevel ?? 1 }}" data-output="min-level-value" class="w-32 accent-teal-600">
-                    <output id="min-level-value" for="min-level" class="w-6 text-right tabular-nums">{{ $filter->minLevel ?? 1 }}</output>
-                    <span aria-hidden="true">–</span>
-                    <label class="sr-only" for="max-level">Maximum Required Level</label>
-                    <output id="max-level-value" for="max-level" class="w-6 tabular-nums">{{ $filter->maxLevel ?? $maxLevel }}</output>
-                    <input id="max-level" type="range" name="max_level" min="1" max="{{ $maxLevel }}" value="{{ $filter->maxLevel ?? $maxLevel }}" data-output="max-level-value" class="w-32 accent-teal-600">
-                </fieldset>
+                <x-forever.range legend="Required Level" name="level" :min="1" :max="$maxLevel" :low="$filter->minLevel" :high="$filter->maxLevel" />
+
+                <x-forever.range legend="Item Level" name="item_level" :min="$itemLevelBounds[0]" :max="$itemLevelBounds[1]" :low="$filter->minItemLevel" :high="$filter->maxItemLevel" />
 
                 @if (! $filter->isEmpty())
                     <a href="{{ route('forever.index') }}" class="ml-auto text-sm text-gray-500 underline underline-offset-4 hover:text-primary-500 dark:text-gray-400 dark:hover:text-primary-400">Reset Filters</a>

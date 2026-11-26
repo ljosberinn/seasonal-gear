@@ -40,13 +40,23 @@ class ForeverCatalog
     }
 
     /**
+     * @return array{int, int} lowest and highest item level in the dataset
+     */
+    public function itemLevelBounds(): array
+    {
+        $itemLevels = array_column($this->dataset()['items'], 'itemLevel');
+
+        return [min($itemLevels), max($itemLevels)];
+    }
+
+    /**
      * @return list<ForeverItem> grouped by slot in slot order, highest item level first within a slot
      */
     public function search(ForeverFilter $filter): array
     {
         $slotOrder = array_flip(array_column(Slot::cases(), 'value'));
         $results = array_values(array_filter($this->dataset()['items'], fn (array $item): bool => $this->matchesSlot($item, $filter)
-            && $this->matchesLevel($item, $filter)
+            && $this->matchesLevels($item, $filter)
             && $this->hasStats($item, $filter->stats)
             && $this->matchesClass($item, $filter->class)));
 
@@ -73,7 +83,7 @@ class ForeverCatalog
         ];
 
         foreach ($this->dataset()['items'] as $item) {
-            if (! $this->matchesLevel($item, $filter)) {
+            if (! $this->matchesLevels($item, $filter)) {
                 continue;
             }
 
@@ -173,13 +183,15 @@ class ForeverCatalog
     /**
      * @param  ForeverItem  $item
      */
-    private function matchesLevel(array $item, ForeverFilter $filter): bool
+    private function matchesLevels(array $item, ForeverFilter $filter): bool
     {
         // Items without a requirement are wearable from level 1.
         $level = max(1, $item['requiredLevel']);
 
         return ($filter->minLevel === null || $level >= $filter->minLevel)
-            && ($filter->maxLevel === null || $level <= $filter->maxLevel);
+            && ($filter->maxLevel === null || $level <= $filter->maxLevel)
+            && ($filter->minItemLevel === null || $item['itemLevel'] >= $filter->minItemLevel)
+            && ($filter->maxItemLevel === null || $item['itemLevel'] <= $filter->maxItemLevel);
     }
 
     /**
