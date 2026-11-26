@@ -146,7 +146,7 @@ class GearPageTest extends TestCase
     {
         $this->get(route('gear.class', ['class' => 'demon-hunter', 'spec' => 'devourer']))
             ->assertOk()
-            ->assertSee('https://www.archon.gg/wow/builds/devourer/demon-hunter/mythic-plus/overview/10/all-dungeons/this-week', false)
+            ->assertSee('https://www.archon.gg/wow/builds/devourer/demon-hunter/mythic-plus/overview/10/all-dungeons/this-week?utm_source=seasonal-gear', false)
             ->assertSee('builds/specs/demonhunter-3.jpg', false)
             ->assertSee('Devourer Demon Hunter</span> players currently use', false);
 
