@@ -45,6 +45,8 @@ class SeasonResolver
 
     private const int ENTRY_FLAG_ABOVE_CAP = 0x1;
 
+    private const int ACHIEVEMENT_FLAG_STATISTIC = 0x1;
+
     /** @var array<string, list<array<string, string>>> */
     private array $treeNodes = [];
 
@@ -60,7 +62,7 @@ class SeasonResolver
     private int $endTimeEvent = PHP_INT_MAX;
 
     /**
-     * @param  array{slug: string, name: string, expansion_id: int, start_time_event: int, ilvl_scaling_id: int, top_rank_points_mod_sets: list<int>, min_group: int, special_instances: list<int>, catalyst_bonus_trees: list<int>}  $season
+     * @param  array{slug: string, name: string, expansion_id: int, start_time_event: int, ilvl_scaling_id: int, top_rank_points_mod_sets: list<int>, min_group: int, catalyst_bonus_trees: list<int>}  $season
      * @param  array<string, array{bonus_trees: list<int>, max_group?: int}>  $expansion
      */
     public function __construct(
@@ -70,7 +72,7 @@ class SeasonResolver
     ) {}
 
     /**
-     * @return array{build: string, season: array{slug: string, name: string}, tracks: array<string, string>, items: list<array<string, mixed>>, sources: list<Source>}
+     * @return array{build: string, season: array{slug: string, name: string}, instances: array<string, array{name: string, icon: ?string, iconFileId: ?int}>, tracks: array<string, string>, items: list<array<string, mixed>>, sources: list<Source>}
      */
     public function resolve(string $build): array
     {
@@ -142,6 +144,7 @@ class SeasonResolver
         return [
             'build' => $build,
             'season' => ['slug' => $this->season['slug'], 'name' => $this->season['name']],
+            'instances' => $this->instanceIcons($instances),
             'tracks' => array_column($this->tracks, 'name', 'key'),
             'items' => $this->describeItems($sources, $items, $sparse, $itemTrees),
             'sources' => $this->sortSources(array_map(fn (array $source): array => array_diff_key($source, ['tracks' => true]), $sources)),
@@ -149,7 +152,7 @@ class SeasonResolver
     }
 
     /**
-     * @return array<string, array{name: string, type: string}> JournalInstance ID => details
+     * @return array<string, array{name: string, type: string, mapId: string}> JournalInstance ID => details
      */
     private function seasonInstances(): array
     {
@@ -195,20 +198,49 @@ class SeasonResolver
         $result = [];
 
         foreach ($journalInstances as $id => $instance) {
-            $type = match (true) {
-                in_array((int) $id, $this->season['special_instances'], true) => 'special',
-                ($maps[$instance['MapID']]['InstanceType'] ?? null) === '2' => 'raid',
-                default => 'dungeon',
-            };
-
-            $result[$id] = ['name' => $instance['Name_lang'], 'type' => $type];
+            $type = ($maps[$instance['MapID']]['InstanceType'] ?? null) === '2' ? 'raid' : 'dungeon';
+            $result[$id] = ['name' => $instance['Name_lang'], 'type' => $type, 'mapId' => $instance['MapID']];
         }
 
         return $result;
     }
 
     /**
-     * @param  array<string, array{name: string, type: string}>  $instances
+     * Each instance's achievement icon: the achievement named after the instance, else the icon most of
+     * its achievements share. Statistics are skipped since they all use one generic icon.
+     *
+     * @param  array<string, array{name: string, type: string, mapId: string}>  $instances
+     * @return array<string, array{name: string, icon: ?string, iconFileId: ?int}>
+     */
+    private function instanceIcons(array $instances): array
+    {
+        $mapIds = array_fill_keys(array_column($instances, 'mapId'), true);
+        $achievements = $this->db2->grouped('Achievement', 'Instance_ID', fn (array $row): bool => isset($mapIds[$row['Instance_ID']])
+            && $row['IconFileID'] !== '0'
+            && ((int) $row['Flags'] & self::ACHIEVEMENT_FLAG_STATISTIC) === 0);
+        $iconNames = $this->db2->iconNames();
+        $normalize = fn (string $name): string => strtolower((string) preg_replace('/^The /', '', $name));
+        $result = [];
+
+        foreach ($instances as $id => $instance) {
+            $candidates = $achievements[$instance['mapId']] ?? [];
+            $named = collect($candidates)->first(fn (array $row): bool => $normalize($row['Title_lang']) === $normalize($instance['name']));
+            $counts = array_count_values(array_column($candidates, 'IconFileID'));
+            arsort($counts);
+            $fileId = $named['IconFileID'] ?? array_key_first($counts);
+
+            $result[$id] = [
+                'name' => $instance['name'],
+                'icon' => $fileId === null ? null : $iconNames[(int) $fileId] ?? null,
+                'iconFileId' => $fileId === null ? null : (int) $fileId,
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param  array<string, array{name: string, type: string, mapId: string}>  $instances
      * @return list<array{itemId: int, type: string, instanceId: int, instance: string, encounterId: int, encounter: string}>
      */
     private function journalSources(array $instances): array

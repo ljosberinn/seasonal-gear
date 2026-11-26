@@ -21,7 +21,7 @@ class ImportGear extends Command
     /**
      * Source types the dataset must contain; a missing one means the season config or DB2 drifted.
      */
-    private const array REQUIRED_SOURCE_TYPES = ['raid', 'dungeon', 'special', 'tier', 'catalyst', 'delve', 'world', 'crafted'];
+    private const array REQUIRED_SOURCE_TYPES = ['raid', 'dungeon', 'tier', 'catalyst', 'delve', 'world', 'crafted'];
 
     public function handle(WagoClient $wago): int
     {

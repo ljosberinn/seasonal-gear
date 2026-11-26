@@ -36,4 +36,18 @@
     html.dark {
         color-scheme: dark;
     }
+
+    /* chart roles for the statistics pages: one bar hue, a blue/red diverging pair, and a gap color */
+    :root {
+        --viz-series: #2a78d6;
+        --viz-above: #2a78d6;
+        --viz-below: #e34948;
+        --viz-gap: #d03b3b;
+    }
+
+    html.dark {
+        --viz-series: #3987e5;
+        --viz-above: #3987e5;
+        --viz-below: #e66767;
+    }
 }
