@@ -142,6 +142,19 @@ class GearPageTest extends TestCase
             ->assertDontSee('Greatsword of Testing');
     }
 
+    public function test_spec_route_links_the_spec_on_archon(): void
+    {
+        $this->get(route('gear.class', ['class' => 'demon-hunter', 'spec' => 'devourer']))
+            ->assertOk()
+            ->assertSee('https://www.archon.gg/wow/builds/devourer/demon-hunter/mythic-plus/overview/10/all-dungeons/this-week', false)
+            ->assertSee('builds/specs/demonhunter-3.jpg', false)
+            ->assertSee('Devourer Demon Hunter</span> players currently use', false);
+
+        $this->get(route('gear.class', ['class' => 'demon-hunter']))
+            ->assertOk()
+            ->assertDontSee('archon.gg');
+    }
+
     public function test_spec_override_limits_items_without_a_primary_stat(): void
     {
         $this->get(route('gear.class', ['class' => 'warrior', 'spec' => 'arms']))
