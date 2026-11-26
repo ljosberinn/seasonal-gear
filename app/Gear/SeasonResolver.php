@@ -2,6 +2,7 @@
 
 namespace App\Gear;
 
+use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
@@ -9,6 +10,7 @@ use RuntimeException;
  * The chain is documented in docs/dbc-current-season.md.
  *
  * @phpstan-type Source array{itemId: int, type: string, instanceId: ?int, instance: ?string, encounterId: ?int, encounter: ?string, itemLevel: ?int}
+ * @phpstan-type Rank array{bonusList: int, itemLevel: int}
  */
 class SeasonResolver
 {
@@ -35,6 +37,10 @@ class SeasonResolver
     // Tertiary stats and chance sockets carry this type; it marks a random roll, not a guaranteed bonus.
     private const int BONUS_RANDOM_ROLL_TOAST = 9;
 
+    private const int BONUS_UPGRADE_TRACK = 34;
+
+    private const int BONUS_LIMIT_CATEGORY = 35;
+
     private const int BONUS_ITEM_LEVEL = 49;
 
     private const int ENTRY_FLAG_ABOVE_CAP = 0x1;
@@ -45,16 +51,16 @@ class SeasonResolver
     /** @var array<string, list<array<string, string>>> */
     private array $challengeModeOverrides = [];
 
-    /** @var array<string, int> season group ID => item level of its highest normal rank */
-    private array $groupTopItemLevel = [];
+    /** @var array<int, array{key: string, name: string, top: Rank, aboveCap: Rank}> season group ID => track, lowest first */
+    private array $tracks = [];
 
-    /** @var array<string, list<string>> */
+    /** @var array<string, array<int, bool>> */
     private array $reachMemo = [];
 
     private int $endTimeEvent = PHP_INT_MAX;
 
     /**
-     * @param  array{slug: string, name: string, expansion_id: int, start_time_event: int, ilvl_scaling_id: int, min_group: int, special_instances: list<int>, catalyst_bonus_trees: list<int>}  $season
+     * @param  array{slug: string, name: string, expansion_id: int, start_time_event: int, ilvl_scaling_id: int, top_rank_points_mod_sets: list<int>, min_group: int, special_instances: list<int>, catalyst_bonus_trees: list<int>}  $season
      * @param  array<string, array{bonus_trees: list<int>, max_group?: int}>  $expansion
      */
     public function __construct(
@@ -64,7 +70,7 @@ class SeasonResolver
     ) {}
 
     /**
-     * @return array{build: string, season: array{slug: string, name: string}, items: list<array<string, mixed>>, sources: list<Source>}
+     * @return array{build: string, season: array{slug: string, name: string}, tracks: array<string, string>, items: list<array<string, mixed>>, sources: list<Source>}
      */
     public function resolve(string $build): array
     {
@@ -136,8 +142,9 @@ class SeasonResolver
         return [
             'build' => $build,
             'season' => ['slug' => $this->season['slug'], 'name' => $this->season['name']],
+            'tracks' => array_column($this->tracks, 'name', 'key'),
             'items' => $this->describeItems($sources, $items, $sparse, $itemTrees),
-            'sources' => $this->sortSources($sources),
+            'sources' => $this->sortSources(array_map(fn (array $source): array => array_diff_key($source, ['tracks' => true]), $sources)),
         ];
     }
 
@@ -324,39 +331,72 @@ class SeasonResolver
         foreach ($this->db2->rows('ItemBonusListGroupEntry') as $entry) {
             $group = $entry['ItemBonusListGroupID'];
 
-            if (! isset($groups[$group]) || ((int) $entry['Flags'] & self::ENTRY_FLAG_ABOVE_CAP) !== 0) {
+            if (! isset($groups[$group])) {
                 continue;
             }
 
-            if (! isset($topLists[$group]) || (int) $entry['SequenceValue'] > $topLists[$group]['rank']) {
-                $topLists[$group] = ['rank' => (int) $entry['SequenceValue'], 'list' => $entry['ItemBonusListID']];
+            $tier = ((int) $entry['Flags'] & self::ENTRY_FLAG_ABOVE_CAP) !== 0 ? 'aboveCap' : 'top';
+
+            if (! isset($topLists[$group][$tier]) || (int) $entry['SequenceValue'] > $topLists[$group][$tier]['rank']) {
+                $topLists[$group][$tier] = ['rank' => (int) $entry['SequenceValue'], 'list' => $entry['ItemBonusListID']];
             }
         }
 
-        $listIds = array_fill_keys(array_column($topLists, 'list'), true);
+        $listIds = [];
+
+        foreach ($topLists as $tiers) {
+            foreach ($tiers as $top) {
+                $listIds[$top['list']] = true;
+            }
+        }
+
         $scalingIds = [];
+        $nameIds = [];
 
         foreach ($this->db2->rows('ItemBonus') as $bonus) {
-            if (isset($listIds[$bonus['ParentItemBonusListID']]) && (int) $bonus['Type'] === self::BONUS_ITEM_LEVEL) {
-                $scalingIds[$bonus['ParentItemBonusListID']] = $bonus['Value_0'];
+            if (! isset($listIds[$bonus['ParentItemBonusListID']])) {
+                continue;
             }
+
+            match ((int) $bonus['Type']) {
+                self::BONUS_ITEM_LEVEL => $scalingIds[$bonus['ParentItemBonusListID']] = $bonus['Value_0'],
+                self::BONUS_UPGRADE_TRACK => $nameIds[$bonus['ParentItemBonusListID']] = $bonus['Value_1'],
+                default => null,
+            };
         }
 
         $scaling = $this->db2->keyed('ItemScalingConfig', filter: fn (array $row): bool => in_array($row['ID'], $scalingIds, true));
+        $names = $this->db2->keyed('SharedString', filter: fn (array $row): bool => in_array($row['ID'], $nameIds, true));
+        $rank = fn (array $top): array => ['bonusList' => (int) $top['list'], 'itemLevel' => (int) $scaling[$scalingIds[$top['list']]]['ItemLevel']];
 
-        foreach ($topLists as $group => $top) {
-            $this->groupTopItemLevel[$group] = (int) $scaling[$scalingIds[$top['list']]]['ItemLevel'];
+        foreach ($topLists as $group => $tiers) {
+            if (! isset($tiers['top'])) {
+                continue;
+            }
+
+            $name = $names[$nameIds[$tiers['top']['list']] ?? '']['String_lang'] ?? "Track {$group}";
+            $top = $rank($tiers['top']);
+
+            $this->tracks[$group] = [
+                'key' => Str::slug($name),
+                'name' => $name,
+                'top' => $top,
+                'aboveCap' => isset($tiers['aboveCap']) ? $rank($tiers['aboveCap']) : $top,
+            ];
         }
 
-        if ($this->groupTopItemLevel === []) {
+        if ($this->tracks === []) {
             throw new RuntimeException("No upgrade tracks use ItemGroupIlvlScalingID {$this->season['ilvl_scaling_id']}.");
         }
+
+        uasort($this->tracks, fn (array $a, array $b): int => $a['top']['itemLevel'] <=> $b['top']['itemLevel']);
     }
 
     /**
-     * Season upgrade groups a bonus tree can award in any context.
+     * Season upgrade groups a bonus tree can award in any context, each flagged when some context
+     * drops it straight at the group's highest above-cap rank.
      *
-     * @return list<string>
+     * @return array<string, bool>
      */
     private function reachableGroups(string $tree): array
     {
@@ -366,38 +406,45 @@ class SeasonResolver
 
         $this->reachMemo[$tree] = [];
         $groups = [];
+        $merge = function (array $reached) use (&$groups): void {
+            foreach ($reached as $group => $dropsAboveCap) {
+                $groups[$group] = ($groups[$group] ?? false) || $dropsAboveCap;
+            }
+        };
 
         foreach ($this->treeNodes[$tree] ?? [] as $node) {
-            if (isset($this->groupTopItemLevel[$node['ChildItemBonusListGroupID']])) {
-                $groups[$node['ChildItemBonusListGroupID']] = true;
+            if (isset($this->tracks[$node['ChildItemBonusListGroupID']])) {
+                $merge([$node['ChildItemBonusListGroupID'] => in_array((int) $node['IblGroupPointsModSetID'], $this->season['top_rank_points_mod_sets'], true)]);
             }
 
             if ($node['ChildItemBonusTreeID'] !== '0') {
-                $groups += array_fill_keys($this->reachableGroups($node['ChildItemBonusTreeID']), true);
+                $merge($this->reachableGroups($node['ChildItemBonusTreeID']));
             }
         }
 
         foreach ($this->challengeModeOverrides[$tree] ?? [] as $override) {
-            $groups += array_fill_keys($this->reachableGroups($override['DstItemBonusTreeID']), true);
+            $merge($this->reachableGroups($override['DstItemBonusTreeID']));
         }
 
-        return $this->reachMemo[$tree] = array_map(strval(...), array_keys($groups));
+        return $this->reachMemo[$tree] = $groups;
     }
 
     /**
      * @param  list<array<string, mixed>>  $sources
      * @param  array<string, list<array<string, string>>>  $itemTrees
-     * @return list<Source>
+     * @return list<Source&array{tracks: array<string, Rank>}>
      */
     private function withItemLevels(array $sources, array $itemTrees): array
     {
         $caps = [];
 
         foreach (['delve', 'world'] as $type) {
-            $caps[$type] = $this->groupTopItemLevel[(string) $this->expansion[$type]['max_group']] ?? PHP_INT_MAX;
+            $caps[$type] = $this->tracks[(string) $this->expansion[$type]['max_group']]['top']['itemLevel'] ?? PHP_INT_MAX;
         }
 
         foreach ($sources as &$source) {
+            $source['tracks'] = [];
+
             if ($source['type'] === 'crafted') {
                 // Crafted item level comes from reagents, not upgrade tracks.
                 $source['itemLevel'] = null;
@@ -405,16 +452,23 @@ class SeasonResolver
                 continue;
             }
 
-            $levels = [];
-
             foreach ($itemTrees[$source['itemId']] ?? [] as $row) {
-                foreach ($this->reachableGroups($row['ItemBonusTreeID']) as $group) {
-                    $levels[] = $this->groupTopItemLevel[$group];
+                foreach ($this->reachableGroups($row['ItemBonusTreeID']) as $group => $dropsAboveCap) {
+                    $track = $this->tracks[$group];
+
+                    if ($track['top']['itemLevel'] > ($caps[$source['type']] ?? PHP_INT_MAX)) {
+                        continue;
+                    }
+
+                    $rank = $dropsAboveCap ? $track['aboveCap'] : $track['top'];
+
+                    if ($rank['itemLevel'] > ($source['tracks'][$track['key']]['itemLevel'] ?? 0)) {
+                        $source['tracks'][$track['key']] = $rank;
+                    }
                 }
             }
 
-            $levels = array_filter($levels, fn (int $level): bool => $level <= ($caps[$source['type']] ?? PHP_INT_MAX));
-            $source['itemLevel'] = $levels === [] ? null : max($levels);
+            $source['itemLevel'] = $source['tracks'] === [] ? null : max(array_column($source['tracks'], 'itemLevel'));
         }
 
         return $sources;
@@ -424,26 +478,26 @@ class SeasonResolver
      * Drops sources without an upgrade track or whose best track is below the configured minimum.
      * Crafted items are exempt since they never have a track.
      *
-     * @param  list<Source>  $sources
-     * @return list<Source>
+     * @param  list<Source&array{tracks: array<string, Rank>}>  $sources
+     * @return list<Source&array{tracks: array<string, Rank>}>
      */
     private function withMinimumTrack(array $sources): array
     {
-        $minGroup = (string) $this->season['min_group'];
+        $minGroup = $this->season['min_group'];
 
-        if (! isset($this->groupTopItemLevel[$minGroup])) {
+        if (! isset($this->tracks[$minGroup])) {
             throw new RuntimeException("Minimum upgrade group {$minGroup} isn't a season upgrade track.");
         }
 
         // Tracks don't overlap at their top rank, so comparing top item levels orders them.
-        $minItemLevel = $this->groupTopItemLevel[$minGroup];
+        $minItemLevel = $this->tracks[$minGroup]['top']['itemLevel'];
 
         return array_values(array_filter($sources, fn (array $source): bool => $source['type'] === 'crafted'
             || ($source['itemLevel'] !== null && $source['itemLevel'] >= $minItemLevel)));
     }
 
     /**
-     * @param  list<Source>  $sources
+     * @param  list<Source&array{tracks: array<string, Rank>}>  $sources
      * @param  array<string, array<string, string>>  $items
      * @param  array<string, array<string, string>>  $sparse
      * @param  array<string, list<array<string, string>>>  $itemTrees
@@ -452,13 +506,22 @@ class SeasonResolver
     private function describeItems(array $sources, array $items, array $sparse, array $itemTrees): array
     {
         $itemLevels = [];
+        $itemTracks = [];
 
         foreach ($sources as $source) {
             $itemLevels[$source['itemId']] = max($itemLevels[$source['itemId']] ?? null, $source['itemLevel']);
+
+            foreach ($source['tracks'] as $key => $rank) {
+                if ($rank['itemLevel'] > ($itemTracks[$source['itemId']][$key]['itemLevel'] ?? 0)) {
+                    $itemTracks[$source['itemId']][$key] = $rank;
+                }
+            }
         }
 
         $effects = $this->effects($itemLevels);
-        $guaranteedSockets = $this->guaranteedSockets($itemLevels, $sparse, $itemTrees);
+        $embellishedCategories = $this->db2->keyed('ItemLimitCategory', filter: fn (array $row): bool => str_ends_with($row['Name_lang'], 'Embellished'));
+        $specOverrides = $this->db2->grouped('ItemSpecOverride', 'ItemID', fn (array $row): bool => isset($itemLevels[$row['ItemID']]));
+        $guaranteedBonuses = $this->guaranteedBonuses($itemLevels, $sparse, $itemTrees);
         $setIds = array_fill_keys(array_filter(array_map(fn (int $id): string => $sparse[$id]['ItemSet'], array_keys($itemLevels))), true);
         $sets = $this->db2->keyed('ItemSet', filter: fn (array $row): bool => isset($setIds[$row['ID']]));
         $calculator = StatCalculator::fromDirectory($this->db2);
@@ -507,19 +570,33 @@ class SeasonResolver
                 'subclassId' => (int) $items[$id]['SubclassID'],
                 'quality' => (int) $row['OverallQualityID'],
                 'allowableClass' => (int) $row['AllowableClass'],
+                'specs' => array_map(intval(...), array_column($specOverrides[$id] ?? [], 'SpecID')),
                 'primaries' => array_values(array_unique($primaries)),
                 'secondaries' => $secondaries === [] ? (object) [] : $secondaries,
                 'choiceStats' => $hasChoiceStats,
                 'itemLevel' => $itemLevel,
+                'tracks' => $this->orderedTracks($itemTracks[$id] ?? []),
                 'stats' => $itemLevel === null ? null : $calculator->compute($inventoryType, (int) $items[$id]['SubclassID'], $allocations, $itemLevel),
-                'sockets' => $nativeSockets + ($guaranteedSockets[$id] ?? 0),
+                'sockets' => $nativeSockets + ($guaranteedBonuses[$id]['sockets'] ?? 0),
                 'onUse' => $effects[$id]['onUse'] ?? false,
                 'onEquip' => $effects[$id]['onEquip'] ?? false,
+                'embellished' => isset($embellishedCategories[$guaranteedBonuses[$id]['limitCategory'] ?? $row['LimitCategory']]),
                 'itemSet' => $setId === 0 ? null : ['id' => $setId, 'name' => $sets[$setId]['Name_lang'] ?? null],
             ];
         }
 
         return $result;
+    }
+
+    /**
+     * @param  array<string, Rank>  $tracks
+     * @return array<string, Rank>|object
+     */
+    private function orderedTracks(array $tracks): array|object
+    {
+        $ordered = array_intersect_key(array_flip(array_column($this->tracks, 'key')), $tracks);
+
+        return $ordered === [] ? (object) [] : array_replace($ordered, $tracks);
     }
 
     /**
@@ -529,10 +606,19 @@ class SeasonResolver
     private function effects(array $itemIds): array
     {
         $links = $this->db2->grouped('ItemXItemEffect', 'ItemEffectID', fn (array $row): bool => isset($itemIds[$row['ItemID']]));
+        $effects = $this->db2->keyed('ItemEffect', filter: fn (array $row): bool => isset($links[$row['ID']]));
+        $spellIds = array_fill_keys(array_column($effects, 'SpellID'), true);
+
+        // Effects whose spell has no description are hidden value holders (e.g. the damage a use effect deals), not tooltip lines.
+        $described = $this->db2->keyed('Spell', filter: fn (array $row): bool => isset($spellIds[$row['ID']]) && $row['Description_lang'] !== '');
         $result = [];
 
-        foreach ($this->db2->rows('ItemEffect') as $effect) {
-            foreach ($links[$effect['ID']] ?? [] as $link) {
+        foreach ($effects as $effect) {
+            if (! isset($described[$effect['SpellID']])) {
+                continue;
+            }
+
+            foreach ($links[$effect['ID']] as $link) {
                 $itemId = (int) $link['ItemID'];
                 $result[$itemId] ??= ['onUse' => false, 'onEquip' => false];
                 $result[$itemId]['onUse'] = $result[$itemId]['onUse'] || $effect['TriggerType'] === '0';
@@ -544,14 +630,15 @@ class SeasonResolver
     }
 
     /**
-     * Sockets added by context-free bonus lists, limited by each subtree's `InventoryTypeSlotMask`.
+     * Sockets and limit category (e.g. crafted gear made Embellished) set by context-free bonus lists,
+     * limited by each subtree's `InventoryTypeSlotMask`.
      *
      * @param  array<int, mixed>  $itemIds
      * @param  array<string, array<string, string>>  $sparse
      * @param  array<string, list<array<string, string>>>  $itemTrees
-     * @return array<int, int>
+     * @return array<int, array{sockets: int, limitCategory: ?string}>
      */
-    private function guaranteedSockets(array $itemIds, array $sparse, array $itemTrees): array
+    private function guaranteedBonuses(array $itemIds, array $sparse, array $itemTrees): array
     {
         $masks = [];
 
@@ -574,6 +661,7 @@ class SeasonResolver
 
         $wanted = array_fill_keys(array_merge(...array_values($listsByItem) ?: [[]]), true);
         $sockets = [];
+        $limitCategories = [];
         $randomRolls = [];
 
         foreach ($this->db2->rows('ItemBonus') as $bonus) {
@@ -585,6 +673,7 @@ class SeasonResolver
 
             match ((int) $bonus['Type']) {
                 self::BONUS_SOCKET => $sockets[$list] = ($sockets[$list] ?? 0) + (int) $bonus['Value_0'],
+                self::BONUS_LIMIT_CATEGORY => $limitCategories[$list] = $bonus['Value_0'],
                 self::BONUS_RANDOM_ROLL_TOAST => $randomRolls[$list] = true,
                 default => null,
             };
@@ -593,9 +682,12 @@ class SeasonResolver
         $result = [];
 
         foreach ($listsByItem as $itemId => $lists) {
+            $result[$itemId] = ['sockets' => 0, 'limitCategory' => null];
+
             foreach ($lists as $list) {
                 if (! isset($randomRolls[$list])) {
-                    $result[$itemId] = ($result[$itemId] ?? 0) + ($sockets[$list] ?? 0);
+                    $result[$itemId]['sockets'] += $sockets[$list] ?? 0;
+                    $result[$itemId]['limitCategory'] = $limitCategories[$list] ?? $result[$itemId]['limitCategory'];
                 }
             }
         }

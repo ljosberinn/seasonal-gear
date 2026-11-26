@@ -42,7 +42,7 @@ class GearCatalog
 
     private const array ARMOR_TYPES = [1 => 'Cloth', 2 => 'Leather', 3 => 'Mail', 4 => 'Plate', 6 => 'Shield'];
 
-    /** @var array{build: string, season: array{slug: string, name: string}, items: list<array<string, mixed>>, sources: list<array<string, mixed>>}|null */
+    /** @var array{build: string, season: array{slug: string, name: string}, tracks: array<string, string>, items: list<array<string, mixed>>, sources: list<array<string, mixed>>}|null */
     private ?array $dataset = null;
 
     public function __construct(private readonly string $path) {}
@@ -58,7 +58,16 @@ class GearCatalog
     }
 
     /**
-     * @return list<array<string, mixed>> items with their `sources`, best matches first
+     * @return array<string, string> upgrade track key => name, lowest first
+     */
+    public function tracks(): array
+    {
+        return $this->dataset()['tracks'];
+    }
+
+    /**
+     * @return list<array<string, mixed>> items with their `sources` and the `rank` to link, highest
+     *                                    potential item level first
      */
     public function search(GearFilter $filter): array
     {
@@ -82,11 +91,11 @@ class GearCatalog
                 continue;
             }
 
-            $results[] = [...$item, 'sources' => $sourcesByItem[$item['id']]];
+            $results[] = [...$item, 'sources' => $sourcesByItem[$item['id']], 'rank' => $this->rankFor($item, $filter->track)];
         }
 
-        usort($results, fn (array $a, array $b): int => [$this->statWeight($b, $filter), $b['itemLevel'] ?? 0, $a['name']]
-            <=> [$this->statWeight($a, $filter), $a['itemLevel'] ?? 0, $b['name']]);
+        usort($results, fn (array $a, array $b): int => [$b['itemLevel'] ?? 0, $this->statWeight($b, $filter), $a['name']]
+            <=> [$a['itemLevel'] ?? 0, $this->statWeight($a, $filter), $b['name']]);
 
         return $results;
     }
@@ -199,7 +208,7 @@ class GearCatalog
         }
 
         if ($item['inventoryType'] === self::INVENTORY_TYPE_HELD_IN_OFF_HAND) {
-            return 'Held In Off-Hand';
+            return 'Off-Hand';
         }
 
         return self::ARMOR_TYPES[$item['subclassId']] ?? '';
@@ -233,7 +242,7 @@ class GearCatalog
 
     /**
      * @param  array<string, mixed>  $item
-     * @param  array{id: int, armor: int, specs: array<string, array{primary: string, weapons: list<int>, shield?: bool, off_hand?: bool}>}  $class
+     * @param  array{id: int, armor: int, specs: array<string, array{id: int, primary: string, weapons: list<int>, shield?: bool, off_hand?: bool}>}  $class
      * @param  list<string>  $specKeys
      */
     private function isUsableBy(array $item, array $class, array $specKeys): bool
@@ -261,10 +270,15 @@ class GearCatalog
 
     /**
      * @param  array<string, mixed>  $item
-     * @param  array{primary: string, weapons: list<int>, shield?: bool, off_hand?: bool}  $spec
+     * @param  array{id: int, primary: string, weapons: list<int>, shield?: bool, off_hand?: bool}  $spec
      */
     private function isUsableBySpec(array $item, array $spec): bool
     {
+        // The override is the loot spec list; it's how primary-less trinkets are limited to Str/Agi specs.
+        if ($item['specs'] !== [] && ! in_array($spec['id'], $item['specs'], true)) {
+            return false;
+        }
+
         if ($item['primaries'] !== [] && ! in_array($spec['primary'], $item['primaries'], true)) {
             return false;
         }
@@ -275,6 +289,31 @@ class GearCatalog
             $item['inventoryType'] === self::INVENTORY_TYPE_HELD_IN_OFF_HAND => $spec['off_hand'] ?? false,
             default => true,
         };
+    }
+
+    /**
+     * The item's top rank on `$track`, or on its reachable track nearest to it; without a track, the
+     * item's best rank.
+     *
+     * @param  array<string, mixed>  $item
+     * @return array{bonusList: int, itemLevel: int}|null
+     */
+    private function rankFor(array $item, ?string $track): ?array
+    {
+        $ranks = $item['tracks'];
+
+        if ($ranks === []) {
+            return null;
+        }
+
+        if ($track === null) {
+            return collect($ranks)->sortByDesc('itemLevel')->first();
+        }
+
+        $order = array_flip(array_keys($this->tracks()));
+        $nearest = collect(array_keys($ranks))->sortBy(fn (string $key): int => abs($order[$key] - $order[$track]))->first();
+
+        return $ranks[$nearest];
     }
 
     /**

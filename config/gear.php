@@ -5,6 +5,7 @@ return [
     'wago' => [
         'base_url' => env('WAGO_BASE_URL', 'https://wago.tools'),
         'concurrency' => (int) env('WAGO_CONCURRENCY', 6),
+        'user_agent' => env('WAGO_USER_AGENT', 'seasonal-gear (+https://github.com/ljosberinn/seasonal-gear)'),
     ],
 
     /*
@@ -22,6 +23,10 @@ return [
         'expansion_id' => 11,
         'start_time_event' => 1552,
         'ilvl_scaling_id' => 12,
+
+        // IblGroupPointsModSet IDs that drop at the track's highest above-cap rank (Mythic Coiled Altar
+        // and Ula'tek at Myth 344). The points table isn't in client DB2, so they're listed by hand.
+        'top_rank_points_mod_sets' => [2970],
 
         // Hero track, which keystones +6 and up drop; sources that can't reach it are dropped.
         'min_group' => 617,
