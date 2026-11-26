@@ -22,7 +22,7 @@ class StatisticsPageTest extends TestCase
     {
         $this->get(route('statistics.index'))
             ->assertOk()
-            ->assertSee('Haste is the rarest secondary at 17% of items, Critical Strike the most common at 100%.')
+            ->assertSeeInOrder(['Haste', 'is the rarest secondary at 17% of items,', 'Critical Strike', 'the most common at 100%.'])
             ->assertSee(route('statistics.spec', ['class' => 'paladin', 'spec' => 'protection']))
             ->assertSee(route('statistics.instance', 1320))
             ->assertSee('Voidscar Arena');
@@ -47,6 +47,23 @@ class StatisticsPageTest extends TestCase
         $this->get(route('statistics.spec', ['class' => 'paladin', 'spec' => 'protection']))
             ->assertOk()
             ->assertSee(e(route('gear.class', ['class' => 'paladin', 'spec' => 'protection', 'slot' => 'head'])), false);
+    }
+
+    public function test_highlights_name_specs_stats_and_gaps(): void
+    {
+        $statistics = $this->app->make(GearStatistics::class);
+        $highlights = GearStatistics::highlights($statistics->overall(), $statistics->specs(), $statistics->instances());
+
+        $this->assertSame(['rarest' => 'haste', 'rarestShare' => 1 / 6, 'commonest' => 'crit', 'commonestShare' => 1.0], $highlights['stats']);
+        // the world-drop two-handers outnumber the delve shield
+        $this->assertSame('two-hand', $highlights['gaps']['slot']);
+        // no fixture instance has enough rated items to call a lean
+        $this->assertArrayNotHasKey('lean', $highlights);
+
+        $this->get(route('statistics.index'))
+            ->assertOk()
+            ->assertSee('icons/medium/'.$highlights['items']['fewest']['icon'].'.jpg', false)
+            ->assertSee('icons/medium/'.$highlights['items']['most']['icon'].'.jpg', false);
     }
 
     public function test_coverage_tells_empty_slots_from_unusable_ones(): void

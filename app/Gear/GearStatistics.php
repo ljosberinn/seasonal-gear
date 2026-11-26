@@ -2,8 +2,6 @@
 
 namespace App\Gear;
 
-use Illuminate\Support\Str;
-
 /**
  * Aggregates season content (raid, tier set, dungeon) for the statistics pages: how many items each
  * spec can use, which secondary stats they carry, and where a spec or instance comes up short.
@@ -89,28 +87,35 @@ class GearStatistics
     }
 
     /**
-     * Plain-language takeaways for the summary page.
+     * Takeaways for the summary page, as data so the page can show spec and instance icons and stat colors.
      *
      * @param  array{profile: Profile, bySource: array<string, int>}  $overall
-     * @param  list<array{className: string, specName: string, profile: Profile, coverage: array<string, int|null>}>  $specs
-     * @param  list<array{name: string, profile: Profile}>  $instances
-     * @return list<string>
+     * @param  list<array{profile: Profile, coverage: array<string, int|null>}>  $specs
+     * @param  list<array{profile: Profile}>  $instances
+     * @return array{
+     *     items?: array{fewest: array<string, mixed>, most: array<string, mixed>},
+     *     stats?: array{rarest: string, rarestShare: float, commonest: string, commonestShare: float},
+     *     gaps?: array{specs: int, of: int, slot: string, slotSpecs: int},
+     *     lean?: array{instance: array<string, mixed>, stat: string, share: float, overall: float},
+     * }
      */
     public static function highlights(array $overall, array $specs, array $instances): array
     {
         $highlights = [];
-        $percent = fn (float $share): string => round($share * 100).'%';
 
         if ($specs !== []) {
             $byItems = collect($specs)->sortBy(fn (array $spec): int => $spec['profile']['items']);
-            $name = fn (array $spec): string => "{$spec['specName']} {$spec['className']}";
-            $highlights[] = "{$name($byItems->first())} has the fewest items ({$byItems->first()['profile']['items']}), {$name($byItems->last())} the most ({$byItems->last()['profile']['items']}).";
+            $highlights['items'] = ['fewest' => $byItems->first(), 'most' => $byItems->last()];
         }
 
         if ($overall['profile']['rated'] > 0) {
             $shares = collect(Stat::SECONDARY_KEYS)->mapWithKeys(fn (string $stat): array => [$stat => self::share($overall['profile'], $stat)])->sort();
-            $highlights[] = self::STAT_NAMES[$shares->keys()->first()]." is the rarest secondary at {$percent($shares->first())} of items, "
-                .self::STAT_NAMES[$shares->keys()->last()]." the most common at {$percent($shares->last())}.";
+            $highlights['stats'] = [
+                'rarest' => $shares->keys()->first(),
+                'rarestShare' => $shares->first(),
+                'commonest' => $shares->keys()->last(),
+                'commonestShare' => $shares->last(),
+            ];
         }
 
         $gapSlots = [];
@@ -127,12 +132,10 @@ class GearStatistics
 
         if ($gapSlots !== []) {
             arsort($gapSlots);
-            $slot = array_key_first($gapSlots);
-            $highlights[] = "{$specsWithGaps} of ".Str::plural('spec', count($specs), prependCount: true)." can't fill every slot from season content. "
-                .'The most common gap is '.Slot::from($slot)->label().' ('.Str::plural('spec', $gapSlots[$slot], prependCount: true).').';
+            $highlights['gaps'] = ['specs' => $specsWithGaps, 'of' => count($specs), 'slot' => array_key_first($gapSlots), 'slotSpecs' => reset($gapSlots)];
         }
 
-        $skews = [];
+        $leans = [];
 
         foreach ($instances as $instance) {
             if ($instance['profile']['rated'] < self::MIN_RATED_FOR_SKEW) {
@@ -140,16 +143,12 @@ class GearStatistics
             }
 
             foreach (Stat::SECONDARY_KEYS as $stat) {
-                $share = self::share($instance['profile'], $stat);
-                $skews[] = ['instance' => $instance['name'], 'stat' => $stat, 'share' => $share, 'deviation' => $share - self::share($overall['profile'], $stat)];
+                $leans[] = ['instance' => $instance, 'stat' => $stat, 'share' => self::share($instance['profile'], $stat), 'overall' => self::share($overall['profile'], $stat)];
             }
         }
 
-        if ($skews !== []) {
-            $skew = collect($skews)->sortByDesc(fn (array $skew): float => abs($skew['deviation']))->first();
-            $direction = $skew['deviation'] > 0 ? 'toward' : 'away from';
-            $highlights[] = "{$skew['instance']} leans furthest {$direction} ".self::STAT_NAMES[$skew['stat']]
-                .": {$percent($skew['share'])} of its items vs. {$percent(self::share($overall['profile'], $skew['stat']))} overall.";
+        if ($leans !== []) {
+            $highlights['lean'] = collect($leans)->sortByDesc(fn (array $lean): float => abs($lean['share'] - $lean['overall']))->first();
         }
 
         return $highlights;

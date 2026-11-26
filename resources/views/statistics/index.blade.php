@@ -25,19 +25,32 @@
             Other sources are left out, since their gear either can't reach the highest upgrade track or lets you pick the stats.
         </p>
 
-        <div class="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-5">
-            <x-stats.tile label="Items" :value="$profile['items']" />
-            @foreach ($overall['bySource'] as $type => $count)
-                <x-stats.tile :label="GearCatalog::SOURCE_TYPES[$type]" :value="$count" />
-            @endforeach
-            <x-stats.tile label="With Fixed Secondaries" :value="$profile['rated']" />
-        </div>
-
         @if ($highlights !== [])
-            <ul class="mt-6 max-w-3xl list-disc space-y-1 pl-5 text-sm">
-                @foreach ($highlights as $highlight)
-                    <li>{{ $highlight }}</li>
-                @endforeach
+            <ul class="mt-6 max-w-3xl list-disc space-y-2 pl-5 text-sm">
+                @isset($highlights['items'])
+                    <li>
+                        <x-stats.spec-chip :spec="$highlights['items']['fewest']" /> has the fewest items ({{ $highlights['items']['fewest']['profile']['items'] }}),
+                        <x-stats.spec-chip :spec="$highlights['items']['most']" /> the most ({{ $highlights['items']['most']['profile']['items'] }}).
+                    </li>
+                @endisset
+                @isset($highlights['stats'])
+                    <li>
+                        <x-stats.stat-label long :stat="$highlights['stats']['rarest']" class="align-middle font-medium" /> is the rarest secondary at {{ round($highlights['stats']['rarestShare'] * 100) }}% of items,
+                        <x-stats.stat-label long :stat="$highlights['stats']['commonest']" class="align-middle font-medium" /> the most common at {{ round($highlights['stats']['commonestShare'] * 100) }}%.
+                    </li>
+                @endisset
+                @isset($highlights['gaps'])
+                    <li>
+                        {{ $highlights['gaps']['specs'] }} of {{ Str::plural('spec', $highlights['gaps']['of'], prependCount: true) }} can't fill every slot from season content.
+                        The most common gap is {{ Slot::from($highlights['gaps']['slot'])->label() }} ({{ Str::plural('spec', $highlights['gaps']['slotSpecs'], prependCount: true) }}).
+                    </li>
+                @endisset
+                @isset($highlights['lean'])
+                    <li>
+                        <x-stats.instance-chip :instance="$highlights['lean']['instance']" /> leans furthest {{ $highlights['lean']['share'] > $highlights['lean']['overall'] ? 'toward' : 'away from' }}
+                        <x-stats.stat-label long :stat="$highlights['lean']['stat']" class="align-middle font-medium" /> with {{ round($highlights['lean']['share'] * 100) }}% of its items vs. {{ round($highlights['lean']['overall'] * 100) }}% overall.
+                    </li>
+                @endisset
             </ul>
         @endif
 

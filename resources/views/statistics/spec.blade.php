@@ -22,14 +22,6 @@
             <a href="{{ route('gear.class', ['class' => $classKey, 'spec' => $specKey]) }}" class="underline underline-offset-4 hover:text-primary-500 dark:hover:text-primary-400">Browse them</a>.
         </p>
 
-        <div class="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-5">
-            <x-stats.tile label="Items" :value="$profile['items']" />
-            @foreach ($statistics['bySource'] as $type => $count)
-                <x-stats.tile :label="GearCatalog::SOURCE_TYPES[$type]" :value="$count" />
-            @endforeach
-            <x-stats.tile label="With Fixed Secondaries" :value="$profile['rated']" />
-        </div>
-
         <div class="grid gap-x-12 lg:grid-cols-2">
             <x-stats.section title="Secondary Stats">
                 <x-slot:description>Share of this spec's items with fixed secondaries that carry each stat. The tick marks the share across all season items.</x-slot:description>
