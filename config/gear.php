@@ -28,6 +28,9 @@ return [
         // and Ula'tek at Myth 344). The points table isn't in client DB2, so they're listed by hand.
         'top_rank_points_mod_sets' => [2970],
 
+        // Hero track, which keystones +6 and up drop; sources that can't reach it are dropped.
+        'min_group' => 617,
+
         // Map InstanceType says raid, but these are single-encounter instances.
         'special_instances' => [1317, 1324],
 
