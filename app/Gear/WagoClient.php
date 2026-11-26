@@ -54,36 +54,56 @@ class WagoClient
         'combat_ratings' => 1391670,
     ];
 
+    public const array FOREVER_TABLES = ['Item', 'ItemSparse', 'RandPropPoints'];
+
+    /**
+     * Forever's ratings convert by character level rather than item level.
+     */
+    public const array FOREVER_GAME_TABLES = [
+        'combat_ratings_by_level' => 1391669,
+    ];
+
     public function latestLiveBuild(): string
     {
-        $version = $this->request()->get('/api/builds/latest')->throw()->json('wow.version');
+        return $this->latestBuild('wow');
+    }
+
+    /**
+     * @param  string  $product  wago.tools product key, e.g. `wow` or `wowf`
+     */
+    public function latestBuild(string $product): string
+    {
+        $version = $this->request()->get('/api/builds/latest')->throw()->json("{$product}.version");
 
         if (! is_string($version) || $version === '') {
-            throw new RuntimeException('wago.tools did not return a live build version.');
+            throw new RuntimeException("wago.tools did not return a {$product} build version.");
         }
 
         return $version;
     }
 
     /**
-     * Downloads every table with hotfixes applied, since hotfixes can change item stats.
+     * Downloads the tables with hotfixes applied, since hotfixes can change item stats.
+     *
+     * @param  list<string>  $tables
+     * @param  array<string, int>  $gameTables  file name => CASC file data ID
      */
-    public function download(string $build, string $directory): void
+    public function download(string $build, string $directory, array $tables = self::TABLES, array $gameTables = self::GAME_TABLES): void
     {
         if (! is_dir($directory) && ! mkdir($directory, 0777, true) && ! is_dir($directory)) {
             throw new RuntimeException("Cannot create {$directory}");
         }
 
-        $responses = Http::pool(function (Pool $pool) use ($build, $directory): array {
+        $responses = Http::pool(function (Pool $pool) use ($build, $directory, $tables, $gameTables): array {
             $requests = [];
 
-            foreach (self::TABLES as $table) {
+            foreach ($tables as $table) {
                 $requests[] = $this->configure($pool->as($table))
                     ->sink(Db2Directory::tablePath($directory, $table))
                     ->get("/db2/{$table}/csv", ['build' => $build, 'useHotfixes' => 'true']);
             }
 
-            foreach (self::GAME_TABLES as $name => $fileDataId) {
+            foreach ($gameTables as $name => $fileDataId) {
                 $requests[] = $this->configure($pool->as($name))
                     ->sink(Db2Directory::gameTablePath($directory, $name))
                     ->get("/api/casc/{$fileDataId}", ['version' => $build]);

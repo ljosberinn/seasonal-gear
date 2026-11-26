@@ -37,10 +37,15 @@ jobs:
           BUILD: ${{ inputs.build }}
         run: php artisan gear:import --no-interaction ${BUILD:+"--build=$BUILD"}
 
+      - name: Import Forever
+        run: php artisan forever:import --no-interaction
+
       - uses: actions/upload-artifact@v4
         with:
           name: gear-data
-          path: resources/data/gear.json
+          path: |
+            resources/data/gear.json
+            resources/data/forever.json
           retention-days: 7
 
   test:
@@ -76,12 +81,12 @@ jobs:
       # Vercel's Git integration deploys the pushed commit.
       - name: Commit if changed
         run: |
-          if git diff --quiet -- resources/data/gear.json; then
+          if git diff --quiet -- resources/data; then
             echo "Dataset unchanged."
             exit 0
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add resources/data/gear.json
-          git commit -m "Refresh gear data for build $(jq -r .build resources/data/gear.json)"
+          git add resources/data
+          git commit -m "Refresh gear data for builds $(jq -r .build resources/data/gear.json) and $(jq -r .build resources/data/forever.json)"
           git push

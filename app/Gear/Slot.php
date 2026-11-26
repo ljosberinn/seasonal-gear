@@ -38,7 +38,7 @@ enum Slot: string
             12 => self::Trinket,
             13 => self::OneHand,
             14, 22, 23 => self::OffHand,
-            15, 26 => self::Ranged,
+            15, 25, 26 => self::Ranged,
             16 => self::Back,
             17 => self::TwoHand,
             21 => self::MainHand,

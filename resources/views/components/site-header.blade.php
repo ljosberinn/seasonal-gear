@@ -22,7 +22,7 @@
 
         <div class="flex items-center gap-4 sm:gap-6">
             <nav aria-label="Main" class="flex gap-3 text-sm sm:gap-4">
-                @foreach (['gear.*' => ['Gear', route('gear.index')], 'statistics.*' => ['Statistics', route('statistics.index')]] as $pattern => [$label, $href])
+                @foreach (['gear.*' => ['Retail', route('gear.index')], 'statistics.*' => ['Statistics', route('statistics.index')], 'forever.*' => ['Forever', route('forever.index')]] as $pattern => [$label, $href])
                     <a href="{{ $href }}" @if (request()->routeIs($pattern)) aria-current="page" @endif class="hover:text-primary-500 aria-[current=page]:font-semibold dark:hover:text-primary-400">{{ $label }}</a>
                 @endforeach
             </nav>

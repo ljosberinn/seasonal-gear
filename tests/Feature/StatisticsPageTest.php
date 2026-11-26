@@ -85,8 +85,8 @@ class StatisticsPageTest extends TestCase
             ->assertSee('Protection Paladin')
             ->assertSeeInOrder(['Head', 'Off Hand']);
 
-        $this->get('/statistics/paladin/arcane')->assertNotFound();
-        $this->get('/statistics/tinker/arcane')->assertNotFound();
+        $this->get('/retail/statistics/paladin/arcane')->assertNotFound();
+        $this->get('/retail/statistics/tinker/arcane')->assertNotFound();
     }
 
     public function test_previews_describe_the_statistics(): void
