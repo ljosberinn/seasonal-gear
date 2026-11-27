@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -29,7 +29,7 @@ jobs:
           coverage: none
           ini-values: memory_limit=1G
 
-      - uses: ramsey/composer-install@v3
+      - uses: ramsey/composer-install@v4
 
       # Table downloads run concurrently inside the command (Http::pool). Scheduled runs keep the
       # committed dataset while it has the latest build and hotfixes; manual runs rewrite it.
@@ -44,7 +44,7 @@ jobs:
           FORCE: ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }}
         run: php artisan forever:import --no-interaction $FORCE
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: gear-data
           path: |
@@ -56,14 +56,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.5'
           coverage: none
 
-      - uses: ramsey/composer-install@v3
+      - uses: ramsey/composer-install@v4
 
       - name: Test
         run: php artisan test --compact
@@ -75,9 +75,9 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: gear-data
           path: resources/data
