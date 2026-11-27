@@ -103,27 +103,6 @@
                     @endforeach
                 </x-filter.select>
 
-                {{-- picks the upgrade rank Wowhead renders; items off that track fall back to their nearest one --}}
-                <x-filter.select name="track" aria-label="Upgrade Track" :active="$filter->track !== null">
-                    <option value="">Highest Track</option>
-                    @foreach ($tracks as $key => $name)
-                        <option value="{{ $key }}" @selected($filter->track === $key)>{{ $name }}</option>
-                    @endforeach
-                </x-filter.select>
-
-                <x-filter.select name="set" aria-label="Item Set" :active="$filter->itemSet !== null">
-                    <option value="">With or Without Set ({{ $counts['anyItemSet'] }})</option>
-                    <option value="any" @selected($filter->itemSet === true)>Has Set ({{ $counts['hasItemSet'] }})</option>
-                    <optgroup label="Sets">
-                        @foreach ($itemSets as $id => $name)
-                            {{-- most sets are another class's tier, which only clutters the list --}}
-                            @if ($counts['itemSets'][$id] > 0 || $filter->itemSet === $id)
-                                <option value="{{ $id }}" @selected($filter->itemSet === $id)>{{ $name }} ({{ $counts['itemSets'][$id] }})</option>
-                            @endif
-                        @endforeach
-                    </optgroup>
-                </x-filter.select>
-
                 <x-filter.divider />
 
                 <x-filter.chip :href="request()->fullUrlWithoutQuery(['stats'])" :active="$filter->stats === []" :count="$counts['anyStat']">Any Stats</x-filter.chip>
@@ -144,6 +123,29 @@
                 <noscript>
                     <button type="submit" class="rounded-md bg-teal-600 px-3 py-0.5 text-sm font-bold text-white">Apply Filters</button>
                 </noscript>
+            </div>
+
+            <div role="group" aria-label="Upgrade Track and Item Set" class="flex flex-wrap items-center gap-2">
+                {{-- picks the upgrade rank Wowhead renders; items off that track fall back to their nearest one --}}
+                <x-filter.select name="track" aria-label="Upgrade Track" :active="$filter->track !== null">
+                    <option value="">Highest Track</option>
+                    @foreach ($tracks as $key => $name)
+                        <option value="{{ $key }}" @selected($filter->track === $key)>{{ $name }}</option>
+                    @endforeach
+                </x-filter.select>
+
+                <x-filter.select name="set" aria-label="Item Set" :active="$filter->itemSet !== null">
+                    <option value="">With or Without Set ({{ $counts['anyItemSet'] }})</option>
+                    <option value="any" @selected($filter->itemSet === true)>Has Set ({{ $counts['hasItemSet'] }})</option>
+                    <optgroup label="Sets">
+                        @foreach ($itemSets as $id => $name)
+                            {{-- most sets are another class's tier, which only clutters the list --}}
+                            @if ($counts['itemSets'][$id] > 0 || $filter->itemSet === $id)
+                                <option value="{{ $id }}" @selected($filter->itemSet === $id)>{{ $name }} ({{ $counts['itemSets'][$id] }})</option>
+                            @endif
+                        @endforeach
+                    </optgroup>
+                </x-filter.select>
             </div>
         </form>
 
