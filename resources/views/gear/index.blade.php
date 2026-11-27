@@ -196,22 +196,28 @@
                         <tr>
                             <td class="px-3 py-2">
                                 @php($wowheadParams = GearCatalog::wowheadParams($item))
-                                {{-- the item link is `contents` so the set link can sit below the name without nesting links, while Wowhead's icon still spans every text row --}}
-                                <div class="grid grid-cols-[auto_1fr] items-center gap-x-2 [&_.iconmedium]:row-span-3">
-                                    <a href="https://www.wowhead.com/item={{ $item['id'] }}{{ $wowheadParams ? '?'.$wowheadParams : '' }}" @if ($wowheadParams) data-wowhead="{{ $wowheadParams }}" @endif class="group contents" target="_blank" rel="noopener">
+                                {{--
+                                    Links can't nest, so the set link is laid over the item link's grid area instead. The item link
+                                    keeps a box of its own, which Wowhead's tooltips need, and subgrids into the rows its icon spans.
+                                --}}
+                                <div class="grid grid-cols-[auto_1fr] gap-x-2">
+                                    <a href="https://www.wowhead.com/item={{ $item['id'] }}{{ $wowheadParams ? '?'.$wowheadParams : '' }}" @if ($wowheadParams) data-wowhead="{{ $wowheadParams }}" @endif @class([
+                                        'group col-span-full row-start-1 grid grid-cols-subgrid grid-rows-subgrid items-center [&_.iconmedium]:row-span-full',
+                                        ['row-span-1', 'row-span-2', 'row-span-3'][($item['itemSet'] ? 1 : 0) + ($item['embellished'] ? 1 : 0)],
+                                    ]) target="_blank" rel="noopener">
                                         {{-- Wowhead's script prepends the item icon in here --}}
                                         <span @class([
-                                            'col-start-2 justify-self-start font-medium group-hover:underline group-focus-visible:underline',
+                                            'col-start-2 justify-self-start font-medium group-hover:underline',
                                             'text-purple-700 dark:text-purple-400' => $item['quality'] === 4,
                                             'text-blue-700 dark:text-blue-400' => $item['quality'] === 3,
                                             'text-green-700 dark:text-green-400' => $item['quality'] === 2,
                                         ])>{{ $item['name'] }}</span>
+                                        @if ($item['embellished'])
+                                            <span @class(['col-start-2 text-xs text-gray-500 dark:text-gray-400', 'row-start-3' => $item['itemSet']])>Embellished</span>
+                                        @endif
                                     </a>
                                     @if ($item['itemSet'])
-                                        <a href="{{ $itemSetUrl($item['itemSet']['id']) }}" title="Show only this set" class="col-start-2 justify-self-start text-xs text-gray-500 hover:text-primary-500 hover:underline dark:text-gray-400 dark:hover:text-primary-400">{{ $item['itemSet']['name'] }}</a>
-                                    @endif
-                                    @if ($item['embellished'])
-                                        <span class="col-start-2 text-xs text-gray-500 dark:text-gray-400">Embellished</span>
+                                        <a href="{{ $itemSetUrl($item['itemSet']['id']) }}" title="Show only this set" class="col-start-2 row-start-2 justify-self-start text-xs text-gray-500 hover:text-primary-500 hover:underline dark:text-gray-400 dark:hover:text-primary-400">{{ $item['itemSet']['name'] }}</a>
                                     @endif
                                 </div>
                             </td>
