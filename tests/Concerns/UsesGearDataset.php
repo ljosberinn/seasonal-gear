@@ -25,6 +25,7 @@ trait UsesGearDataset
         $hero = ['bonusList' => 12846, 'itemLevel' => 321];
         $myth = ['bonusList' => 12854, 'itemLevel' => 334];
         $heroOnly = ['itemLevel' => 321, 'tracks' => ['hero' => $hero]];
+        $biteOfZuljan = ['itemSet' => ['id' => 2070, 'name' => "Bite of Zul'jan"]];
         $item = fn (int $id, string $name, string $slot, int $inventoryType, int $classId, int $subclassId, array $primaries, array $secondaries, array $extra = []): array => [
             'id' => $id, 'name' => $name, 'slot' => $slot, 'inventoryType' => $inventoryType, 'classId' => $classId,
             'subclassId' => $subclassId, 'quality' => 4, 'allowableClass' => -1, 'specs' => [], 'primaries' => $primaries,
@@ -48,19 +49,19 @@ trait UsesGearDataset
             ],
             'tracks' => ['champion' => 'Champion', 'hero' => 'Hero', 'myth' => 'Myth'],
             'items' => [
-                $item(268265, 'Aqirbane Reliquary', 'neck', 2, 4, 0, [], ['crit' => 3000, 'haste' => 3000], ['itemLevel' => 344, 'tracks' => ['hero' => $hero, 'myth' => ['bonusList' => 13848, 'itemLevel' => 344]], 'defaultBonusLists' => [13987]]),
+                $item(268265, 'Aqirbane Reliquary', 'neck', 2, 4, 0, [], ['crit' => 3000, 'haste' => 3000], ['itemLevel' => 344, 'tracks' => ['hero' => $hero, 'myth' => ['bonusList' => 13848, 'itemLevel' => 344]], 'defaultBonusLists' => [13987], ...$biteOfZuljan]),
                 $item(268249, "Vile Alchemist's Band", 'finger', 11, 4, 0, [], ['mastery' => 14350, 'crit' => 3150]),
                 $item(251229, 'Visor of the Predator', 'head', 1, 4, 4, ['str', 'int'], ['crit' => 4550, 'mastery' => 2450]),
                 $item(251199, 'Worldroot Canopy', 'head', 1, 4, 1, ['int'], ['mastery' => 3500, 'crit' => 3500]),
                 $item(900001, 'Hasty Helm', 'head', 1, 4, 4, ['str'], ['haste' => 4000, 'crit' => 3000], $heroOnly),
-                $item(271499, "Calamitous Echo's Sundered Peaks", 'shoulder', 3, 4, 3, ['agi', 'int'], ['crit' => 4846, 'vers' => 2154], ['allowableClass' => 4096]),
+                $item(271499, "Calamitous Echo's Sundered Peaks", 'shoulder', 3, 4, 3, ['agi', 'int'], ['crit' => 4846, 'vers' => 2154], ['allowableClass' => 4096, 'itemSet' => ['id' => 2058, 'name' => 'Echo of Calamity']]),
                 $item(239652, "Martyr's Crown", 'head', 1, 4, 1, ['int'], [], ['choiceStats' => true, 'embellished' => true, 'itemLevel' => 331, 'tracks' => ['hero' => ['bonusList' => 13751, 'itemLevel' => 318], 'myth' => ['bonusList' => 13751, 'itemLevel' => 331]], 'defaultBonusLists' => [12497]]),
-                $item(900002, 'Greatsword of Testing', 'two-hand', 17, 2, 8, ['str'], ['haste' => 3500, 'vers' => 3500]),
+                $item(900002, 'Greatsword of Testing', 'two-hand', 17, 2, 8, ['str'], ['haste' => 3500, 'vers' => 3500], $biteOfZuljan),
                 $item(900003, 'Staff of Testing', 'two-hand', 17, 2, 10, ['int'], ['haste' => 3500, 'vers' => 3500]),
                 $item(900006, 'Maul of Testing', 'two-hand', 17, 2, 5, ['int'], ['crit' => 3500, 'vers' => 3500]),
                 $item(900004, 'Bulwark of Testing', 'off-hand', 14, 4, 6, ['str'], ['haste' => 3500, 'vers' => 3500], $heroOnly),
-                $item(270175, "Voracious Heart of Ula'tek", 'trinket', 12, 4, 0, [], ['crit' => 6666], ['specs' => [71, 72, 73, 103, 577], 'sockets' => 1, 'onUse' => true]),
-                $item(900005, 'Catalyzed Cowl', 'head', 1, 4, 4, ['str'], ['haste' => 3500, 'crit' => 3500]),
+                $item(270175, "Voracious Heart of Ula'tek", 'trinket', 12, 4, 0, [], ['crit' => 6666], ['specs' => [71, 72, 73, 103, 577], 'sockets' => 1, 'onUse' => true, ...$biteOfZuljan]),
+                $item(900005, 'Catalyzed Cowl', 'head', 1, 4, 4, ['str'], ['haste' => 3500, 'crit' => 3500], ['itemSet' => ['id' => 9999, 'name' => 'Catalyzed Regalia']]),
             ],
             'sources' => [
                 $source(268249, 'raid', 'The Venomous Abyss', 'Vashnik the Malignant'),

@@ -75,6 +75,21 @@ class GearCatalog
     }
 
     /**
+     * Item sets with at least one piece from a shown source type.
+     *
+     * @return array<int, string> item set ID => name, by name
+     */
+    public function itemSets(): array
+    {
+        return collect($this->fromSources([]))
+            ->pluck('itemSet')
+            ->filter()
+            ->pluck('name', 'id')
+            ->sort()
+            ->all();
+    }
+
+    /**
      * @return list<array<string, mixed>> items with their `sources` and the `rank` to link, highest
      *                                    potential item level first
      */
@@ -131,7 +146,7 @@ class GearCatalog
      * previews what picking that option yields. Stats are AND-ed, so a stat counts items that also
      * have every already picked stat.
      *
-     * @return array{slots: array<string, int>, stats: array<string, int>, sources: array<string, int>, anySlot: int, anyStat: int, anySource: int}
+     * @return array{slots: array<string, int>, stats: array<string, int>, sources: array<string, int>, itemSets: array<int, int>, anySlot: int, anyStat: int, anySource: int, anyItemSet: int, hasItemSet: int}
      */
     public function counts(GearFilter $filter): array
     {
@@ -150,9 +165,12 @@ class GearCatalog
             'slots' => array_fill_keys(array_column(Slot::cases(), 'value'), 0),
             'stats' => array_fill_keys(Stat::SECONDARY_KEYS, 0),
             'sources' => array_fill_keys(array_keys(self::SOURCE_TYPES), 0),
+            'itemSets' => array_fill_keys(array_keys($this->itemSets()), 0),
             'anySlot' => 0,
             'anyStat' => 0,
             'anySource' => 0,
+            'anyItemSet' => 0,
+            'hasItemSet' => 0,
         ];
 
         foreach ($dataset['items'] as $item) {
@@ -165,13 +183,14 @@ class GearCatalog
             $matchesSlot = $filter->slot === null || $item['slot'] === $filter->slot->value;
             $matchesStats = $this->hasStats($item, $filter->stats);
             $matchesSource = $filter->sources === [] || array_intersect_key($sourceTypes, array_flip($filter->sources)) !== [];
+            $matchesItemSet = $this->isInItemSet($item, $filter->itemSet);
 
-            if ($matchesStats && $matchesSource) {
+            if ($matchesStats && $matchesSource && $matchesItemSet) {
                 $counts['anySlot']++;
                 $counts['slots'][$item['slot']]++;
             }
 
-            if ($matchesSlot && $matchesSource) {
+            if ($matchesSlot && $matchesSource && $matchesItemSet) {
                 $counts['anyStat']++;
 
                 foreach (Stat::SECONDARY_KEYS as $stat) {
@@ -181,11 +200,20 @@ class GearCatalog
                 }
             }
 
-            if ($matchesSlot && $matchesStats) {
+            if ($matchesSlot && $matchesStats && $matchesItemSet) {
                 $counts['anySource']++;
 
                 foreach (array_keys($sourceTypes) as $type) {
                     $counts['sources'][$type]++;
+                }
+            }
+
+            if ($matchesSlot && $matchesStats && $matchesSource) {
+                $counts['anyItemSet']++;
+
+                if ($item['itemSet'] !== null) {
+                    $counts['hasItemSet']++;
+                    $counts['itemSets'][$item['itemSet']['id']]++;
                 }
             }
         }
@@ -268,7 +296,7 @@ class GearCatalog
             return false;
         }
 
-        if (! $this->hasStats($item, $filter->stats)) {
+        if (! $this->hasStats($item, $filter->stats) || ! $this->isInItemSet($item, $filter->itemSet)) {
             return false;
         }
 
@@ -283,6 +311,18 @@ class GearCatalog
     {
         // Crafted items take whichever secondaries the crafter picks.
         return $item['choiceStats'] || array_diff($stats, array_keys($item['secondaries'])) === [];
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     */
+    private function isInItemSet(array $item, int|true|null $itemSet): bool
+    {
+        return match ($itemSet) {
+            null => true,
+            true => $item['itemSet'] !== null,
+            default => ($item['itemSet']['id'] ?? null) === $itemSet,
+        };
     }
 
     /**

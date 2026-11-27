@@ -19,9 +19,10 @@ class PagePreview
      * e.g. "74 items available for Blood Death Knight using Crit/Vers."
      *
      * @param  array{name: string, icon: string, specs: array<string, array{name: string, icon: string}>}|null  $class
+     * @param  array<int, string>  $itemSets  item set ID => name
      * @return Preview
      */
-    public static function gear(GearFilter $filter, int $count, ?array $class, ?string $specKey, string $season): array
+    public static function gear(GearFilter $filter, int $count, ?array $class, ?string $specKey, string $season, array $itemSets): array
     {
         $spec = $specKey === null ? null : $class['specs'][$specKey];
         $audience = match (true) {
@@ -30,7 +31,13 @@ class PagePreview
             default => "in {$season}",
         };
 
-        $description = $count.' '.($filter->slot === null ? '' : $filter->slot->label().' ').Str::plural('item', $count)." available {$audience}";
+        $itemSet = match ($filter->itemSet) {
+            null => '',
+            true => ' with a set bonus',
+            default => " of {$itemSets[$filter->itemSet]}",
+        };
+
+        $description = $count.' '.($filter->slot === null ? '' : $filter->slot->label().' ').Str::plural('item', $count)."{$itemSet} available {$audience}";
 
         if ($filter->stats !== []) {
             $description .= ' using '.implode('/', array_map(fn (string $stat): string => self::SHORT_STAT_NAMES[$stat], $filter->stats));
