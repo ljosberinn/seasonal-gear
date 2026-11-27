@@ -131,6 +131,58 @@ class GearPageTest extends TestCase
         $this->assertSame(['head' => 2], array_filter($counts['slots']));
     }
 
+    public function test_filters_by_item_set(): void
+    {
+        $this->get(route('gear.index', ['set' => 'any', 'sources' => self::ALL_SOURCES]))
+            ->assertOk()
+            ->assertSee('Aqirbane Reliquary')
+            ->assertSee('Calamitous Echo')
+            ->assertSee('Greatsword of Testing')
+            ->assertDontSee('Visor of the Predator');
+
+        $this->get(route('gear.index', ['set' => 2070, 'sources' => self::ALL_SOURCES]))
+            ->assertOk()
+            ->assertSeeInOrder(['Aqirbane Reliquary', 'Voracious Heart', 'Greatsword of Testing'])
+            ->assertDontSee('Calamitous Echo');
+    }
+
+    public function test_set_filter_only_offers_sets_with_matching_items(): void
+    {
+        $this->get(route('gear.index'))
+            ->assertOk()
+            ->assertSee('Bite of Zul&#039;jan (2)</option>', false)
+            ->assertSee('Echo of Calamity (1)</option>', false)
+            ->assertDontSee('Catalyzed Regalia');
+
+        // tier is limited to Evokers
+        $this->get(route('gear.class', ['class' => 'hunter']))
+            ->assertOk()
+            ->assertDontSee('Echo of Calamity (0)</option>', false);
+    }
+
+    public function test_set_name_links_to_every_piece_of_the_set(): void
+    {
+        $setUrl = route('gear.index', ['set' => 2070, 'sources' => self::ALL_SOURCES, 'track' => 'hero']);
+
+        $this->get(route('gear.index', ['slot' => 'neck', 'stats' => ['crit'], 'track' => 'hero']))
+            ->assertOk()
+            ->assertSee('href="'.e($setUrl).'"', false);
+
+        $this->get($setUrl)
+            ->assertOk()
+            ->assertSee('Greatsword of Testing');
+    }
+
+    public function test_counts_items_in_sets_against_the_other_groups_filters(): void
+    {
+        $counts = $this->app->make(GearCatalog::class)->counts(new GearFilter(sources: ['raid', 'world'], itemSet: 2070));
+
+        $this->assertSame(6, $counts['anyItemSet']);
+        $this->assertSame(3, $counts['hasItemSet']);
+        $this->assertSame([2070 => 3], array_filter($counts['itemSets']));
+        $this->assertSame(['raid' => 2, 'world' => 1], array_filter($counts['sources']));
+    }
+
     public function test_class_route_limits_armor_type_and_class_restricted_items(): void
     {
         $this->get(route('gear.class', ['class' => 'evoker']))
@@ -189,6 +241,14 @@ class GearPageTest extends TestCase
             ->assertOk()
             ->assertSee('content="2 Head items available for Paladins from all sources."', false)
             ->assertSee('icons/large/classicon_paladin.jpg', false);
+
+        $this->get(route('gear.index', ['set' => 2070]))
+            ->assertOk()
+            ->assertSee('content="2 items of Bite of Zul&#039;jan available in Test Season."', false);
+
+        $this->get(route('gear.index', ['set' => 'any']))
+            ->assertOk()
+            ->assertSee('content="3 items with a set bonus available in Test Season."', false);
     }
 
     public function test_spec_override_limits_items_without_a_primary_stat(): void
@@ -307,6 +367,7 @@ class GearPageTest extends TestCase
         $this->get(route('gear.index', ['stats' => ['leech']]))->assertSessionHasErrors('stats.0');
         $this->get(route('gear.index', ['slot' => 'tabard']))->assertSessionHasErrors('slot');
         $this->get(route('gear.index', ['track' => 'explorer']))->assertSessionHasErrors('track');
+        $this->get(route('gear.index', ['set' => 9999]))->assertSessionHasErrors('set');
     }
 
     /**

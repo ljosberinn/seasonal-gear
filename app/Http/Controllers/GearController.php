@@ -29,6 +29,7 @@ class GearController extends Controller
             'sources' => ['array'],
             'sources.*' => [Rule::in(array_keys(GearCatalog::SOURCE_TYPES))],
             'track' => ['nullable', Rule::in(array_keys($catalog->tracks()))],
+            'set' => ['nullable', Rule::in(['any', ...array_keys($catalog->itemSets())])],
         ]);
 
         $filter = new GearFilter(
@@ -38,6 +39,11 @@ class GearController extends Controller
             class: $selectedClass,
             specs: $spec === null ? [] : [$spec],
             track: $validated['track'] ?? null,
+            itemSet: match ($validated['set'] ?? null) {
+                null => null,
+                'any' => true,
+                default => (int) $validated['set'],
+            },
         );
 
         $items = $catalog->search($filter);
@@ -45,10 +51,11 @@ class GearController extends Controller
 
         return view('gear.index', [
             'meta' => $meta,
-            'preview' => PagePreview::gear($filter, count($items), $selectedClass, $spec, $meta['season']['name']),
+            'preview' => PagePreview::gear($filter, count($items), $selectedClass, $spec, $meta['season']['name'], $catalog->itemSets()),
             'items' => $items,
             'counts' => $catalog->counts($filter),
             'tracks' => $catalog->tracks(),
+            'itemSets' => $catalog->itemSets(),
             'filter' => $filter,
             'classes' => $classes,
             'classKey' => $class,

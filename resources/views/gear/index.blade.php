@@ -13,7 +13,9 @@
     $formAction = $classKey === null ? route('gear.index') : route('gear.class', array_filter(['class' => $classKey, 'spec' => $specKey]));
     $allSources = array_keys(GearCatalog::SOURCE_TYPES);
     $showsAllSources = array_diff($allSources, $filter->sources) === [];
-    $hasFilters = $filter->slot !== null || $filter->track !== null || $filter->stats !== [] || collect($filter->sources)->sort()->values()->all() !== collect(GearCatalog::DEFAULT_SOURCE_TYPES)->sort()->values()->all();
+    $hasFilters = $filter->slot !== null || $filter->track !== null || $filter->itemSet !== null || $filter->stats !== [] || collect($filter->sources)->sort()->values()->all() !== collect(GearCatalog::DEFAULT_SOURCE_TYPES)->sort()->values()->all();
+    // slot, stats and other sources would hide pieces of the set
+    $itemSetUrl = fn (int $id): string => $formAction.'?'.Arr::query(['set' => $id, 'sources' => $allSources] + Arr::except($query, ['set', 'sources', 'slot', 'stats']));
     $specOptionsFor = fn (string $key): array => [
         ['href' => route('gear.class', ['class' => $key] + $query), 'label' => 'All Specs', 'active' => $classKey === $key && $specKey === null, 'icon' => $classes[$key]['icon'], 'color' => $classes[$key]['color']],
         ...collect($classes[$key]['specs'])->map(fn (array $spec, string $specKeyOption): array => [
@@ -101,14 +103,6 @@
                     @endforeach
                 </x-filter.select>
 
-                {{-- picks the upgrade rank Wowhead renders; items off that track fall back to their nearest one --}}
-                <x-filter.select name="track" aria-label="Upgrade Track" :active="$filter->track !== null">
-                    <option value="">Highest Track</option>
-                    @foreach ($tracks as $key => $name)
-                        <option value="{{ $key }}" @selected($filter->track === $key)>{{ $name }}</option>
-                    @endforeach
-                </x-filter.select>
-
                 <x-filter.divider />
 
                 <x-filter.chip :href="request()->fullUrlWithoutQuery(['stats'])" :active="$filter->stats === []" :count="$counts['anyStat']">Any Stats</x-filter.chip>
@@ -129,6 +123,29 @@
                 <noscript>
                     <button type="submit" class="rounded-md bg-teal-600 px-3 py-0.5 text-sm font-bold text-white">Apply Filters</button>
                 </noscript>
+            </div>
+
+            <div role="group" aria-label="Upgrade Track and Item Set" class="flex flex-wrap items-center gap-2">
+                {{-- picks the upgrade rank Wowhead renders; items off that track fall back to their nearest one --}}
+                <x-filter.select name="track" aria-label="Upgrade Track" :active="$filter->track !== null">
+                    <option value="">Highest Track</option>
+                    @foreach ($tracks as $key => $name)
+                        <option value="{{ $key }}" @selected($filter->track === $key)>{{ $name }}</option>
+                    @endforeach
+                </x-filter.select>
+
+                <x-filter.select name="set" aria-label="Item Set" :active="$filter->itemSet !== null">
+                    <option value="">With or Without Set ({{ $counts['anyItemSet'] }})</option>
+                    <option value="any" @selected($filter->itemSet === true)>Has Set ({{ $counts['hasItemSet'] }})</option>
+                    <optgroup label="Sets">
+                        @foreach ($itemSets as $id => $name)
+                            {{-- most sets are another class's tier, which only clutters the list --}}
+                            @if ($counts['itemSets'][$id] > 0 || $filter->itemSet === $id)
+                                <option value="{{ $id }}" @selected($filter->itemSet === $id)>{{ $name }} ({{ $counts['itemSets'][$id] }})</option>
+                            @endif
+                        @endforeach
+                    </optgroup>
+                </x-filter.select>
             </div>
         </form>
 
@@ -179,23 +196,30 @@
                         <tr>
                             <td class="px-3 py-2">
                                 @php($wowheadParams = GearCatalog::wowheadParams($item))
-                                <a href="https://www.wowhead.com/item={{ $item['id'] }}{{ $wowheadParams ? '?'.$wowheadParams : '' }}" @if ($wowheadParams) data-wowhead="{{ $wowheadParams }}" @endif class="group inline-flex items-center gap-2" target="_blank" rel="noopener">
-                                    {{-- Wowhead's script prepends the item icon in here --}}
-                                    <span class="flex flex-col">
+                                {{--
+                                    Links can't nest, so the set link is laid over the item link's grid area instead. The item link
+                                    keeps a box of its own, which Wowhead's tooltips need, and subgrids into the rows its icon spans.
+                                --}}
+                                <div class="grid grid-cols-[auto_1fr] gap-x-2">
+                                    <a href="https://www.wowhead.com/item={{ $item['id'] }}{{ $wowheadParams ? '?'.$wowheadParams : '' }}" @if ($wowheadParams) data-wowhead="{{ $wowheadParams }}" @endif @class([
+                                        'group col-span-full row-start-1 grid grid-cols-subgrid grid-rows-subgrid items-center [&_.iconmedium]:row-span-full',
+                                        ['row-span-1', 'row-span-2', 'row-span-3'][($item['itemSet'] ? 1 : 0) + ($item['embellished'] ? 1 : 0)],
+                                    ]) target="_blank" rel="noopener">
+                                        {{-- Wowhead's script prepends the item icon in here --}}
                                         <span @class([
-                                            'font-medium group-hover:underline',
+                                            'col-start-2 justify-self-start font-medium group-hover:underline',
                                             'text-purple-700 dark:text-purple-400' => $item['quality'] === 4,
                                             'text-blue-700 dark:text-blue-400' => $item['quality'] === 3,
                                             'text-green-700 dark:text-green-400' => $item['quality'] === 2,
                                         ])>{{ $item['name'] }}</span>
-                                        @if ($item['itemSet'])
-                                            <span class="text-xs text-gray-500 dark:text-gray-400">{{ $item['itemSet']['name'] }}</span>
-                                        @endif
                                         @if ($item['embellished'])
-                                            <span class="text-xs text-gray-500 dark:text-gray-400">Embellished</span>
+                                            <span @class(['col-start-2 text-xs text-gray-500 dark:text-gray-400', 'row-start-3' => $item['itemSet']])>Embellished</span>
                                         @endif
-                                    </span>
-                                </a>
+                                    </a>
+                                    @if ($item['itemSet'])
+                                        <a href="{{ $itemSetUrl($item['itemSet']['id']) }}" title="Show only this set" class="col-start-2 row-start-2 justify-self-start text-xs text-gray-500 hover:text-primary-500 hover:underline dark:text-gray-400 dark:hover:text-primary-400">{{ $item['itemSet']['name'] }}</a>
+                                    @endif
+                                </div>
                             </td>
                             @if ($filter->slot === null)
                                 <td class="px-3 py-2 whitespace-nowrap">{{ Slot::from($item['slot'])->label() }}</td>

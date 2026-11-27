@@ -10,6 +10,7 @@ readonly class GearFilter
      * @param  array{id: int, armor: int, specs: array<string, array{id: int, primary: string, weapons: list<int>, shield?: bool, off_hand?: bool}>}|null  $class
      * @param  list<string>  $specs  spec keys of `$class` to match; empty means any
      * @param  string|null  $track  upgrade track key whose ranks the item links show; null means each item's best
+     * @param  int|true|null  $itemSet  item set ID the item must belong to; true means any set, null means sets don't matter
      */
     public function __construct(
         public ?Slot $slot = null,
@@ -18,5 +19,6 @@ readonly class GearFilter
         public ?array $class = null,
         public array $specs = [],
         public ?string $track = null,
+        public int|true|null $itemSet = null,
     ) {}
 }
