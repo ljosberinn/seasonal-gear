@@ -26,8 +26,10 @@ trait WritesForeverExports
 
     /**
      * @param  list<array{int, string, int, int, int, int, int, int, int, list<array{int, int}>}>  $items  ID, name, class, subclass, quality, item level, required level, inventory type, allowable class, [stat type, allocation] pairs
+     * @param  list<array{int, int, int, int}>  $effects  item ID, trigger type, spell ID, cooldown in ms
+     * @param  list<array{id: int, description?: string, effects?: list<array{0: float, 1?: float, 2?: int}>, duration?: int, procChance?: int, procCooldown?: int}>  $spells  effects are [base points, variance, period in ms] by index; duration in ms
      */
-    protected function writeExports(array $items): void
+    protected function writeExports(array $items, array $effects = [], array $spells = []): void
     {
         $sparseHeader = ['ID', 'Display_lang', 'OverallQualityID', 'ItemLevel', 'RequiredLevel', 'InventoryType', 'AllowableClass'];
 
@@ -62,12 +64,72 @@ trait WritesForeverExports
             [75, 52, 40, 30, 22, 16, 40, 31, 23, 17, 13, 30, 23, 17, 13, 10],
             [88, 58, 45, 33, 25, 19, 45, 35, 25, 19, 14, 34, 26, 19, 14, 11],
         ]);
+        $this->writeEffects($effects);
+        $this->writeSpells($spells);
 
         File::put(Db2Directory::gameTablePath($this->directory, 'combat_ratings_by_level'), implode("\n", [
             "Level\tDefense Skill\tDodge\tParry\tBlock\tHit - Melee\tCrit - Melee\tHaste - Melee\tExpertise",
             "59\t1\t12\t15\t5\t10\t14\t10\t10",
             "60\t1\t12\t15\t5\t10\t14\t10\t10",
         ]));
+    }
+
+    /**
+     * @param  list<array{int, int, int, int}>  $effects
+     */
+    private function writeEffects(array $effects): void
+    {
+        $effectRows = [['ID', 'LegacySlotIndex', 'TriggerType', 'CoolDownMSec', 'CategoryCoolDownMSec', 'SpellID']];
+        $linkRows = [['ID', 'ItemEffectID', 'ItemID']];
+
+        foreach ($effects as $index => [$itemId, $triggerType, $spellId, $cooldown]) {
+            $effectRows[] = [$index + 1, $index, $triggerType, $cooldown, -1, $spellId];
+            $linkRows[] = [$index + 1, $index + 1, $itemId];
+        }
+
+        $this->writeCsv('ItemEffect', $effectRows);
+        $this->writeCsv('ItemXItemEffect', $linkRows);
+    }
+
+    /**
+     * @param  list<array{id: int, description?: string, effects?: list<array{0: float, 1?: float, 2?: int}>, duration?: int, procChance?: int, procCooldown?: int}>  $spells
+     */
+    private function writeSpells(array $spells): void
+    {
+        $spellRows = [['ID', 'Description_lang']];
+        $effectRows = [['ID', 'DifficultyID', 'EffectIndex', 'EffectAuraPeriod', 'EffectChainAmplitude', 'EffectChainTargets', 'EffectPointsPerResource', 'EffectAmplitude', 'Variance', 'EffectBasePointsF', 'EffectRadiusIndex_0', 'EffectRadiusIndex_1', 'SpellID']];
+        $miscRows = [['ID', 'DifficultyID', 'DurationIndex', 'RangeIndex', 'SpellID']];
+        $auraRows = [['ID', 'DifficultyID', 'CumulativeAura', 'ProcCategoryRecovery', 'ProcChance', 'ProcCharges', 'SpellID']];
+        $durationRows = [['ID', 'Duration']];
+
+        foreach ($spells as $spell) {
+            $spellRows[] = [$spell['id'], $spell['description'] ?? ''];
+
+            foreach ($spell['effects'] ?? [] as $index => $effect) {
+                $effectRows[] = [count($effectRows), 0, $index, $effect[2] ?? 0, 1, 0, 0, 0, $effect[1] ?? 0, $effect[0], 0, 0, $spell['id']];
+            }
+
+            if (isset($spell['duration'])) {
+                $durationRows[] = [count($durationRows), $spell['duration']];
+            }
+
+            $miscRows[] = [count($miscRows), 0, isset($spell['duration']) ? count($durationRows) - 1 : 0, 0, $spell['id']];
+
+            if (isset($spell['procChance']) || isset($spell['procCooldown'])) {
+                $auraRows[] = [count($auraRows), 0, 0, $spell['procCooldown'] ?? 0, $spell['procChance'] ?? 0, 0, $spell['id']];
+            }
+        }
+
+        $this->writeCsv('Spell', $spellRows);
+        $this->writeCsv('SpellEffect', $effectRows);
+        $this->writeCsv('SpellMisc', $miscRows);
+        $this->writeCsv('SpellAuraOptions', $auraRows);
+        $this->writeCsv('SpellDuration', $durationRows);
+        $this->writeCsv('SpellRadius', [['ID', 'Radius']]);
+        $this->writeCsv('SpellRange', [['ID', 'RangeMax_0']]);
+        $this->writeCsv('SpellTargetRestrictions', [['ID', 'DifficultyID', 'MaxTargets', 'SpellID']]);
+        $this->writeCsv('SpellDescriptionVariables', [['ID', 'Variables']]);
+        $this->writeCsv('SpellXDescriptionVariables', [['ID', 'SpellID', 'SpellDescriptionVariablesID']]);
     }
 
     /**

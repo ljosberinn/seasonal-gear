@@ -3,9 +3,10 @@
 namespace App\Gear;
 
 /**
- * Builds the WoW Forever item dataset: every Uncommon or better weapon and armor piece with stats.
+ * Builds the WoW Forever item dataset: every Uncommon or better weapon and armor piece with stats or effects.
  *
- * @phpstan-type ForeverItem array{id: int, name: string, quality: int, itemLevel: int, requiredLevel: int, inventoryType: int, slot: string, classId: int, subclassId: int, allowableClass: int, stats: array<string, int>}
+ * @phpstan-type ForeverEffect array{trigger: string, text: string}
+ * @phpstan-type ForeverItem array{id: int, name: string, quality: int, itemLevel: int, requiredLevel: int, inventoryType: int, slot: string, classId: int, subclassId: int, allowableClass: int, stats: array<string, int>, effects: list<ForeverEffect>}
  */
 class ForeverResolver
 {
@@ -17,6 +18,9 @@ class ForeverResolver
 
     private const int NO_STAT = -1;
 
+    /** `ItemEffect.TriggerType` values that show on the tooltip, e.g. not the rune an item teaches. */
+    private const array EFFECT_TRIGGERS = [0 => 'use', 1 => 'equip', 2 => 'hit'];
+
     /**
      * Unshipped debug and placeholder items, e.g. "Test Haste Chest", "Ring of Uber Resists (TEST)",
      * "Flowing Ritual Robes DEPRECATED" or "90 Epic Frost Robes".
@@ -26,11 +30,13 @@ class ForeverResolver
     public function __construct(private readonly Db2Directory $db2, private readonly int $maxLevel) {}
 
     /**
-     * @return array{build: string, hotfixes: array<string, string>, ratingsPerPercent: array<string, float>, items: list<ForeverItem>, unknownStats: array<int, int>}
+     * @return array{build: string, hotfixes: array<string, string>, ratingsPerPercent: array<string, float>, items: list<ForeverItem>, unknownStats: array<int, int>, unresolvedSpells: list<int>}
      */
     public function resolve(string $build): array
     {
         $itemClasses = $this->db2->keyed('Item', filter: fn (array $row): bool => in_array((int) $row['ClassID'], self::ITEM_CLASSES, true));
+        $spells = new SpellDescriptions($this->db2);
+        $effects = $this->effects($itemClasses, $spells);
         $points = $this->db2->keyed('RandPropPoints');
         $statOrder = array_flip(array_column(ForeverStat::cases(), 'value'));
         $items = [];
@@ -78,7 +84,9 @@ class ForeverResolver
                 }
             }
 
-            if ($stats === []) {
+            $itemEffects = $effects[$row['ID']] ?? [];
+
+            if ($stats === [] && $itemEffects === []) {
                 continue;
             }
 
@@ -96,6 +104,7 @@ class ForeverResolver
                 'subclassId' => (int) $item['SubclassID'],
                 'allowableClass' => (int) $row['AllowableClass'],
                 'stats' => array_combine(array_map(fn (int $type): string => ForeverStat::from($type)->key(), array_keys($stats)), $stats),
+                'effects' => $itemEffects,
             ];
         }
 
@@ -108,7 +117,80 @@ class ForeverResolver
             'ratingsPerPercent' => $this->ratingsPerPercent(),
             'items' => $items,
             'unknownStats' => $unknownStats,
+            'unresolvedSpells' => $spells->unresolvedSpells(),
         ];
+    }
+
+    /**
+     * Tooltip lines of each item's use, equip and chance on hit effects, in tooltip order.
+     *
+     * @param  array<string, array<string, string>>  $items  by item ID
+     * @return array<string, list<ForeverEffect>> by item ID
+     */
+    private function effects(array $items, SpellDescriptions $spells): array
+    {
+        $links = [];
+
+        foreach ($this->db2->rows('ItemXItemEffect') as $row) {
+            if (isset($items[$row['ItemID']])) {
+                $links[$row['ItemEffectID']][] = $row['ItemID'];
+            }
+        }
+
+        $itemEffects = $this->db2->keyed('ItemEffect', filter: fn (array $row): bool => isset($links[$row['ID']], self::EFFECT_TRIGGERS[(int) $row['TriggerType']]));
+        uasort($itemEffects, fn (array $a, array $b): int => [(int) $a['LegacySlotIndex'], (int) $a['ID']] <=> [(int) $b['LegacySlotIndex'], (int) $b['ID']]);
+        $result = [];
+
+        foreach ($itemEffects as $effect) {
+            $spellId = (int) $effect['SpellID'];
+            $trigger = self::EFFECT_TRIGGERS[(int) $effect['TriggerType']];
+            $text = $spells->render($spellId);
+
+            // Spells without a description only carry values for other spells, like the damage a use effect deals.
+            if ($text === null || $text === '') {
+                continue;
+            }
+
+            $cooldown = match ($trigger) {
+                'use' => $this->formatUseCooldown(max(0, (int) $effect['CoolDownMSec']) ?: max(0, (int) $effect['CategoryCoolDownMSec'])),
+                'equip', 'hit' => $spells->mentionsProcCooldown($spellId) ? '' : $this->formatProcCooldown($spells->procCooldown($spellId)),
+            };
+
+            foreach ($links[$effect['ID']] as $itemId) {
+                $result[$itemId][] = ['trigger' => $trigger, 'text' => trim("{$text} {$cooldown}")];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * The game's wording, e.g. "(1 Min, 30 Sec Cooldown)".
+     */
+    private function formatUseCooldown(int $milliseconds): string
+    {
+        $seconds = intdiv($milliseconds, 1000);
+        $parts = [];
+
+        foreach (['Day' => 86400, 'Hour' => 3600, 'Min' => 60, 'Sec' => 1] as $unit => $length) {
+            $count = intdiv($seconds, $length);
+            $seconds %= $length;
+
+            if ($count > 0) {
+                $parts[] = $count.' '.($count > 1 && in_array($unit, ['Day', 'Hour'], true) ? "{$unit}s" : $unit);
+            }
+        }
+
+        return $parts === [] ? '' : '('.implode(', ', $parts).' Cooldown)';
+    }
+
+    /**
+     * The game doesn't show internal cooldowns; this is Wowhead's wording, e.g. "(20s cooldown)".
+     * Sub-second ones only stop a proc from triggering itself, so they're left out.
+     */
+    private function formatProcCooldown(int $milliseconds): string
+    {
+        return $milliseconds < 1000 ? '' : '('.rtrim(rtrim(number_format($milliseconds / 1000, 1, '.', ''), '0'), '.').'s cooldown)';
     }
 
     /**
