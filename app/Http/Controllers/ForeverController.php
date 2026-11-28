@@ -28,11 +28,13 @@ class ForeverController extends Controller
             'max_item_level' => ['nullable', 'integer', 'min:1'],
             'stats' => ['array'],
             'stats.*' => [Rule::in(ForeverStat::keys())],
+            'effect' => ['nullable', 'string', Rule::in($catalog->effectOptionValues())],
             'page' => ['nullable', 'integer', 'min:1'],
         ]);
 
         [$minLevel, $upToLevel] = $this->range($validated, 'level');
         [$minItemLevel, $upToItemLevel] = $this->range($validated, 'item_level');
+        [$effect, $minEffectValue] = array_pad(explode(':', $validated['effect'] ?? ''), 2, null);
 
         $filter = new ForeverFilter(
             class: $validated['class'] ?? null,
@@ -42,6 +44,8 @@ class ForeverController extends Controller
             minItemLevel: $minItemLevel,
             maxItemLevel: $upToItemLevel,
             stats: array_values(array_unique($validated['stats'] ?? [])),
+            effect: $effect ?: null,
+            minEffectValue: $minEffectValue === null ? null : (float) $minEffectValue,
         );
 
         $items = $catalog->search($filter);
@@ -60,6 +64,7 @@ class ForeverController extends Controller
             'paginator' => $paginator,
             'slots' => collect($paginator->items())->groupBy('slot'),
             'counts' => $catalog->counts($filter),
+            'effectOptions' => $catalog->effectOptions(),
             'filter' => $filter,
             'classes' => array_intersect_key(config('classes'), config('forever.classes')),
             'maxLevel' => $maxLevel,

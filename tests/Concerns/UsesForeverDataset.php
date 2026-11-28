@@ -34,7 +34,7 @@ trait UsesForeverDataset
         return [
             'id' => $id, 'name' => $name, 'quality' => 3, 'itemLevel' => $itemLevel, 'requiredLevel' => $requiredLevel,
             'inventoryType' => $inventoryType, 'slot' => $slot, 'classId' => $classId, 'subclassId' => $subclassId,
-            'allowableClass' => -1, 'stats' => $stats, 'effects' => [], ...$extra,
+            'allowableClass' => -1, 'stats' => $stats, 'effects' => [], 'effectCategories' => [], ...$extra,
         ];
     }
 

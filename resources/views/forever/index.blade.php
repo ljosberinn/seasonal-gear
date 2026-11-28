@@ -1,4 +1,5 @@
 @php
+    use App\Gear\ForeverCatalog;
     use App\Gear\ForeverStat;
     use App\Gear\GearCatalog;
     use App\Gear\Slot;
@@ -11,6 +12,7 @@
         'str' => ['text' => 'text-amber-800 dark:text-amber-600', 'dot' => 'bg-amber-800'],
     ];
     $effectLabels = ['use' => 'Use', 'equip' => 'Equip', 'hit' => 'Chance on hit'];
+    $selectedEffect = $filter->effect === null ? null : $filter->effect.($filter->minEffectValue === null ? '' : ':'.ForeverCatalog::formatEffectValue($filter->minEffectValue));
     // the rarer stat groups start collapsed unless one of their stats is picked
     $primaryGroups = ['attributes', 'defense', 'physical', 'spell'];
     $statsByGroup = collect(ForeverStat::cases())->groupBy(fn (ForeverStat $stat): string => $stat->group());
@@ -52,6 +54,18 @@
                     <option value="">Any Slot ({{ $counts['anySlot'] }})</option>
                     @foreach (Slot::cases() as $slotOption)
                         <option value="{{ $slotOption->value }}" @selected($filter->slot === $slotOption)>{{ $slotOption->label() }} ({{ $counts['slots'][$slotOption->value] }})</option>
+                    @endforeach
+                </x-filter.select>
+
+                <x-filter.select name="effect" aria-label="Effect" :active="$filter->effect !== null">
+                    <option value="">Any Effect ({{ $counts['anyEffect'] }})</option>
+                    @foreach ($effectOptions as $trigger => $options)
+                        <optgroup label="{{ $trigger }}">
+                            @foreach ($options as $option)
+                                {{-- thresholds sit indented under their category --}}
+                                <option value="{{ $option['value'] }}" @selected($selectedEffect === $option['value'])>@if (str_contains($option['value'], ':'))&nbsp;&nbsp;&nbsp;@endif{{ $option['label'] }} ({{ $counts['effects'][$option['value']] }})</option>
+                            @endforeach
+                        </optgroup>
                     @endforeach
                 </x-filter.select>
 

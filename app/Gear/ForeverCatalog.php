@@ -25,6 +25,9 @@ class ForeverCatalog
     /** @var array<string, array{mask: int, armor: int, shield: bool, weapons: array<int, true>}>|null */
     private ?array $proficiencies = null;
 
+    /** @var array<string, list<array{value: string, label: string}>>|null */
+    private ?array $effectOptions = null;
+
     public function __construct(private readonly string $path) {}
 
     public function build(): string
@@ -41,7 +44,8 @@ class ForeverCatalog
     }
 
     /**
-     * @return list<ForeverItem> grouped by slot in slot order, highest item level first within a slot
+     * @return list<ForeverItem> grouped by slot in slot order, highest item level first within a slot,
+     *                           or highest value first for a picked effect that has one
      */
     public function search(ForeverFilter $filter): array
     {
@@ -49,12 +53,71 @@ class ForeverCatalog
         $results = array_values(array_filter($this->dataset()['items'], fn (array $item): bool => $this->matchesSlot($item, $filter)
             && $this->matchesLevels($item, $filter)
             && $this->hasStats($item, $filter->stats)
+            && $this->matchesEffect($item, $filter)
             && $this->matchesClass($item, $filter->class)));
+        $effectValue = fn (array $item): float => $filter->effect === null ? 0 : (float) ($item['effectCategories'][$filter->effect] ?? 0);
 
-        usort($results, fn (array $a, array $b): int => [$slotOrder[$a['slot']], $b['itemLevel'], $a['name']]
-            <=> [$slotOrder[$b['slot']], $a['itemLevel'], $b['name']]);
+        usort($results, fn (array $a, array $b): int => [$slotOrder[$a['slot']], $effectValue($b), $b['itemLevel'], $a['name']]
+            <=> [$slotOrder[$b['slot']], $effectValue($a), $a['itemLevel'], $b['name']]);
 
         return $results;
+    }
+
+    /**
+     * Effect filter choices by trigger label: each category the dataset has, followed by one
+     * "at least" choice per higher value for categories with a unit.
+     *
+     * @return array<string, list<array{value: string, label: string}>>
+     */
+    public function effectOptions(): array
+    {
+        if ($this->effectOptions !== null) {
+            return $this->effectOptions;
+        }
+
+        $values = [];
+
+        foreach ($this->dataset()['items'] as $item) {
+            foreach ($item['effectCategories'] as $key => $value) {
+                $values[$key] ??= [];
+
+                if ($value !== null) {
+                    $values[$key][self::formatEffectValue($value)] = $value;
+                }
+            }
+        }
+
+        $categories = array_filter(array_map(ForeverEffectClassifier::parseKey(...), array_combine(array_keys($values), array_keys($values))));
+        $triggerOrder = array_flip(array_column(ForeverEffectTrigger::cases(), 'value'));
+        $outcomeOrder = array_flip(array_column(ForeverEffectOutcome::cases(), 'value'));
+        uasort($categories, fn (array $a, array $b): int => [$triggerOrder[$a[0]->value], $outcomeOrder[$a[1]->value]]
+            <=> [$triggerOrder[$b[0]->value], $outcomeOrder[$b[1]->value]]);
+        $this->effectOptions = [];
+
+        foreach ($categories as $key => [$trigger, $outcome]) {
+            $this->effectOptions[$trigger->label()][] = ['value' => $key, 'label' => $outcome->label()];
+            asort($values[$key]);
+
+            // The lowest value would match the same items as the category itself.
+            foreach (array_slice(array_keys($values[$key]), 1) as $value) {
+                $this->effectOptions[$trigger->label()][] = ['value' => "{$key}:{$value}", 'label' => "{$outcome->label()} ≥ {$value}{$outcome->unit()}"];
+            }
+        }
+
+        return $this->effectOptions;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function effectOptionValues(): array
+    {
+        return array_column(array_merge(...array_values($this->effectOptions())), 'value');
+    }
+
+    public static function formatEffectValue(float $value): string
+    {
+        return rtrim(rtrim(number_format($value, 1, '.', ''), '0'), '.');
     }
 
     /**
@@ -62,41 +125,67 @@ class ForeverCatalog
      * previews what picking that option yields. Stats are AND-ed, so a stat counts items that also
      * have every already picked stat.
      *
-     * @return array{slots: array<string, int>, stats: array<string, int>, anySlot: int, anyStat: int}
+     * @return array{slots: array<string, int>, stats: array<string, int>, effects: array<string, int>, anySlot: int, anyStat: int, anyEffect: int}
      */
     public function counts(ForeverFilter $filter): array
     {
         $counts = [
             'slots' => array_fill_keys(array_column(Slot::cases(), 'value'), 0),
             'stats' => array_fill_keys(ForeverStat::keys(), 0),
+            'effects' => array_fill_keys($this->effectOptionValues(), 0),
             'anySlot' => 0,
             'anyStat' => 0,
+            'anyEffect' => 0,
         ];
+        $thresholds = [];
+
+        foreach ($this->effectOptionValues() as $option) {
+            if (str_contains($option, ':')) {
+                [$key, $value] = explode(':', $option);
+                $thresholds[$key][$option] = (float) $value;
+            }
+        }
 
         foreach ($this->dataset()['items'] as $item) {
-            if (! $this->matchesLevels($item, $filter)) {
+            if (! $this->matchesLevels($item, $filter) || ! $this->matchesClass($item, $filter->class)) {
                 continue;
             }
 
-            $matchesClass = $this->matchesClass($item, $filter->class);
             $matchesSlot = $this->matchesSlot($item, $filter);
             $matchesStats = $this->hasStats($item, $filter->stats);
+            $matchesEffect = $this->matchesEffect($item, $filter);
 
-            if ($matchesClass && $matchesStats) {
+            if ($matchesStats && $matchesEffect) {
                 $counts['anySlot']++;
                 $counts['slots'][$item['slot']]++;
             }
 
-            if (! $matchesClass || ! $matchesSlot) {
+            if (! $matchesSlot) {
                 continue;
             }
 
-            $counts['anyStat']++;
+            if ($matchesEffect) {
+                $counts['anyStat']++;
+
+                if ($matchesStats) {
+                    foreach ($item['stats'] as $stat => $value) {
+                        if ($value > 0) {
+                            $counts['stats'][$stat]++;
+                        }
+                    }
+                }
+            }
 
             if ($matchesStats) {
-                foreach ($item['stats'] as $stat => $value) {
-                    if ($value > 0) {
-                        $counts['stats'][$stat]++;
+                $counts['anyEffect']++;
+
+                foreach ($item['effectCategories'] as $key => $value) {
+                    $counts['effects'][$key]++;
+
+                    foreach ($thresholds[$key] ?? [] as $option => $threshold) {
+                        if ($value >= $threshold) {
+                            $counts['effects'][$option]++;
+                        }
                     }
                 }
             }
@@ -183,6 +272,22 @@ class ForeverCatalog
             && ($filter->maxLevel === null || $level <= $filter->maxLevel)
             && ($filter->minItemLevel === null || $item['itemLevel'] >= $filter->minItemLevel)
             && ($filter->maxItemLevel === null || $item['itemLevel'] <= $filter->maxItemLevel);
+    }
+
+    /**
+     * @param  ForeverItem  $item
+     */
+    private function matchesEffect(array $item, ForeverFilter $filter): bool
+    {
+        if ($filter->effect === null) {
+            return true;
+        }
+
+        if (! array_key_exists($filter->effect, $item['effectCategories'])) {
+            return false;
+        }
+
+        return $filter->minEffectValue === null || ($item['effectCategories'][$filter->effect] ?? 0) >= $filter->minEffectValue;
     }
 
     /**

@@ -126,7 +126,7 @@ class ForeverResolverTest extends TestCase
             ],
             [[6629, 1, 1291698, -1], [900001, 6, 900010, -1], [900002, 1, 900011, -1]],
             [
-                ['id' => 1291698, 'description' => 'When struck in combat, inflicts $s2 Nature damage to the attacker.', 'effects' => [[1], [1]]],
+                ['id' => 1291698, 'description' => 'When struck in combat, inflicts $s2 Nature damage to the attacker.', 'effects' => [[1, 'aura' => 15], [1, 'aura' => 4]]],
                 ['id' => 900010, 'description' => 'Engrave your bracers with a rune.'],
                 ['id' => 900011, 'effects' => [[50]]],
             ],
@@ -137,6 +137,21 @@ class ForeverResolverTest extends TestCase
         $this->assertSame([6629], array_column($items, 'id'));
         $this->assertSame([], $items[0]['stats']);
         $this->assertSame([['trigger' => 'equip', 'text' => 'When struck in combat, inflicts 1 Nature damage to the attacker.']], $items[0]['effects']);
+        $this->assertSame(['struck-damage' => null], $items[0]['effectCategories']);
+    }
+
+    public function test_keeps_the_highest_value_of_an_effect_category(): void
+    {
+        $this->writeExports(
+            [[900001, 'Fishy Boots', 4, 1, 3, 45, 17, 8, -1, []]],
+            [[900001, 1, 24090, -1], [900001, 1, 8747, -1]],
+            [
+                ['id' => 24090, 'description' => 'Increases running and swimming speed by $s1%.', 'effects' => [[8, 'aura' => 31], [8, 'aura' => 58]]],
+                ['id' => 8747, 'description' => 'Increases swim speed by $s1%.', 'effects' => [[15, 'aura' => 58]]],
+            ],
+        );
+
+        $this->assertSame(['equip-run-speed' => 8.0, 'equip-swim-speed' => 15.0], $this->resolve()['items'][0]['effectCategories']);
     }
 
     /**

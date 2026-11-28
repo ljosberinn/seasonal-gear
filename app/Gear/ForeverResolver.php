@@ -6,7 +6,7 @@ namespace App\Gear;
  * Builds the WoW Forever item dataset: every Uncommon or better weapon and armor piece with stats or effects.
  *
  * @phpstan-type ForeverEffect array{trigger: string, text: string}
- * @phpstan-type ForeverItem array{id: int, name: string, quality: int, itemLevel: int, requiredLevel: int, inventoryType: int, slot: string, classId: int, subclassId: int, allowableClass: int, stats: array<string, int>, effects: list<ForeverEffect>}
+ * @phpstan-type ForeverItem array{id: int, name: string, quality: int, itemLevel: int, requiredLevel: int, inventoryType: int, slot: string, classId: int, subclassId: int, allowableClass: int, stats: array<string, int>, effects: list<ForeverEffect>, effectCategories: array<string, float|null>}
  */
 class ForeverResolver
 {
@@ -36,7 +36,7 @@ class ForeverResolver
     {
         $itemClasses = $this->db2->keyed('Item', filter: fn (array $row): bool => in_array((int) $row['ClassID'], self::ITEM_CLASSES, true));
         $spells = new SpellDescriptions($this->db2);
-        $effects = $this->effects($itemClasses, $spells);
+        $effects = $this->effects($itemClasses, $spells, new ForeverEffectClassifier($this->db2));
         $points = $this->db2->keyed('RandPropPoints');
         $statOrder = array_flip(array_column(ForeverStat::cases(), 'value'));
         $items = [];
@@ -84,7 +84,7 @@ class ForeverResolver
                 }
             }
 
-            $itemEffects = $effects[$row['ID']] ?? [];
+            $itemEffects = $effects[$row['ID']]['lines'] ?? [];
 
             if ($stats === [] && $itemEffects === []) {
                 continue;
@@ -105,6 +105,7 @@ class ForeverResolver
                 'allowableClass' => (int) $row['AllowableClass'],
                 'stats' => array_combine(array_map(fn (int $type): string => ForeverStat::from($type)->key(), array_keys($stats)), $stats),
                 'effects' => $itemEffects,
+                'effectCategories' => $effects[$row['ID']]['categories'] ?? [],
             ];
         }
 
@@ -122,12 +123,13 @@ class ForeverResolver
     }
 
     /**
-     * Tooltip lines of each item's use, equip and chance on hit effects, in tooltip order.
+     * Tooltip lines of each item's use, equip and chance on hit effects in tooltip order, and their
+     * categories with the highest value an item has in each.
      *
      * @param  array<string, array<string, string>>  $items  by item ID
-     * @return array<string, list<ForeverEffect>> by item ID
+     * @return array<string, array{lines: list<ForeverEffect>, categories: array<string, float|null>}> by item ID
      */
-    private function effects(array $items, SpellDescriptions $spells): array
+    private function effects(array $items, SpellDescriptions $spells, ForeverEffectClassifier $classifier): array
     {
         $links = [];
 
@@ -156,10 +158,24 @@ class ForeverResolver
                 'equip', 'hit' => $spells->mentionsProcCooldown($spellId) ? '' : $this->formatProcCooldown($spells->procCooldown($spellId)),
             };
 
+            $categories = $classifier->classify((int) $effect['TriggerType'], $spellId);
+
             foreach ($links[$effect['ID']] as $itemId) {
-                $result[$itemId][] = ['trigger' => $trigger, 'text' => trim("{$text} {$cooldown}")];
+                $result[$itemId]['lines'][] = ['trigger' => $trigger, 'text' => trim("{$text} {$cooldown}")];
+                $result[$itemId]['categories'] ??= [];
+
+                foreach ($categories as $key => $value) {
+                    $previous = $result[$itemId]['categories'][$key] ?? null;
+                    $result[$itemId]['categories'][$key] = $value === null ? $previous : max($previous ?? $value, $value);
+                }
             }
         }
+
+        foreach ($result as &$entry) {
+            ksort($entry['categories']);
+        }
+
+        unset($entry);
 
         return $result;
     }
