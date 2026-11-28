@@ -27,7 +27,7 @@ trait WritesForeverExports
     /**
      * @param  list<array{int, string, int, int, int, int, int, int, int, list<array{int, int}>}>  $items  ID, name, class, subclass, quality, item level, required level, inventory type, allowable class, [stat type, allocation] pairs
      * @param  list<array{int, int, int, int}>  $effects  item ID, trigger type, spell ID, cooldown in ms
-     * @param  list<array{id: int, description?: string, effects?: list<array{0: float, 1?: float, 2?: int}>, duration?: int, procChance?: int, procCooldown?: int}>  $spells  effects are [base points, variance, period in ms] by index; duration in ms
+     * @param  list<array{id: int, description?: string, effects?: list<array{0: float, 1?: float, 2?: int, effect?: int, aura?: int, triggerSpell?: int, targets?: array{int, int}}>, duration?: int, procChance?: int, procCooldown?: int, procFlags?: int}>  $spells  effects are [base points, variance, period in ms] by index, applying an aura (`effect` 6) with no `aura` unless given; duration in ms
      */
     protected function writeExports(array $items, array $effects = [], array $spells = []): void
     {
@@ -92,21 +92,24 @@ trait WritesForeverExports
     }
 
     /**
-     * @param  list<array{id: int, description?: string, effects?: list<array{0: float, 1?: float, 2?: int}>, duration?: int, procChance?: int, procCooldown?: int}>  $spells
+     * @param  list<array{id: int, description?: string, effects?: list<array{0: float, 1?: float, 2?: int, effect?: int, aura?: int, triggerSpell?: int, targets?: array{int, int}}>, duration?: int, procChance?: int, procCooldown?: int, procFlags?: int}>  $spells
      */
     private function writeSpells(array $spells): void
     {
         $spellRows = [['ID', 'Description_lang']];
-        $effectRows = [['ID', 'DifficultyID', 'EffectIndex', 'EffectAuraPeriod', 'EffectChainAmplitude', 'EffectChainTargets', 'EffectPointsPerResource', 'EffectAmplitude', 'Variance', 'EffectBasePointsF', 'EffectRadiusIndex_0', 'EffectRadiusIndex_1', 'SpellID']];
+        $effectRows = [['ID', 'DifficultyID', 'EffectIndex', 'Effect', 'EffectAura', 'EffectTriggerSpell', 'EffectAuraPeriod', 'EffectChainAmplitude', 'EffectChainTargets', 'EffectPointsPerResource', 'EffectAmplitude', 'Variance', 'EffectBasePointsF', 'EffectRadiusIndex_0', 'EffectRadiusIndex_1', 'ImplicitTarget_0', 'ImplicitTarget_1', 'SpellID']];
         $miscRows = [['ID', 'DifficultyID', 'DurationIndex', 'RangeIndex', 'SpellID']];
-        $auraRows = [['ID', 'DifficultyID', 'CumulativeAura', 'ProcCategoryRecovery', 'ProcChance', 'ProcCharges', 'SpellID']];
+        $auraRows = [['ID', 'DifficultyID', 'CumulativeAura', 'ProcCategoryRecovery', 'ProcChance', 'ProcCharges', 'ProcTypeMask_0', 'SpellID']];
         $durationRows = [['ID', 'Duration']];
 
         foreach ($spells as $spell) {
             $spellRows[] = [$spell['id'], $spell['description'] ?? ''];
 
             foreach ($spell['effects'] ?? [] as $index => $effect) {
-                $effectRows[] = [count($effectRows), 0, $index, $effect[2] ?? 0, 1, 0, 0, 0, $effect[1] ?? 0, $effect[0], 0, 0, $spell['id']];
+                $effectRows[] = [
+                    count($effectRows), 0, $index, $effect['effect'] ?? 6, $effect['aura'] ?? 0, $effect['triggerSpell'] ?? 0, $effect[2] ?? 0, 1, 0, 0, 0,
+                    $effect[1] ?? 0, $effect[0], 0, 0, ...$effect['targets'] ?? [1, 0], $spell['id'],
+                ];
             }
 
             if (isset($spell['duration'])) {
@@ -115,8 +118,8 @@ trait WritesForeverExports
 
             $miscRows[] = [count($miscRows), 0, isset($spell['duration']) ? count($durationRows) - 1 : 0, 0, $spell['id']];
 
-            if (isset($spell['procChance']) || isset($spell['procCooldown'])) {
-                $auraRows[] = [count($auraRows), 0, 0, $spell['procCooldown'] ?? 0, $spell['procChance'] ?? 0, 0, $spell['id']];
+            if (isset($spell['procChance']) || isset($spell['procCooldown']) || isset($spell['procFlags'])) {
+                $auraRows[] = [count($auraRows), 0, 0, $spell['procCooldown'] ?? 0, $spell['procChance'] ?? 0, 0, $spell['procFlags'] ?? 0, $spell['id']];
             }
         }
 

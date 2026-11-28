@@ -59,6 +59,38 @@ class ForeverPageTest extends TestCase
             ->assertSee('Use: Increases damage and healing done by magical spells and effects by up to 175 for 15 sec. (1 Min, 30 Sec Cooldown)');
     }
 
+    public function test_effect_select_groups_categories_by_trigger_with_thresholds_for_values(): void
+    {
+        $this->useForeverDataset($this->swimmingItems());
+
+        $this->get(route('forever.index'))
+            ->assertOk()
+            ->assertSee('<option value="">Any Effect (13)</option>', false)
+            ->assertSeeInOrder(['<optgroup label="Equip">', 'Swim speed (3)', 'Swim speed ≥ 8% (2)', 'Swim speed ≥ 15% (1)', '<optgroup label="When struck">', 'Damage (1)'], false);
+    }
+
+    public function test_effect_filter_keeps_items_with_that_effect(): void
+    {
+        $this->useForeverDataset($this->swimmingItems());
+
+        $this->get(route('forever.index', ['effect' => 'struck-damage']))
+            ->assertOk()
+            ->assertSee('Sporid Cape')
+            ->assertDontSee('Fishy Boots')
+            ->assertDontSee('Zarmok');
+    }
+
+    public function test_effect_threshold_keeps_items_with_at_least_that_value_highest_first(): void
+    {
+        $this->useForeverDataset($this->swimmingItems());
+
+        $this->get(route('forever.index', ['effect' => 'equip-swim-speed:8']))
+            ->assertOk()
+            ->assertSeeInOrder(['Fishy Boots', 'Damp Boots'])
+            ->assertDontSee('Slightly Wet Boots')
+            ->assertDontSee('Sporid Cape');
+    }
+
     public function test_class_filter_keeps_the_best_armor_type_and_trainable_weapons(): void
     {
         $this->useForeverDataset();
@@ -255,12 +287,27 @@ class ForeverPageTest extends TestCase
 
     public function test_rejects_unknown_filter_values(): void
     {
-        $this->useForeverDataset();
+        $this->useForeverDataset($this->swimmingItems());
 
         $this->get(route('forever.index', ['class' => 'death-knight']))->assertSessionHasErrors(['class' => 'The selected class is invalid.']);
         $this->get(route('forever.index', ['stats' => ['mastery']]))->assertSessionHasErrors(['stats.0' => 'The selected stats.0 is invalid.']);
         $this->get(route('forever.index', ['slot' => 'tabard']))->assertSessionHasErrors('slot');
         $this->get(route('forever.index', ['min_level' => 0]))->assertSessionHasErrors(['min_level' => 'The min level field must be between 1 and 60.']);
         $this->get(route('forever.index', ['max_level' => 61]))->assertSessionHasErrors('max_level');
+        $this->get(route('forever.index', ['effect' => 'equip-flying']))->assertSessionHasErrors('effect');
+        $this->get(route('forever.index', ['effect' => 'equip-swim-speed:9']))->assertSessionHasErrors('effect');
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function swimmingItems(): array
+    {
+        return [
+            $this->foreverItem(900001, 'Slightly Wet Boots', 'feet', 8, 4, 1, 40, 35, [], ['effectCategories' => ['equip-swim-speed' => 5.0]]),
+            $this->foreverItem(900002, 'Damp Boots', 'feet', 8, 4, 1, 50, 45, [], ['effectCategories' => ['equip-run-speed' => 8.0, 'equip-swim-speed' => 8.0]]),
+            $this->foreverItem(900003, 'Fishy Boots', 'feet', 8, 4, 1, 30, 25, [], ['effectCategories' => ['equip-swim-speed' => 15.0]]),
+            $this->foreverItem(6629, 'Sporid Cape', 'back', 16, 4, 1, 22, 17, ['sta' => 6], ['effectCategories' => ['struck-damage' => null]]),
+        ];
     }
 }
