@@ -45,6 +45,22 @@ class ImportForeverTest extends TestCase
         $this->assertArrayNotHasKey('unknownStats', $dataset);
     }
 
+    public function test_warns_about_spell_descriptions_it_cannot_fill_in(): void
+    {
+        $this->writeExports(
+            [[900001, 'Homing Ring', 4, 0, 3, 45, 40, 11, -1, []]],
+            [[900001, 0, 419417, -1]],
+            [['id' => 419417, 'description' => 'Returns you to $z.']],
+        );
+        $output = $this->directory.DIRECTORY_SEPARATOR.'forever.json';
+
+        $this->artisan('forever:import', ['--from' => $this->directory, '--build' => '1.60.1.71139', '--output' => $output])
+            ->expectsOutputToContain('Spell descriptions with variables left unfilled: 419417')
+            ->assertSuccessful();
+
+        $this->assertArrayNotHasKey('unresolvedSpells', File::json($output));
+    }
+
     public function test_fails_without_writing_when_no_item_resolves(): void
     {
         $this->writeExports([[900001, 'Plain Ring', 4, 0, 3, 45, 40, 11, -1, []]]);

@@ -51,7 +51,11 @@ class ImportForever extends Command
             $this->components->warn('Skipped unknown stat IDs (ID => stat count): '.json_encode($dataset['unknownStats']));
         }
 
-        unset($dataset['unknownStats']);
+        if ($dataset['unresolvedSpells'] !== []) {
+            $this->components->warn('Spell descriptions with variables left unfilled: '.implode(', ', $dataset['unresolvedSpells']));
+        }
+
+        unset($dataset['unknownStats'], $dataset['unresolvedSpells']);
 
         if ($dataset['items'] === []) {
             $this->components->error('No items resolved.');

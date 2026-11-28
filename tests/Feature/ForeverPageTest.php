@@ -42,6 +42,23 @@ class ForeverPageTest extends TestCase
             ->assertSee('+1.0% Critical Strike');
     }
 
+    public function test_shows_effects_after_the_stats(): void
+    {
+        $this->useForeverDataset([
+            $this->foreverItem(13243, 'Argent Defender', 'off-hand', 14, 4, 6, 62, 0, ['sta' => 11], ['effects' => [
+                ['trigger' => 'equip', 'text' => 'Has a chance when struck in combat to increase your chance to block by 18% for 10 sec. (20s cooldown)'],
+            ]]),
+            $this->foreverItem(18820, 'Talisman of Ephemeral Power', 'trinket', 12, 4, 0, 66, 60, [], ['effects' => [
+                ['trigger' => 'use', 'text' => 'Increases damage and healing done by magical spells and effects by up to 175 for 15 sec. (1 Min, 30 Sec Cooldown)'],
+            ]]),
+        ]);
+
+        $this->get(route('forever.index'))
+            ->assertOk()
+            ->assertSeeInOrder(['Argent Defender', '+11 Stamina', 'Equip: Has a chance when struck in combat to increase your chance to block by 18% for 10 sec. (20s cooldown)'])
+            ->assertSee('Use: Increases damage and healing done by magical spells and effects by up to 175 for 15 sec. (1 Min, 30 Sec Cooldown)');
+    }
+
     public function test_class_filter_keeps_the_best_armor_type_and_trainable_weapons(): void
     {
         $this->useForeverDataset();

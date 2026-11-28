@@ -90,6 +90,56 @@ class ForeverResolverTest extends TestCase
     }
 
     /**
+     * Wowhead's tooltips read e.g. "Equip: Has a chance when struck in combat to increase your chance to block by 18%…".
+     */
+    public function test_adds_use_equip_and_chance_on_hit_lines_with_their_cooldowns(): void
+    {
+        $this->writeExports(
+            [
+                [13243, 'Argent Defender', 4, 6, 3, 45, 0, 14, -1, [[7, 6428]]],
+                [18820, 'Talisman of Ephemeral Power', 4, 0, 3, 45, 60, 12, -1, [[7, 6428]]],
+                [12798, 'Annihilator', 2, 0, 3, 45, 58, 13, -1, [[7, 6428]]],
+            ],
+            [[13243, 1, 17350, -1], [18820, 0, 23271, 90000], [12798, 2, 16928, -1]],
+            [
+                ['id' => 17350, 'description' => 'Has a chance when struck in combat to increase your chance to block by $17351s1% for $17351d.', 'procCooldown' => 20000],
+                ['id' => 17351, 'effects' => [[18]], 'duration' => 10000],
+                ['id' => 23271, 'description' => 'Increases damage and healing done by magical spells and effects by up to $s1 for $d.', 'effects' => [[175]], 'duration' => 15000],
+                ['id' => 16928, 'description' => 'Reduces an enemy\'s armor by $s1. Stacks up to 3 times.', 'effects' => [[200]]],
+            ],
+        );
+
+        $effects = collect($this->resolve()['items'])->pluck('effects', 'id');
+
+        $this->assertSame([['trigger' => 'equip', 'text' => 'Has a chance when struck in combat to increase your chance to block by 18% for 10 sec. (20s cooldown)']], $effects[13243]);
+        $this->assertSame([['trigger' => 'use', 'text' => 'Increases damage and healing done by magical spells and effects by up to 175 for 15 sec. (1 Min, 30 Sec Cooldown)']], $effects[18820]);
+        $this->assertSame([['trigger' => 'hit', 'text' => 'Reduces an enemy\'s armor by 200. Stacks up to 3 times.']], $effects[12798]);
+    }
+
+    public function test_keeps_items_whose_only_bonus_is_an_effect(): void
+    {
+        $this->writeExports(
+            [
+                [6629, 'Sporid Cape', 4, 1, 3, 45, 17, 16, -1, []],
+                [900001, 'Rune Bracers', 4, 1, 3, 45, 17, 9, -1, []],
+                [900002, 'Silent Bracers', 4, 1, 3, 45, 17, 9, -1, []],
+            ],
+            [[6629, 1, 1291698, -1], [900001, 6, 900010, -1], [900002, 1, 900011, -1]],
+            [
+                ['id' => 1291698, 'description' => 'When struck in combat, inflicts $s2 Nature damage to the attacker.', 'effects' => [[1], [1]]],
+                ['id' => 900010, 'description' => 'Engrave your bracers with a rune.'],
+                ['id' => 900011, 'effects' => [[50]]],
+            ],
+        );
+
+        $items = $this->resolve()['items'];
+
+        $this->assertSame([6629], array_column($items, 'id'));
+        $this->assertSame([], $items[0]['stats']);
+        $this->assertSame([['trigger' => 'equip', 'text' => 'When struck in combat, inflicts 1 Nature damage to the attacker.']], $items[0]['effects']);
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function resolve(): array

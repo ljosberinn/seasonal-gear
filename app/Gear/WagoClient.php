@@ -60,7 +60,23 @@ class WagoClient
      */
     private const string HOTFIX_HEADER = 'X-Hotfix-Modified-At';
 
-    public const array FOREVER_TABLES = ['Item', 'ItemSparse', 'RandPropPoints'];
+    public const array FOREVER_TABLES = [
+        'Item',
+        'ItemEffect',
+        'ItemSparse',
+        'ItemXItemEffect',
+        'RandPropPoints',
+        'Spell',
+        'SpellAuraOptions',
+        'SpellDescriptionVariables',
+        'SpellDuration',
+        'SpellEffect',
+        'SpellMisc',
+        'SpellRadius',
+        'SpellRange',
+        'SpellTargetRestrictions',
+        'SpellXDescriptionVariables',
+    ];
 
     /**
      * Forever's ratings convert by character level rather than item level.

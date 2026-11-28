@@ -10,6 +10,7 @@
         'spi' => ['text' => 'text-sky-500 dark:text-sky-300', 'dot' => 'bg-sky-300'],
         'str' => ['text' => 'text-amber-800 dark:text-amber-600', 'dot' => 'bg-amber-800'],
     ];
+    $effectLabels = ['use' => 'Use', 'equip' => 'Equip', 'hit' => 'Chance on hit'];
     // the rarer stat groups start collapsed unless one of their stats is picked
     $primaryGroups = ['attributes', 'defense', 'physical', 'spell'];
     $statsByGroup = collect(ForeverStat::cases())->groupBy(fn (ForeverStat $stat): string => $stat->group());
@@ -145,6 +146,13 @@
                                                 ])>{{ ForeverStat::fromKey($key)->format($value, $ratingsPerPercent) }}</span>
                                             @endforeach
                                         </div>
+                                        @if ($item['effects'] !== [])
+                                            <ul @class(['text-green-700 dark:text-green-400', 'mt-1' => $item['stats'] !== []])>
+                                                @foreach ($item['effects'] as $effect)
+                                                    <li>{{ $effectLabels[$effect['trigger']] }}: {{ $effect['text'] }}</li>
+                                                @endforeach
+                                            </ul>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
